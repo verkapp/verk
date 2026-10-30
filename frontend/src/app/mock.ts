@@ -147,7 +147,7 @@ let tasks = seed();
 let settings: Settings = loadSettings();
 
 function loadSettings(): Settings {
-  const fallback: Settings = { accent: 'lavande', coachOnStart: false, claudePath: '' };
+  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, claudePath: '' };
   try {
     const raw = localStorage.getItem('todo.settings');
     return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<Settings>) } : fallback;

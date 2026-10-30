@@ -50,6 +50,26 @@
 
       <div class="row">
         <div class="row-copy">
+          <p class="row-title">Activer le coach</p>
+          <p class="row-sub">
+            Le mot du coach, le rappel d’accueil et la page Coach. Le découpage de tâches avec Claude reste disponible.
+          </p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().coachEnabled"
+          [attr.aria-checked]="store.settings().coachEnabled"
+          (click)="toggleCoachEnabled()"
+          aria-label="Activer le coach"
+        >
+          <span></span>
+        </button>
+      </div>
+
+      <div class="row" [class.disabled]="!store.settings().coachEnabled">
+        <div class="row-copy">
           <p class="row-title">Un mot au démarrage</p>
           <p class="row-sub">
             Demande un rappel à Claude à l’ouverture, s’il reste des tâches en attente. Un appel par lancement.
@@ -61,6 +81,7 @@
           role="switch"
           [class.on]="store.settings().coachOnStart"
           [attr.aria-checked]="store.settings().coachOnStart"
+          [disabled]="!store.settings().coachEnabled"
           (click)="toggleCoach()"
           aria-label="Activer le mot du coach au démarrage"
         >

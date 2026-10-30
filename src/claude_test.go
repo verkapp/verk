@@ -1,6 +1,9 @@
 package src
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseSuggestionsJSON(t *testing.T) {
 	out, err := parseSuggestions(`["Définir le résultat", "Lister les étapes", "Bloquer 30 minutes"]`)
@@ -61,5 +64,16 @@ func TestParseSuggestionsDedupes(t *testing.T) {
 func TestParseSuggestionsEmpty(t *testing.T) {
 	if _, err := parseSuggestions("   "); err == nil {
 		t.Fatal("empty input should produce an error")
+	}
+}
+
+func TestCoachNudgeDisabled(t *testing.T) {
+	st := newTestStore(t)
+	if err := st.saveSettings(Settings{Accent: "lavande", CoachEnabled: false}); err != nil {
+		t.Fatalf("saveSettings: %v", err)
+	}
+	app := &App{store: st}
+	if _, err := app.coachNudge(); err == nil || !strings.Contains(err.Error(), "désactivé") {
+		t.Fatalf("expected disabled coach error, got %v", err)
 	}
 }

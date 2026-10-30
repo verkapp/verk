@@ -15,7 +15,7 @@ coach propulsé par **Claude Code (haiku)**.
 - **Toutes les tâches** avec filtres (en retard, aujourd'hui, sans date) et ajout rapide.
 - **Historique** des tâches terminées, regroupées par jour, réouvrables d'un clic.
 - **Coach Claude Code** : un mot court et bienveillant pour repartir, et un découpage assisté
-  des tâches en sous-tâches concrètes.
+  des tâches en sous-tâches concrètes. Le coach peut être désactivé dans les réglages.
 - **Six accents pastel** : lavande, menthe, ciel, pêche, rose, beurre.
 - **Local-first** : SQLite et images stockés sur la machine, aucune donnée envoyée par l'app
   ailleurs qu'à Claude Code lorsque tu le sollicites.
@@ -102,6 +102,8 @@ L'intégration passe par la CLI locale, sans serveur intermédiaire :
   à haiku pour produire 2 phrases maximum et une action immédiate.
 - Les suggestions ne sont **jamais** ajoutées automatiquement : tu choisis « + » ou « Tout ajouter ».
 - Le rappel automatique au démarrage est désactivé par défaut (Réglages → Coach).
+- Le coach peut être désactivé entièrement depuis les réglages : la page Coach, le bandeau
+  d’accueil et le rappel automatique disparaissent. Le découpage de tâches reste disponible.
 - Si `claude` n'est pas dans le `PATH` (fréquent pour une app macOS lancée depuis le Finder),
   l'app cherche aussi `~/.local/bin/claude`, `~/.claude/local/claude`, `/opt/homebrew/bin/claude`,
   `%APPDATA%\npm\claude.cmd`, etc. Un chemin personnalisé est disponible dans les réglages.

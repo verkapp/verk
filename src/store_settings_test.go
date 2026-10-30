@@ -8,11 +8,11 @@ func TestSettings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getSettings: %v", err)
 	}
-	if defaults.Accent != "lavande" || defaults.CoachOnStart || defaults.ClaudePath != "" {
+	if defaults.Accent != "lavande" || !defaults.CoachEnabled || defaults.CoachOnStart || defaults.ClaudePath != "" {
 		t.Fatalf("unexpected defaults: %+v", defaults)
 	}
 
-	want := Settings{Accent: "menthe", CoachOnStart: true, ClaudePath: "/opt/claude"}
+	want := Settings{Accent: "menthe", CoachEnabled: false, CoachOnStart: true, ClaudePath: "/opt/claude"}
 	if err := st.saveSettings(want); err != nil {
 		t.Fatalf("saveSettings: %v", err)
 	}

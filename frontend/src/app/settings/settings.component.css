@@ -150,6 +150,14 @@
   min-width: 0;
 }
 
+.row.disabled {
+  opacity: 0.5;
+}
+
+.row.disabled .switch {
+  cursor: not-allowed;
+}
+
 .row-title {
   font-size: 12.8px;
   font-weight: 550;

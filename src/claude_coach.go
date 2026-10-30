@@ -1,12 +1,20 @@
 package src
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 )
 
 func (a *App) coachNudge() (string, error) {
+	settings, err := a.store.getSettings()
+	if err != nil {
+		return "", err
+	}
+	if !settings.CoachEnabled {
+		return "", errors.New("le coach est désactivé")
+	}
 	tasks, err := a.store.listTasks()
 	if err != nil {
 		return "", err

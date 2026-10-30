@@ -32,6 +32,7 @@ export interface TaskInput {
 
 export interface Settings {
   accent: AccentName;
+  coachEnabled: boolean;
   coachOnStart: boolean;
   claudePath: string;
 }
