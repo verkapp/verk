@@ -31,7 +31,7 @@ export class TaskListComponent {
   readonly filter = signal<TaskFilter>('all');
   readonly bannerDismissed = signal(false);
 
-  readonly filters: Array<{ id: TaskFilter; label: string }> = [
+  readonly filters: { id: TaskFilter; label: string }[] = [
     { id: 'all', label: 'Toutes' },
     { id: 'overdue', label: 'En retard' },
     { id: 'today', label: "Aujourd'hui" },

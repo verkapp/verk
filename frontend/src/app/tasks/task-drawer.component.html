@@ -1,3 +1,4 @@
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- Échap ferme aussi (onEscape) -->
 <div class="backdrop" (click)="close()"></div>
 
 <aside class="drawer" role="dialog" aria-modal="true" aria-label="Détails de la tâche">
@@ -254,10 +255,12 @@
 </aside>
 
 @if (lightbox()) {
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- Échap ferme aussi (onEscape) -->
   <div class="lightbox" (click)="lightbox.set(null)">
     <button class="lightbox-close" type="button" (click)="lightbox.set(null)" aria-label="Fermer l’image">
       <app-icon name="close" [size]="20" />
     </button>
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- Échap ferme aussi (onEscape) -->
     <img [src]="lightbox()!" alt="" (click)="$event.stopPropagation()" />
   </div>
 }

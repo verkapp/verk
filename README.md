@@ -66,9 +66,10 @@ Le frontend détecte l'absence du pont Wails et bascule sur un jeu de données d
 Tests et vérifications :
 
 ```bash
-cd frontend && npm ci && npm run build && cd ..
+cd frontend && npm ci && npm run lint && npm run build && cd ..
 go test ./...
 go vet ./...
+golangci-lint run ./...   # v2, configuré dans .golangci.yml
 ```
 
 Le build Angular est nécessaire avant `go test` : le binaire Go embarque `frontend/dist`.
@@ -122,9 +123,12 @@ d'ouvrir ce dossier. La suppression est locale : aucune synchronisation cloud.
 
 `.github/workflows/build.yml` :
 
-- **Tests** sur macOS : build Angular, `go test`, `go vet`.
+- **Tests** sur macOS : ESLint (angular-eslint), build Angular, `go test`, `go vet`, golangci-lint.
 - **Build** en matrice : `darwin/universal` (`.app` zippée) et `windows/amd64` (`.exe` zippé),
   artefacts téléchargeables depuis chaque run.
+- Chaque push sur `main` met à jour la pré-release **`dev`** avec les deux archives : la
+  release et son tag sont recréés sur le dernier commit, les liens de téléchargement changent donc
+  à chaque fois.
 - Un tag `v*` crée automatiquement une **GitHub Release** avec les deux archives.
 
 ```bash
@@ -163,3 +167,9 @@ git push origin v1.0.0
 - Typographie Inter Variable, fond chaud, cartes blanches, ombres très légères.
 - L'accent pilote les boutons, cases, badges, halos et l'illustration du coach ; il est
   appliqué instantanément et mémorisé en base.
+
+## Licence
+
+Todo est un logiciel libre distribué sous licence
+[GNU GPL v3](LICENSE) (GPL-3.0-only). Tu peux l'utiliser, l'étudier, le modifier et le
+redistribuer, à condition de conserver la même licence et de fournir le code source.

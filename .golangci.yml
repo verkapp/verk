@@ -1,0 +1,21 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # defer rows.Close() / tx.Rollback() : l'erreur n'apporte rien après coup.
+      exclude-functions:
+        - (*database/sql.Rows).Close
+        - (*database/sql.Tx).Rollback
+    staticcheck:
+      checks:
+        - all
+        # Les messages d'erreur sont affichés à l'utilisateur et commencent par « Claude Code ».
+        - -ST1005
+        # Valeurs par défaut de staticcheck désactivées.
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022

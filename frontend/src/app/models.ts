@@ -77,7 +77,7 @@ export interface HistoryGroup {
   tasks: Task[];
 }
 
-export const ACCENTS: Array<{ id: AccentName; label: string; color: string; soft: string }> = [
+export const ACCENTS: { id: AccentName; label: string; color: string; soft: string }[] = [
   { id: 'lavande', label: 'Lavande', color: '#7b6cf0', soft: '#ece8ff' },
   { id: 'menthe', label: 'Menthe', color: '#4aa985', soft: '#e3f4ec' },
   { id: 'ciel', label: 'Ciel', color: '#559fe0', soft: '#e6f1fb' },

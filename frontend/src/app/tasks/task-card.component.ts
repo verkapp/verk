@@ -14,8 +14,8 @@ import { IconComponent } from '../ui/icon.component';
 })
 export class TaskCardComponent {
   readonly task = input.required<Task>();
-  readonly open = output<void>();
-  readonly toggle = output<void>();
+  readonly opened = output<void>();
+  readonly toggled = output<void>();
 
   readonly due = computed(() => dueMeta(this.task()));
   readonly progress = computed(() => subtaskProgress(this.task()));
@@ -24,7 +24,7 @@ export class TaskCardComponent {
 
   onToggle(event: Event): void {
     event.stopPropagation();
-    this.toggle.emit();
+    this.toggled.emit();
   }
 
   onKeydown(event: Event): void {
@@ -32,6 +32,6 @@ export class TaskCardComponent {
       return;
     }
     event.preventDefault();
-    this.open.emit();
+    this.opened.emit();
   }
 }

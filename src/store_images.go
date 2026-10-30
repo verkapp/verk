@@ -30,7 +30,7 @@ func (s *store) importImage(taskID, sourcePath string) (Task, error) {
 	if err != nil {
 		return Task{}, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	head := make([]byte, 512)
 	n, _ := file.Read(head)
@@ -55,11 +55,14 @@ func (s *store) importImage(taskID, sourcePath string) (Task, error) {
 		return Task{}, err
 	}
 	if _, err := io.Copy(dst, file); err != nil {
-		dst.Close()
+		_ = dst.Close()
 		_ = os.Remove(filepath.Join(s.imageDir, fileName))
 		return Task{}, err
 	}
-	dst.Close()
+	if err := dst.Close(); err != nil {
+		_ = os.Remove(filepath.Join(s.imageDir, fileName))
+		return Task{}, err
+	}
 
 	if _, err := s.db.Exec(`INSERT INTO images (id, task_id, name, file, created_at) VALUES (?, ?, ?, ?, ?)`,
 		newID(), taskID, clip(filepath.Base(sourcePath), 200), fileName, time.Now().UnixMilli()); err != nil {
