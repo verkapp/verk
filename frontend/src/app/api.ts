@@ -4,8 +4,8 @@ import { AppInfo, ClaudeStatus, Settings, Task, TaskInput } from './models';
 type Bridge = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
 function bridge(): Bridge | null {
-  const wails = (window as unknown as { go?: { main?: { App?: Bridge } } }).go;
-  return wails?.main?.App ?? null;
+  const wails = (window as unknown as { go?: { src?: { App?: Bridge }; main?: { App?: Bridge } } }).go;
+  return wails?.src?.App ?? wails?.main?.App ?? null;
 }
 
 async function call<T>(method: string, ...args: unknown[]): Promise<T> {

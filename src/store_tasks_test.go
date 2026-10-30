@@ -1,0 +1,94 @@
+package src
+
+import (
+	"testing"
+	"time"
+)
+
+func TestTaskLifecycle(t *testing.T) {
+	st := newTestStore(t)
+	due := time.Now().Add(2 * time.Hour).UnixMilli()
+
+	task, err := st.createTask(TaskInput{
+		Title:       "  Préparer   la démo ",
+		Description: "  Relire le scénario  ",
+		DueAt:       &due,
+	})
+	if err != nil {
+		t.Fatalf("createTask: %v", err)
+	}
+	if task.Title != "Préparer la démo" {
+		t.Fatalf("title not cleaned: %q", task.Title)
+	}
+	if task.Description != "Relire le scénario" {
+		t.Fatalf("description not trimmed: %q", task.Description)
+	}
+	if task.Done || task.CompletedAt != nil {
+		t.Fatal("new task should be open")
+	}
+	if task.DueAt == nil || *task.DueAt != due {
+		t.Fatal("due date not persisted")
+	}
+	if len(task.Subtasks) != 0 || len(task.Images) != 0 {
+		t.Fatal("new task should have no children")
+	}
+
+	updated, err := st.updateTask(task.ID, TaskInput{Title: "Démo finale", Description: "Trois slides", DueAt: nil})
+	if err != nil {
+		t.Fatalf("updateTask: %v", err)
+	}
+	if updated.Title != "Démo finale" || updated.DueAt != nil {
+		t.Fatalf("update not applied: %+v", updated)
+	}
+
+	for _, title := range []string{"Écrire le fil rouge", "Répéter à voix haute"} {
+		if _, err := st.addSubtask(task.ID, title); err != nil {
+			t.Fatalf("addSubtask: %v", err)
+		}
+	}
+	loaded, err := st.getTask(task.ID)
+	if err != nil {
+		t.Fatalf("getTask: %v", err)
+	}
+	if len(loaded.Subtasks) != 2 {
+		t.Fatalf("expected 2 subtasks, got %d", len(loaded.Subtasks))
+	}
+	if loaded.Subtasks[0].Position != 0 || loaded.Subtasks[1].Position != 1 {
+		t.Fatal("subtask positions not assigned")
+	}
+
+	first := loaded.Subtasks[0]
+	if _, err := st.setSubtaskDone(first.ID, true); err != nil {
+		t.Fatalf("setSubtaskDone: %v", err)
+	}
+	renamed, err := st.updateSubtask(first.ID, "Écrire le fil conducteur")
+	if err != nil {
+		t.Fatalf("updateSubtask: %v", err)
+	}
+	if renamed.Subtasks[0].Title != "Écrire le fil conducteur" || !renamed.Subtasks[0].Done {
+		t.Fatal("subtask update not applied")
+	}
+	if _, err := st.deleteSubtask(first.ID); err != nil {
+		t.Fatalf("deleteSubtask: %v", err)
+	}
+
+	done, err := st.setDone(task.ID, true)
+	if err != nil {
+		t.Fatalf("setDone: %v", err)
+	}
+	if !done.Done || done.CompletedAt == nil {
+		t.Fatal("task not marked done with a completion date")
+	}
+	reopened, err := st.setDone(task.ID, false)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	if reopened.Done || reopened.CompletedAt != nil {
+		t.Fatal("reopening should clear completion date")
+	}
+
+	empty, err := st.createTask(TaskInput{Title: "   "})
+	if err == nil || empty.ID != "" {
+		t.Fatal("empty title should be rejected")
+	}
+}
