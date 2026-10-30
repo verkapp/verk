@@ -1,4 +1,4 @@
-package main
+package src
 
 // Task is the shape sent to the Angular frontend. Timestamps are Unix
 // milliseconds; nil dates are serialised as null.

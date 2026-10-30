@@ -134,10 +134,14 @@ git push origin v1.0.0
 
 ```text
 .
-├── app.go                  # API exposée à Angular (bindings Wails)
-├── store.go                # SQLite : tâches, sous-tâches, images, réglages
-├── claude.go               # Détection Claude Code, prompts, parsing
-├── main.go                 # Fenêtre Wails, thème clair forcé
+├── main.go                 # Amorçage Wails + assets Angular embarqués
+├── src/                    # Tout le code Go de l'application
+│   ├── run.go              # Fenêtre, thème clair, options Wails
+│   ├── app.go              # Cycle de vie et état de l'application
+│   ├── api_*.go            # API exposée à Angular (tâches, images, réglages…)
+│   ├── store*.go           # SQLite : schéma, tâches, sous-tâches, images
+│   ├── claude*.go          # Détection Claude Code, prompts, parsing
+│   └── types.go            # Structures partagées avec le frontend
 ├── build/appicon.png       # Icône de l'application
 ├── frontend/
 │   └── src/app/
