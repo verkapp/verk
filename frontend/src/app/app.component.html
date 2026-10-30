@@ -1,0 +1,68 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <app-sidebar
+    [view]="view()"
+    [collapsed]="collapsed()"
+    (navigate)="navigate($event)"
+    (toggleCollapsed)="toggleCollapsed()"
+  />
+
+  <main class="main" #main>
+    <div class="main-inner">
+      @if (store.loading()) {
+        <div class="loading">
+          <div class="sk eyebrow-sk"></div>
+          <div class="sk title-sk"></div>
+          <div class="sk sub-sk"></div>
+          <div class="sk quick-sk"></div>
+          <div class="sk card-sk"></div>
+          <div class="sk card-sk"></div>
+          <div class="sk card-sk short-sk"></div>
+        </div>
+      } @else if (store.fatalError()) {
+        <div class="fatal">
+          <span class="fatal-icon"><app-icon name="alert" [size]="24" /></span>
+          <h1>Impossible d’ouvrir ta liste</h1>
+          <p>{{ store.fatalError() }}</p>
+          <button class="btn btn-primary" type="button" (click)="retry()">
+            <app-icon name="refresh" [size]="15" />
+            Réessayer
+          </button>
+        </div>
+      } @else {
+        @switch (view()) {
+          @case ('today') {
+            <app-task-list
+              mode="today"
+              (openTask)="openTask($event)"
+              (newTask)="newTask()"
+              (openCoach)="openCoach()"
+            />
+          }
+          @case ('all') {
+            <app-task-list
+              mode="all"
+              (openTask)="openTask($event)"
+              (newTask)="newTask()"
+              (openCoach)="openCoach()"
+            />
+          }
+          @case ('history') {
+            <app-history (openTask)="openTask($event)" />
+          }
+          @case ('coach') {
+            <app-coach (openTask)="openTask($event)" (openSettings)="openSettings()" />
+          }
+          @case ('settings') {
+            <app-settings />
+          }
+        }
+      }
+    </div>
+  </main>
+</div>
+
+@if (drawer(); as state) {
+  <app-task-drawer [task]="state.task" [presetDue]="state.presetDue" (closed)="closeDrawer()" />
+}
+
+<app-toast [raised]="drawerOpen()" />

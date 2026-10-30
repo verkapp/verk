@@ -1,0 +1,60 @@
+<article
+  class="task-card"
+  [class.done]="task().done"
+  [class.overdue]="due()?.tone === 'danger'"
+  tabindex="0"
+  (click)="open.emit()"
+  (keydown.enter)="onKeydown($event)"
+  (keydown.space)="onKeydown($event)"
+>
+  <button
+    class="checkbox"
+    type="button"
+    [class.checked]="task().done"
+    [attr.aria-label]="task().done ? 'Rouvrir la tâche' : 'Terminer la tâche'"
+    (click)="onToggle($event)"
+  >
+    <app-icon name="check" [size]="12" [strokeWidth]="2.9" />
+  </button>
+
+  <div class="content">
+    <div class="title-row">
+      <h3 [class.struck]="task().done">{{ task().title }}</h3>
+      @if (due() && !task().done) {
+        <span class="due" [class]="'tone-' + due()!.tone" [title]="due()!.full">{{ due()!.label }}</span>
+      }
+    </div>
+
+    @if (task().description) {
+      <p class="desc">{{ task().description }}</p>
+    }
+
+    <div class="meta">
+      <span class="meta-item" title="Date de création">
+        <app-icon name="clock" [size]="13" />
+        Créée {{ age() }}
+      </span>
+
+      @if (task().subtasks.length > 0) {
+        <span class="sep"></span>
+        <span class="meta-item" [title]="doneSubtasks() + ' sous-tâche(s) terminée(s)'">
+          <app-icon name="subtasks" [size]="13" />
+          {{ doneSubtasks() }}/{{ task().subtasks.length }}
+        </span>
+        <span class="mini-progress" aria-hidden="true"><i [style.width.%]="progress()"></i></span>
+      }
+
+      @if (task().images.length > 0) {
+        <span class="sep"></span>
+        <span class="meta-item" title="Images jointes">
+          <app-icon name="image" [size]="13" />
+          {{ task().images.length }}
+        </span>
+      }
+    </div>
+  </div>
+
+  <span class="chevron" aria-hidden="true">
+    <app-icon name="chevron-right" [size]="15" />
+  </span>
+</article>

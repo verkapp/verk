@@ -1,0 +1,174 @@
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+
+import { formatLongDate, isDueToday, isOverdue, sortOpen } from '../dates';
+import { Task, TaskFilter } from '../models';
+import { Store } from '../store';
+import { IconComponent } from '../ui/icon.component';
+import { TaskCardComponent } from './task-card.component';
+
+interface TaskGroup {
+  key: string;
+  label: string;
+  tasks: Task[];
+}
+
+@Component({
+  selector: 'app-task-list',
+  standalone: true,
+  imports: [IconComponent, TaskCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './task-list.component.html',
+  styleUrl: './task-list.component.css',
+})
+export class TaskListComponent {
+  readonly store = inject(Store);
+  readonly mode = input<'today' | 'all'>('today');
+  readonly openTask = output<string>();
+  readonly newTask = output<void>();
+  readonly openCoach = output<void>();
+
+  readonly quickTitle = signal('');
+  readonly filter = signal<TaskFilter>('all');
+  readonly bannerDismissed = signal(false);
+
+  readonly filters: Array<{ id: TaskFilter; label: string }> = [
+    { id: 'all', label: 'Toutes' },
+    { id: 'overdue', label: 'En retard' },
+    { id: 'today', label: "Aujourd'hui" },
+    { id: 'undated', label: 'Sans date' },
+  ];
+
+  readonly title = computed(() => (this.mode() === 'today' ? "Aujourd'hui" : 'Toutes les tâches'));
+  readonly eyebrow = computed(() => (this.mode() === 'today' ? formatLongDate(Date.now()) : 'Ma liste'));
+  readonly isTodayMode = computed(() => this.mode() === 'today');
+
+  readonly counts = computed<Record<TaskFilter, number>>(() => {
+    const open = this.store.openTasks();
+    return {
+      all: open.length,
+      overdue: open.filter((task) => isOverdue(task)).length,
+      today: open.filter((task) => isDueToday(task) && !isOverdue(task)).length,
+      undated: open.filter((task) => task.dueAt === null).length,
+    };
+  });
+
+  readonly todayGroups = computed<TaskGroup[]>(() => {
+    const now = Date.now();
+    const open = this.store.openTasks();
+    const overdue = open.filter((task) => isOverdue(task, now));
+    const dueToday = open.filter((task) => !isOverdue(task, now) && isDueToday(task));
+    const upcoming = open.filter(
+      (task) => task.dueAt !== null && !isOverdue(task, now) && !isDueToday(task) && task.dueAt > now,
+    );
+    const undated = open.filter((task) => task.dueAt === null);
+
+    return [
+      { key: 'overdue', label: 'En retard', tasks: sortOpen(overdue) },
+      { key: 'today', label: "Aujourd'hui", tasks: sortOpen(dueToday) },
+      { key: 'upcoming', label: 'À venir', tasks: sortOpen(upcoming) },
+      { key: 'undated', label: 'Sans date', tasks: sortOpen(undated) },
+    ].filter((group) => group.tasks.length > 0);
+  });
+
+  readonly filteredTasks = computed(() => {
+    const open = this.store.openTasks();
+    switch (this.filter()) {
+      case 'overdue':
+        return open.filter((task) => isOverdue(task));
+      case 'today':
+        return open.filter((task) => isDueToday(task) && !isOverdue(task));
+      case 'undated':
+        return open.filter((task) => task.dueAt === null);
+      default:
+        return open;
+    }
+  });
+
+  readonly showBanner = computed(
+    () => this.mode() === 'today' && !this.bannerDismissed() && this.store.attentionTasks().length > 0,
+  );
+
+  readonly bannerTitle = computed(() => {
+    const overdue = this.store.stats().overdue;
+    return overdue > 0 ? 'Un petit coup de pouce ?' : 'On garde le cap ?';
+  });
+
+  readonly bannerText = computed(() => {
+    const overdue = this.store.stats().overdue;
+    if (overdue > 0) {
+      return `${overdue} tâche${overdue > 1 ? 's ont' : ' a'} dépassé l’échéance. Claude peut t’aider à t’y remettre.`;
+    }
+    return 'Quelques tâches attendent depuis un moment. Un mot du coach peut aider à choisir la prochaine.';
+  });
+
+  readonly subtitle = computed(() => {
+    const open = this.store.stats().open;
+    const done = this.store.doneTasks().length;
+    if (this.mode() === 'today') {
+      return open === 0 ? 'Rien d’ouvert, la journée est à toi.' : `${open} tâche${open > 1 ? 's' : ''} ouverte${open > 1 ? 's' : ''} dans ta liste.`;
+    }
+    return `${open} ouverte${open > 1 ? 's' : ''} · ${done} terminée${done > 1 ? 's' : ''}`;
+  });
+
+  readonly emptyTitle = computed(() => {
+    if (this.mode() === 'today') {
+      return this.store.openTasks().length === 0 ? 'Tout est calme' : 'Rien ici';
+    }
+    switch (this.filter()) {
+      case 'overdue':
+        return 'Rien en retard';
+      case 'today':
+        return 'Rien pour aujourd’hui';
+      case 'undated':
+        return 'Aucune tâche sans date';
+      default:
+        return 'Ta liste est vide';
+    }
+  });
+
+  readonly emptyText = computed(() => {
+    if (this.mode() === 'today') {
+      return this.store.openTasks().length === 0
+        ? 'Rien d’ouvert pour l’instant. Ajoute une tâche, ou savoure le silence.'
+        : 'Cette vue est vide, mais ta liste contient encore des choses.';
+    }
+    switch (this.filter()) {
+      case 'overdue':
+        return 'Tu es pile à jour. Profite de cet élan.';
+      case 'today':
+        return 'Aucune échéance aujourd’hui. Tu peux respirer.';
+      case 'undated':
+        return 'Toutes tes tâches ont une date. C’est très cadré.';
+      default:
+        return 'Ajoute une première tâche, même toute petite.';
+    }
+  });
+
+  add(event: Event): void {
+    event.preventDefault();
+    const title = this.quickTitle().trim();
+    if (!title) {
+      return;
+    }
+    this.quickTitle.set('');
+    const promise =
+      this.mode() === 'today'
+        ? this.store.quickAdd(title)
+        : this.store.createTask({ title, description: '', dueAt: null });
+    void promise
+      .then((task) => {
+        if (task) {
+          this.store.notify('Tâche ajoutée.', 'accent');
+        }
+      })
+      .catch(() => undefined);
+  }
+
+  toggle(task: Task): void {
+    void this.store.setTaskDone(task.id, !task.done).catch(() => undefined);
+  }
+
+  setFilter(filter: TaskFilter): void {
+    this.filter.set(filter);
+  }
+}

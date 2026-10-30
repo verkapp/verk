@@ -1,0 +1,16 @@
+# Build output
+build/bin/
+/todo
+frontend/dist/*
+!frontend/dist/.gitkeep
+frontend/.angular/
+frontend/node_modules/
+frontend/out-tsc/
+frontend/package.json.md5
+wailsjs/
+
+# Local tooling
+.DS_Store
+*.log
+.env
+.env.local

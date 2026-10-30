@@ -1,0 +1,263 @@
+<div class="backdrop" (click)="close()"></div>
+
+<aside class="drawer" role="dialog" aria-modal="true" aria-label="Détails de la tâche">
+  <header class="drawer-head">
+    <span class="eyebrow">{{ taskId() ? 'Détails de la tâche' : 'Nouvelle tâche' }}</span>
+    <div class="head-right">
+      <span class="save-state" [class.visible]="saving() || (savedAt() && !dirty())">
+        @if (saving()) {
+          <span class="mini-spinner" aria-hidden="true"></span>
+          Enregistrement…
+        } @else if (savedAt() && !dirty()) {
+          <app-icon name="check" [size]="12" [strokeWidth]="2.4" />
+          Enregistré
+        }
+      </span>
+      <button class="icon-btn" type="button" (click)="close()" aria-label="Fermer">
+        <app-icon name="close" [size]="18" />
+      </button>
+    </div>
+  </header>
+
+  <div class="drawer-body">
+    <textarea
+      #titleInput
+      class="title-input"
+      rows="1"
+      [value]="title()"
+      (input)="onTitle($any($event.target).value)"
+      (keydown)="onTitleKeydown($event)"
+      placeholder="Donner un titre à cette tâche…"
+      maxlength="240"
+      aria-label="Titre de la tâche"
+    ></textarea>
+
+    <div class="meta-grid">
+      <div class="field">
+        <span class="field-label"><app-icon name="calendar" [size]="13" /> Échéance</span>
+        <div class="due-box" [class.is-empty]="!dueDate()">
+          <input
+            class="date-input"
+            type="date"
+            [value]="dueDate()"
+            (input)="onDate($any($event.target).value)"
+            aria-label="Date d’échéance"
+          />
+          <span class="due-sep"></span>
+          <input
+            class="time-input"
+            type="time"
+            [value]="dueTime()"
+            [disabled]="!dueDate()"
+            (input)="onTime($any($event.target).value)"
+            aria-label="Heure d’échéance"
+          />
+          @if (dueDate()) {
+            <button class="clear-due" type="button" (click)="clearDue()" aria-label="Effacer l’échéance">
+              <app-icon name="close" [size]="13" />
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label"><app-icon name="clock" [size]="13" /> Création</span>
+        <p class="field-static">{{ createdLabel() }}</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <span class="field-label">Description</span>
+      <textarea
+        class="desc-input"
+        rows="3"
+        [value]="description()"
+        (input)="onDescription($any($event.target).value)"
+        placeholder="Ajoute du contexte, des liens, des notes…"
+        aria-label="Description"
+        maxlength="5000"
+      ></textarea>
+    </div>
+
+    <section class="ai-card">
+      <div class="ai-top">
+        <span class="ai-icon"><app-icon name="sparkles" [size]="18" /></span>
+        <div class="ai-copy">
+          <h3>Découper avec Claude</h3>
+          <p>Trois à six sous-tâches concrètes, proposées par haiku.</p>
+        </div>
+        <button class="btn btn-soft btn-sm" type="button" [disabled]="breakingDown()" (click)="breakdown()">
+          @if (breakingDown()) {
+            <span class="spinner" aria-hidden="true"></span>
+            Réflexion…
+          } @else {
+            <app-icon name="wand" [size]="14" />
+            Proposer
+          }
+        </button>
+      </div>
+
+      @if (aiError()) {
+        <p class="ai-error">
+          <app-icon name="alert" [size]="14" />
+          {{ aiError() }}
+        </p>
+      }
+
+      @if (suggestions().length > 0) {
+        <div class="suggestions">
+          <p class="sugg-label">Suggestions</p>
+          @for (suggestion of suggestions(); track suggestion) {
+            <div class="suggestion">
+              <span class="sugg-text">{{ suggestion }}</span>
+              <button
+                class="sugg-add"
+                type="button"
+                (click)="addSuggestion(suggestion)"
+                [attr.aria-label]="'Ajouter ' + suggestion"
+              >
+                <app-icon name="plus" [size]="14" />
+              </button>
+            </div>
+          }
+          <div class="sugg-actions">
+            <button class="btn btn-ghost btn-sm" type="button" (click)="dismissSuggestions()">Ignorer</button>
+            <button class="btn btn-soft btn-sm" type="button" (click)="addAllSuggestions()">
+              <app-icon name="plus" [size]="14" />
+              Tout ajouter
+            </button>
+          </div>
+        </div>
+      } @else if (!breakingDown()) {
+        <p class="ai-foot">Claude Code lit le titre et la description, puis propose des étapes.</p>
+      }
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h3>Sous-tâches</h3>
+        @if (subtasks().length > 0) {
+          <span class="block-count">{{ doneSubtasks() }}/{{ subtasks().length }}</span>
+        }
+      </div>
+
+      @if (subtasks().length > 0) {
+        <div class="progress" aria-hidden="true"><i [style.width.%]="progress()"></i></div>
+        <div class="sub-list">
+          @for (subtask of subtasks(); track subtask.id) {
+            <div class="sub-row">
+              <button
+                class="mini-check"
+                type="button"
+                [class.checked]="subtask.done"
+                (click)="toggleSubtask(subtask)"
+                [attr.aria-label]="subtask.done ? 'Rouvrir la sous-tâche' : 'Terminer la sous-tâche'"
+              >
+                <app-icon name="check" [size]="10" [strokeWidth]="2.8" />
+              </button>
+              <input
+                class="sub-input"
+                [class.done]="subtask.done"
+                [value]="subtask.title"
+                (change)="renameSubtask(subtask, $event)"
+                (keydown.enter)="$event.preventDefault(); $any($event.target).blur()"
+                aria-label="Titre de la sous-tâche"
+              />
+              <button class="row-delete" type="button" (click)="deleteSubtask(subtask)" aria-label="Supprimer la sous-tâche">
+                <app-icon name="close" [size]="13" />
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <form class="sub-add" (submit)="addSubtask($event)">
+        <span class="sub-add-icon"><app-icon name="plus" [size]="15" /></span>
+        <input
+          type="text"
+          [value]="addSubtaskTitle()"
+          (input)="addSubtaskTitle.set($any($event.target).value)"
+          placeholder="Ajouter une sous-tâche…"
+          aria-label="Nouvelle sous-tâche"
+          maxlength="240"
+        />
+        <button class="sub-submit" type="submit" [disabled]="!addSubtaskTitle().trim()">Ajouter</button>
+      </form>
+    </section>
+
+    <section class="block images-block">
+      <div class="block-head">
+        <h3>Images</h3>
+        @if (images().length > 0) {
+          <span class="block-count">{{ images().length }}</span>
+        }
+      </div>
+
+      <div class="image-grid">
+        @for (image of images(); track image.id) {
+          <div
+            class="image-tile"
+            role="button"
+            tabindex="0"
+            (click)="lightbox.set(image.dataUrl)"
+            (keydown.enter)="lightbox.set(image.dataUrl)"
+            [attr.aria-label]="'Agrandir ' + image.name"
+          >
+            <img [src]="image.dataUrl" [alt]="image.name" />
+            <button
+              class="image-remove"
+              type="button"
+              (click)="deleteImage(image, $event)"
+              aria-label="Supprimer l’image"
+            >
+              <app-icon name="close" [size]="11" [strokeWidth]="2.4" />
+            </button>
+          </div>
+        }
+        <button class="image-add" type="button" (click)="addImage()">
+          <app-icon name="image" [size]="19" />
+          <span>Ajouter</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="drawer-foot">
+    <div class="foot-left">
+      @if (taskId()) {
+        @if (confirmDelete()) {
+          <button class="btn btn-danger btn-sm" type="button" (click)="deleteTask()">
+            <app-icon name="trash" [size]="14" />
+            Confirmer
+          </button>
+          <button class="btn btn-ghost btn-sm" type="button" (click)="confirmDelete.set(false)">Annuler</button>
+        } @else {
+          <button class="btn btn-ghost btn-sm delete-btn" type="button" (click)="requestDelete()">
+            <app-icon name="trash" [size]="14" />
+            Supprimer
+          </button>
+        }
+      }
+    </div>
+    <div class="foot-right">
+      @if (taskId()) {
+        <button class="btn btn-soft" type="button" (click)="toggleDone()">
+          <app-icon name="check" [size]="15" />
+          {{ isDone() ? 'Rouvrir' : 'Marquer faite' }}
+        </button>
+      }
+      <button class="btn btn-primary" type="button" [disabled]="!title().trim()" (click)="close()">
+        {{ taskId() ? 'Fermer' : 'Créer la tâche' }}
+      </button>
+    </div>
+  </footer>
+</aside>
+
+@if (lightbox()) {
+  <div class="lightbox" (click)="lightbox.set(null)">
+    <button class="lightbox-close" type="button" (click)="lightbox.set(null)" aria-label="Fermer l’image">
+      <app-icon name="close" [size]="20" />
+    </button>
+    <img [src]="lightbox()!" alt="" (click)="$event.stopPropagation()" />
+  </div>
+}
