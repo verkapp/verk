@@ -1,0 +1,112 @@
+<section class="view">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h1>{{ title() }}</h1>
+      <p class="page-sub">{{ subtitle() }}</p>
+    </div>
+    <div class="head-actions">
+      <button class="btn btn-primary" type="button" (click)="newTask.emit()">
+        <app-icon name="plus" [size]="16" [strokeWidth]="2.2" />
+        Nouvelle tâche
+      </button>
+    </div>
+  </header>
+
+  @if (showBanner()) {
+    <div class="coach-banner">
+      <span class="banner-icon"><app-icon name="sparkles" [size]="18" /></span>
+      <div class="banner-copy">
+        <strong>{{ bannerTitle() }}</strong>
+        <p>{{ bannerText() }}</p>
+      </div>
+      <button class="btn btn-soft btn-sm" type="button" (click)="openCoach.emit()">Voir le coach</button>
+      <button class="icon-btn dismiss" type="button" (click)="bannerDismissed.set(true)" aria-label="Masquer le rappel">
+        <app-icon name="close" [size]="15" />
+      </button>
+    </div>
+  }
+
+  <form class="quick-add" (submit)="add($event)">
+    <span class="qa-icon"><app-icon name="plus" [size]="17" [strokeWidth]="2" /></span>
+    <input
+      type="text"
+      [value]="quickTitle()"
+      (input)="quickTitle.set($any($event.target).value)"
+      [placeholder]="isTodayMode() ? 'Ajouter une tâche pour aujourd’hui…' : 'Ajouter une tâche…'"
+      aria-label="Titre de la nouvelle tâche"
+      maxlength="240"
+    />
+    <span class="qa-hint">{{ isTodayMode() ? 'échéance ce soir' : 'Entrée' }}</span>
+  </form>
+
+  @if (!isTodayMode()) {
+    <div class="chips" role="group" aria-label="Filtrer les tâches">
+      @for (item of filters; track item.id) {
+        <button
+          class="chip"
+          type="button"
+          [class.active]="filter() === item.id"
+          (click)="setFilter(item.id)"
+        >
+          {{ item.label }}
+          <span class="chip-count">{{ counts()[item.id] }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  @if (isTodayMode()) {
+    @for (group of todayGroups(); track group.key) {
+      <section class="group">
+        <div class="group-head">
+          <h2>{{ group.label }}</h2>
+          <span class="group-count">{{ group.tasks.length }}</span>
+          <i></i>
+        </div>
+        <div class="cards">
+          @for (task of group.tasks; track task.id) {
+            <app-task-card [task]="task" (open)="openTask.emit(task.id)" (toggle)="toggle(task)" />
+          }
+        </div>
+      </section>
+    }
+    @if (todayGroups().length === 0) {
+      <div class="empty">
+        <div class="empty-art">
+          <span class="orb orb-a"></span>
+          <span class="orb orb-b"></span>
+          <span class="empty-check"><app-icon name="check" [size]="26" [strokeWidth]="2.1" /></span>
+        </div>
+        <h2>{{ emptyTitle() }}</h2>
+        <p>{{ emptyText() }}</p>
+        <button class="btn btn-soft" type="button" (click)="newTask.emit()">
+          <app-icon name="plus" [size]="15" />
+          Nouvelle tâche
+        </button>
+      </div>
+    }
+  } @else {
+    @if (filteredTasks().length > 0) {
+      <div class="cards">
+        @for (task of filteredTasks(); track task.id) {
+          <app-task-card [task]="task" (open)="openTask.emit(task.id)" (toggle)="toggle(task)" />
+        }
+      </div>
+    } @else {
+      <div class="empty">
+        <div class="empty-art">
+          <span class="orb orb-a"></span>
+          <span class="orb orb-b"></span>
+          <span class="empty-check"><app-icon name="check" [size]="26" [strokeWidth]="2.1" /></span>
+        </div>
+        <h2>{{ emptyTitle() }}</h2>
+        <p>{{ emptyText() }}</p>
+        <button class="btn btn-soft" type="button" (click)="newTask.emit()">
+          <app-icon name="plus" [size]="15" />
+          Nouvelle tâche
+        </button>
+      </div>
+    }
+  }
+</section>

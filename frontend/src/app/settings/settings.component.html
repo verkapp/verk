@@ -1,0 +1,164 @@
+<section class="view">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Préférences</p>
+      <h1>Réglages</h1>
+      <p class="page-sub">Une application calme, qui reste à toi.</p>
+    </div>
+  </header>
+
+  <div class="settings">
+    <section class="card">
+      <div class="card-head">
+        <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Accent</h2>
+          <p>Une couleur pastel pour les boutons, les repères et les petits détails.</p>
+        </div>
+      </div>
+
+      <div class="accent-grid">
+        @for (accent of accents; track accent.id) {
+          <button
+            class="accent-option"
+            type="button"
+            [class.active]="store.settings().accent === accent.id"
+            (click)="setAccent(accent.id)"
+          >
+            <span class="swatch" [style.background]="accent.soft">
+              <i [style.background]="accent.color"></i>
+              @if (store.settings().accent === accent.id) {
+                <span class="swatch-check" [style.background]="accent.color">
+                  <app-icon name="check" [size]="10" [strokeWidth]="3" />
+                </span>
+              }
+            </span>
+            <span class="accent-name">{{ accent.label }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <span class="card-icon"><app-icon name="leaf" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Coach</h2>
+          <p>Un mot doux quand la liste s’accumule.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Un mot au démarrage</p>
+          <p class="row-sub">
+            Demande un rappel à Claude à l’ouverture, s’il reste des tâches en attente. Un appel par lancement.
+          </p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().coachOnStart"
+          [attr.aria-checked]="store.settings().coachOnStart"
+          (click)="toggleCoach()"
+          aria-label="Activer le mot du coach au démarrage"
+        >
+          <span></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Claude Code</h2>
+          <p>Utilisé pour découper les tâches et écrire le mot du coach.</p>
+        </div>
+        @if (store.claude()?.available) {
+          <span class="pill pill-accent status-pill">Connecté</span>
+        } @else if (store.claude()) {
+          <span class="pill pill-danger status-pill">Introuvable</span>
+        } @else {
+          <span class="pill status-pill">Vérification…</span>
+        }
+      </div>
+
+      <div class="claude-status" [class.offline]="store.claude() && !store.claude()!.available">
+        <span class="status-dot" [class.ok]="store.claude()?.available"></span>
+        <div class="status-copy">
+          <p class="row-title">
+            @if (store.claude()?.available) {
+              Claude Code est prêt
+            } @else if (store.claude()) {
+              Claude Code n’a pas été trouvé
+            } @else {
+              Recherche de Claude Code…
+            }
+          </p>
+          <p class="row-sub mono truncate">
+            @if (store.claude()?.available) {
+              {{ store.claude()!.version }} · {{ store.claude()!.path }}
+            } @else {
+              {{ store.claude()?.error || 'Un instant…' }}
+            }
+          </p>
+        </div>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="verify()" [disabled]="checking()">
+          <app-icon name="refresh" [size]="14" [class.spin]="checking()" />
+          Vérifier
+        </button>
+      </div>
+
+      <div class="path-block">
+        <label class="field-label" for="claude-path">Chemin personnalisé (optionnel)</label>
+        <div class="path-row">
+          <input
+            id="claude-path"
+            class="input mono"
+            type="text"
+            [value]="pathDraft()"
+            (input)="onPathInput($any($event.target).value)"
+            placeholder="Laisse vide pour la détection automatique"
+            spellcheck="false"
+          />
+          <button class="btn btn-ghost" type="button" (click)="savePath()">Enregistrer</button>
+        </div>
+        <p class="hint">
+          Utile si l’application ne trouve pas <code>claude</code> : indique le chemin complet du binaire, par exemple
+          <code>~/.local/bin/claude</code>.
+        </p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Données</h2>
+          <p>Ta liste et tes images restent sur cet ordinateur.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Base SQLite</p>
+          <p class="row-sub mono truncate">{{ store.info()?.databasePath }}</p>
+        </div>
+        <button class="btn btn-ghost" type="button" (click)="openFolder()">
+          <app-icon name="folder" [size]="15" />
+          Ouvrir le dossier
+        </button>
+      </div>
+
+      <div class="about">
+        <span>Todo {{ store.info()?.version }}</span>
+        <span class="about-dot"></span>
+        <span>Thème clair uniquement</span>
+        <span class="about-dot"></span>
+        <span>Windows & macOS</span>
+      </div>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,194 @@
+<section class="view">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Claude Code · haiku</p>
+      <h1>Coach</h1>
+      <p class="page-sub">Un regard doux sur ta liste, pour choisir la prochaine petite étape.</p>
+    </div>
+  </header>
+
+  @if (store.claude() && !store.claude()!.available) {
+    <div class="missing">
+      <span class="missing-icon"><app-icon name="alert" [size]="18" /></span>
+      <div class="missing-copy">
+        <strong>Claude Code n’est pas encore relié</strong>
+        <p>{{ store.claude()!.error || 'Installe Claude Code, ou indique son chemin dans les réglages.' }}</p>
+      </div>
+      <button class="btn btn-soft btn-sm" type="button" (click)="openSettings.emit()">Configurer</button>
+    </div>
+  }
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-top">
+        <span class="stat-label">Ouvertes</span>
+        <app-icon name="tasks" [size]="16" />
+      </div>
+      <p class="stat-number">{{ store.stats().open }}</p>
+      <p class="stat-foot">dans ta liste</p>
+    </div>
+    <div class="stat" [class.danger]="store.stats().overdue > 0">
+      <div class="stat-top">
+        <span class="stat-label">En retard</span>
+        <app-icon name="alert" [size]="16" />
+      </div>
+      <p class="stat-number">{{ store.stats().overdue }}</p>
+      <p class="stat-foot">{{ store.stats().overdue > 0 ? 'à remettre sur les rails' : 'tout est à jour' }}</p>
+    </div>
+    <div class="stat accent">
+      <div class="stat-top">
+        <span class="stat-label">Terminées</span>
+        <app-icon name="check-circle" [size]="16" />
+      </div>
+      <p class="stat-number">{{ store.stats().doneToday }}</p>
+      <p class="stat-foot">aujourd’hui</p>
+    </div>
+  </div>
+
+  <section class="nudge-card">
+    <div class="nudge-head">
+      <span class="nudge-icon"><app-icon name="sparkles" [size]="19" /></span>
+      <div class="nudge-title">
+        <h2>Le mot du coach</h2>
+        <span class="nudge-meta">
+          @if (store.nudge()) {
+            {{ nudgeAge() }}
+          } @else {
+            proposé par haiku
+          }
+        </span>
+      </div>
+      @if (store.nudge()) {
+        <button class="icon-btn" type="button" (click)="requestNudge()" [disabled]="store.nudgeLoading()" title="Nouveau mot" aria-label="Demander un nouveau mot">
+          <app-icon name="refresh" [size]="16" [class.spin]="store.nudgeLoading()" />
+        </button>
+      }
+    </div>
+
+    @if (store.nudgeLoading()) {
+      <div class="nudge-loading">
+        <span class="skeleton-line wide"></span>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line short"></span>
+      </div>
+    } @else if (store.nudge()) {
+      <blockquote class="nudge-text">{{ store.nudge()!.text }}</blockquote>
+      <div class="nudge-actions">
+        <button class="btn btn-ghost btn-sm" type="button" (click)="requestNudge()">
+          <app-icon name="refresh" [size]="13" />
+          Un autre mot
+        </button>
+      </div>
+    } @else {
+      <p class="nudge-empty">
+        Claude regarde les échéances, les tâches qui traînent et celles déjà terminées. Il en tire un rappel court,
+        bienveillant et concret.
+      </p>
+      @if (store.nudgeError()) {
+        <p class="nudge-error">{{ store.nudgeError() }}</p>
+      }
+      <button class="btn btn-primary btn-sm" type="button" (click)="requestNudge()">
+        <app-icon name="sparkles" [size]="14" />
+        Demander un coup de pouce
+      </button>
+    }
+  </section>
+
+  <div class="panels">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>À remettre sur les rails</h2>
+        @if (store.attentionTasks().length > 0) {
+          <span class="pill pill-accent">{{ store.attentionTasks().length }}</span>
+        }
+      </div>
+
+      @if (store.attentionTasks().length === 0) {
+        <div class="panel-empty">
+          <span class="panel-empty-icon"><app-icon name="check-circle" [size]="18" /></span>
+          <p>Rien ne traîne vraiment. Tu peux regarder devant, ou souffler un peu.</p>
+        </div>
+      } @else {
+        <div class="attention-list">
+          @for (task of store.attentionTasks().slice(0, 5); track task.id) {
+            <button class="attention-row" type="button" (click)="openTask.emit(task.id)">
+              <span class="attention-dot" [class.danger]="dueTone(task) === 'danger'"></span>
+              <span class="attention-copy">
+                <span class="attention-title">{{ task.title }}</span>
+                @if (dueLabel(task)) {
+                  <span class="attention-meta">{{ dueLabel(task) }}</span>
+                }
+              </span>
+              <app-icon name="chevron-right" [size]="14" />
+            </button>
+          }
+        </div>
+        @if (store.attentionTasks().length > 5) {
+          <p class="more">+ {{ store.attentionTasks().length - 5 }} autre(s)</p>
+        }
+      }
+    </section>
+
+    <section class="panel breakdown-panel">
+      <div class="panel-head">
+        <h2>Découper une tâche</h2>
+        <span class="pill">Claude</span>
+      </div>
+      <p class="panel-sub">Choisis une tâche : Claude propose des étapes concrètes, à garder ou non.</p>
+
+      <div class="split-row">
+        <select
+          class="select"
+          [value]="selectedId()"
+          (change)="selectTask($any($event.target).value)"
+          aria-label="Tâche à découper"
+        >
+          <option value="">Choisir une tâche…</option>
+          @for (task of store.openTasks(); track task.id) {
+            <option [value]="task.id">{{ task.title }}</option>
+          }
+        </select>
+        <button
+          class="btn btn-soft"
+          type="button"
+          [disabled]="!selectedTask() || breakdownLoading()"
+          (click)="breakdown()"
+        >
+          @if (breakdownLoading()) {
+            <span class="spinner"></span>
+          } @else {
+            <app-icon name="wand" [size]="15" />
+          }
+          Découper
+        </button>
+      </div>
+
+      @if (breakdownError()) {
+        <p class="breakdown-error">{{ breakdownError() }}</p>
+      }
+
+      @if (suggestions().length > 0) {
+        <div class="suggestions">
+          @for (suggestion of suggestions(); track suggestion) {
+            <div class="suggestion">
+              <span>{{ suggestion }}</span>
+              <button class="sugg-add" type="button" (click)="addSuggestion(suggestion)" [attr.aria-label]="'Ajouter ' + suggestion">
+                <app-icon name="plus" [size]="13" />
+              </button>
+            </div>
+          }
+          <div class="sugg-actions">
+            <button class="btn btn-soft btn-sm" type="button" (click)="addAll()">
+              <app-icon name="plus" [size]="13" />
+              Tout ajouter
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+
+  <p class="coach-foot">
+    Claude Code tourne en local, avec ton abonnement. Les suggestions ne sont jamais ajoutées sans ton accord.
+  </p>
+</section>

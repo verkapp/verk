@@ -1,0 +1,75 @@
+<section class="view">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Journal</p>
+      <h1>Historique</h1>
+      <p class="page-sub">
+        {{ total() }} tâche{{ total() > 1 ? 's terminées' : ' terminée' }}
+        @if (thisWeek() > 0 && thisWeek() < total()) {
+          · <strong>{{ thisWeek() }}</strong> ces 7 derniers jours
+        }
+      </p>
+    </div>
+  </header>
+
+  @if (groups().length === 0) {
+    <div class="empty">
+      <div class="empty-art">
+        <span class="orb orb-a"></span>
+        <span class="orb orb-b"></span>
+        <span class="empty-icon"><app-icon name="history" [size]="24" /></span>
+      </div>
+      <h2>Pas encore d’historique</h2>
+      <p>Les tâches terminées s’empileront ici, jour après jour. Une petite victoire suffit pour commencer.</p>
+    </div>
+  } @else {
+    @for (group of groups(); track group.key) {
+      <section class="day">
+        <div class="day-head">
+          <h2>{{ group.label }}</h2>
+          <span class="day-count">{{ group.tasks.length }}</span>
+          <i></i>
+        </div>
+        <div class="rows">
+          @for (task of group.tasks; track task.id) {
+            <article
+              class="done-row"
+              tabindex="0"
+              (click)="openTask.emit(task.id)"
+              (keydown.enter)="onKeydown($event, task)"
+              (keydown.space)="onKeydown($event, task)"
+            >
+              <button
+                class="check"
+                type="button"
+                (click)="toggle($event, task)"
+                aria-label="Rouvrir la tâche"
+                title="Rouvrir la tâche"
+              >
+                <app-icon name="check" [size]="11" [strokeWidth]="2.9" />
+              </button>
+              <div class="row-main">
+                <p class="row-title">{{ task.title }}</p>
+                <div class="row-meta">
+                  @if (task.subtasks.length > 0) {
+                    <span><app-icon name="subtasks" [size]="12" /> {{ task.subtasks.length }}</span>
+                  }
+                  @if (task.images.length > 0) {
+                    <span><app-icon name="image" [size]="12" /> {{ task.images.length }}</span>
+                  }
+                  @if (task.description) {
+                    <span class="row-desc">{{ task.description }}</span>
+                  }
+                </div>
+              </div>
+              @if (task.completedAt) {
+                <time class="row-time">{{ formatTime(task.completedAt) }}</time>
+              }
+              <span class="chevron"><app-icon name="chevron-right" [size]="15" /></span>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>

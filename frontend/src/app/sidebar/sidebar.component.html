@@ -1,0 +1,122 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+  <div class="brand-row">
+    <button class="brand" type="button" (click)="go('today')" aria-label="Accueil">
+      <span class="logo">
+        <app-icon name="check" [size]="15" [strokeWidth]="2.8" />
+      </span>
+      <span class="wordmark">todo<span class="dot">.</span></span>
+    </button>
+    @if (!collapsed()) {
+      <button class="icon-btn collapse" type="button" (click)="toggleCollapsed.emit()" title="Replier le menu" aria-label="Replier le menu">
+        <app-icon name="sidebar" [size]="17" />
+      </button>
+    }
+  </div>
+
+  @if (collapsed()) {
+    <button class="expand" type="button" (click)="toggleCollapsed.emit()" title="Déplier le menu" aria-label="Déplier le menu">
+      <app-icon name="sidebar" [size]="17" />
+    </button>
+  }
+
+  <nav class="nav">
+    @if (!collapsed()) {
+      <p class="nav-label">Ma journée</p>
+    }
+    <button
+      class="nav-item"
+      type="button"
+      [class.active]="view() === 'today'"
+      (click)="go('today')"
+      [attr.title]="collapsed() ? 'Aujourd’hui' : null"
+    >
+      <app-icon name="today" [size]="18" />
+      <span class="label">Aujourd’hui</span>
+      @if (store.stats().overdue + store.stats().dueToday > 0) {
+        <span class="count accent">{{ store.stats().overdue + store.stats().dueToday }}</span>
+      }
+    </button>
+    <button
+      class="nav-item"
+      type="button"
+      [class.active]="view() === 'all'"
+      (click)="go('all')"
+      [attr.title]="collapsed() ? 'Toutes les tâches' : null"
+    >
+      <app-icon name="tasks" [size]="18" />
+      <span class="label">Toutes les tâches</span>
+      @if (store.stats().open > 0) {
+        <span class="count">{{ store.stats().open }}</span>
+      }
+    </button>
+    <button
+      class="nav-item"
+      type="button"
+      [class.active]="view() === 'coach'"
+      (click)="go('coach')"
+      [attr.title]="collapsed() ? 'Coach' : null"
+    >
+      <app-icon name="sparkles" [size]="18" />
+      <span class="label">Coach</span>
+      @if (store.attentionTasks().length > 0) {
+        <span class="dot-alert"></span>
+      }
+    </button>
+
+    @if (!collapsed()) {
+      <p class="nav-label second">Bibliothèque</p>
+    }
+    <button
+      class="nav-item"
+      type="button"
+      [class.active]="view() === 'history'"
+      (click)="go('history')"
+      [attr.title]="collapsed() ? 'Historique' : null"
+    >
+      <app-icon name="history" [size]="18" />
+      <span class="label">Historique</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    @if (!collapsed()) {
+      <div class="focus-card">
+        <div class="focus-head">
+          <span class="focus-icon"><app-icon name="leaf" [size]="16" /></span>
+          <span class="focus-label">Ton élan du jour</span>
+        </div>
+        <p class="focus-title">
+          @if (store.stats().doneToday > 0) {
+            {{ store.stats().doneToday }} terminée{{ store.stats().doneToday > 1 ? 's' : '' }}
+          } @else {
+            On commence doucement
+          }
+        </p>
+        <div class="progress" aria-hidden="true">
+          <i [style.width.%]="store.stats().completion"></i>
+        </div>
+        <p class="focus-sub">
+          @if (store.stats().dueToday + store.stats().overdue > 0) {
+            {{ store.stats().dueToday + store.stats().overdue }} encore au programme
+          } @else {
+            Une chose à la fois, sans pression.
+          }
+        </p>
+      </div>
+    }
+
+    <button
+      class="nav-item settings"
+      type="button"
+      [class.active]="view() === 'settings'"
+      (click)="go('settings')"
+      [attr.title]="collapsed() ? 'Réglages' : null"
+    >
+      <app-icon name="settings" [size]="18" />
+      <span class="label">Réglages</span>
+      @if (!collapsed()) {
+        <span class="version">v1.0</span>
+      }
+    </button>
+  </div>
+</aside>
