@@ -49,19 +49,21 @@
         <span class="count">{{ store.stats().open }}</span>
       }
     </button>
-    <button
-      class="nav-item"
-      type="button"
-      [class.active]="view() === 'coach'"
-      (click)="go('coach')"
-      [attr.title]="collapsed() ? 'Coach' : null"
-    >
-      <app-icon name="sparkles" [size]="18" />
-      <span class="label">Coach</span>
-      @if (store.attentionTasks().length > 0) {
-        <span class="dot-alert"></span>
-      }
-    </button>
+    @if (store.settings().coachEnabled) {
+      <button
+        class="nav-item"
+        type="button"
+        [class.active]="view() === 'coach'"
+        (click)="go('coach')"
+        [attr.title]="collapsed() ? 'Coach' : null"
+      >
+        <app-icon name="sparkles" [size]="18" />
+        <span class="label">Coach</span>
+        @if (store.attentionTasks().length > 0) {
+          <span class="dot-alert"></span>
+        }
+      </button>
+    }
 
     @if (!collapsed()) {
       <p class="nav-label second">Bibliothèque</p>

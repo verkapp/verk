@@ -20,7 +20,7 @@ const DAY = 86_400_000;
 @Injectable({ providedIn: 'root' })
 export class Store {
   readonly tasks = signal<Task[]>([]);
-  readonly settings = signal<Settings>({ accent: 'lavande', coachOnStart: false, claudePath: '' });
+  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, claudePath: '' });
   readonly claude = signal<ClaudeStatus | null>(null);
   readonly info = signal<AppInfo | null>(null);
   readonly loading = signal(true);
@@ -81,7 +81,7 @@ export class Store {
       this.info.set(info);
       this.applySettings(settings);
       void this.refreshClaude();
-      if (settings.coachOnStart) {
+      if (settings.coachEnabled && settings.coachOnStart) {
         setTimeout(() => void this.requestNudge(true), 1200);
       }
     } catch (error) {
@@ -107,6 +107,10 @@ export class Store {
 
   async saveSettings(patch: Partial<Settings>): Promise<void> {
     const next: Settings = { ...this.settings(), ...patch };
+    if (patch.coachEnabled === false) {
+      this.nudge.set(null);
+      this.nudgeError.set(null);
+    }
     this.applySettings(next);
     try {
       await api.saveSettings(next);
@@ -258,13 +262,16 @@ export class Store {
   }
 
   async requestNudge(silent = false): Promise<void> {
-    if (this.nudgeLoading()) {
+    if (!this.settings().coachEnabled || this.nudgeLoading()) {
       return;
     }
     this.nudgeLoading.set(true);
     this.nudgeError.set(null);
     try {
       const text = await api.coachNudge();
+      if (!this.settings().coachEnabled) {
+        return;
+      }
       this.nudge.set({ text, at: Date.now() });
       if (silent) {
         this.notify('Le coach a un mot pour toi.', 'accent');

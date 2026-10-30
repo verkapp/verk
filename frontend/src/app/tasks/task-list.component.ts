@@ -85,7 +85,11 @@ export class TaskListComponent {
   });
 
   readonly showBanner = computed(
-    () => this.mode() === 'today' && !this.bannerDismissed() && this.store.attentionTasks().length > 0,
+    () =>
+      this.mode() === 'today' &&
+      this.store.settings().coachEnabled &&
+      !this.bannerDismissed() &&
+      this.store.attentionTasks().length > 0,
   );
 
   readonly bannerTitle = computed(() => {

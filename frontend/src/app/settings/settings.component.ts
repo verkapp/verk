@@ -27,7 +27,14 @@ export class SettingsComponent implements OnInit {
     void this.store.saveSettings({ accent });
   }
 
+  toggleCoachEnabled(): void {
+    void this.store.saveSettings({ coachEnabled: !this.store.settings().coachEnabled });
+  }
+
   toggleCoach(): void {
+    if (!this.store.settings().coachEnabled) {
+      return;
+    }
     void this.store.saveSettings({ coachOnStart: !this.store.settings().coachOnStart });
   }
 
