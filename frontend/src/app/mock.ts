@@ -1,4 +1,3 @@
-import { endOfToday } from './dates';
 import { AppInfo, ClaudeStatus, Settings, Subtask, Task, TaskImage, TaskInput } from './models';
 
 /**

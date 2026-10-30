@@ -3,7 +3,7 @@
   [class.done]="task().done"
   [class.overdue]="due()?.tone === 'danger'"
   tabindex="0"
-  (click)="open.emit()"
+  (click)="opened.emit()"
   (keydown.enter)="onKeydown($event)"
   (keydown.space)="onKeydown($event)"
 >

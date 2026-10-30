@@ -60,7 +60,7 @@ func openStoreAt(dir string) (*store, error) {
 	// desktop workload while avoiding lock contention.
 	db.SetMaxOpenConns(1)
 	if _, err := db.Exec(schema); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("initialisation de la base: %w", err)
 	}
 	return &store{db: db, dataDir: dir, imageDir: imageDir}, nil
