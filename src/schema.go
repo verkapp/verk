@@ -11,7 +11,9 @@ const schema = `
 		done INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,
 		due_at INTEGER,
-		completed_at INTEGER
+		completed_at INTEGER,
+		started_at INTEGER,
+		time_spent INTEGER NOT NULL DEFAULT 0
 	);
 	CREATE TABLE IF NOT EXISTS subtasks (
 		id TEXT PRIMARY KEY,

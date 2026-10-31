@@ -54,7 +54,7 @@ export class TaskListComponent {
 
   readonly todayGroups = computed<TaskGroup[]>(() => {
     const now = Date.now();
-    const open = this.store.openTasks();
+    const open = this.store.openTasks().filter((task) => task.startedAt === null);
     const overdue = open.filter((task) => isOverdue(task, now));
     const dueToday = open.filter((task) => !isOverdue(task, now) && isDueToday(task));
     const upcoming = open.filter(
@@ -71,7 +71,7 @@ export class TaskListComponent {
   });
 
   readonly filteredTasks = computed(() => {
-    const open = this.store.openTasks();
+    const open = this.store.openTasks().filter((task) => task.startedAt === null);
     switch (this.filter()) {
       case 'overdue':
         return open.filter((task) => isOverdue(task));
@@ -170,6 +170,10 @@ export class TaskListComponent {
 
   toggle(task: Task): void {
     void this.store.setTaskDone(task.id, !task.done).catch(() => undefined);
+  }
+
+  toggleStarted(task: Task): void {
+    void this.store.setTaskStarted(task.id, task.startedAt === null).catch(() => undefined);
   }
 
   setFilter(filter: TaskFilter): void {

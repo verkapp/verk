@@ -395,15 +395,24 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     this.suggestions.set([]);
   }
 
-  async addSuggestion(suggestion: string): Promise<void> {
+  editSuggestion(index: number, value: string): void {
+    this.suggestions.update((items) => items.map((item, i) => (i === index ? value : item)));
+  }
+
+  async addSuggestion(index: number): Promise<void> {
+    const title = (this.suggestions()[index] ?? '').trim();
+    if (!title) {
+      this.suggestions.update((items) => items.filter((_, i) => i !== index));
+      return;
+    }
     const id = await this.ensureSaved();
     if (!id) {
       return;
     }
     try {
-      const task = await this.store.addSubtask(id, suggestion);
+      const task = await this.store.addSubtask(id, title);
       this.applyTask(task);
-      this.suggestions.update((items) => items.filter((item) => item !== suggestion));
+      this.suggestions.update((items) => items.filter((_, i) => i !== index));
     } catch {
       // handled by the store
     }
@@ -411,10 +420,12 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
 
   async addAllSuggestions(): Promise<void> {
     const id = await this.ensureSaved();
-    if (!id || this.suggestions().length === 0) {
+    if (!id || this.suggestions().some((item) => item.trim()) === false) {
       return;
     }
-    const titles = this.suggestions();
+    const titles = this.suggestions()
+      .map((item) => item.trim())
+      .filter(Boolean);
     try {
       const task = await this.store.addSubtasks(id, titles);
       this.applyTask(task);

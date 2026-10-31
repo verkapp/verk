@@ -56,6 +56,26 @@
     </div>
   }
 
+  @if (store.startedTasks().length > 0) {
+    <section class="group in-progress">
+      <div class="group-head">
+        <h2>En cours</h2>
+        <span class="group-count">{{ store.startedTasks().length }}</span>
+        <i></i>
+      </div>
+      <div class="cards">
+        @for (task of store.startedTasks(); track task.id) {
+          <app-task-card
+                [task]="task"
+                (opened)="openTask.emit(task.id)"
+                (toggled)="toggle(task)"
+                (started)="toggleStarted(task)"
+              />
+        }
+      </div>
+    </section>
+  }
+
   @if (isTodayMode()) {
     @for (group of todayGroups(); track group.key) {
       <section class="group">
@@ -66,7 +86,31 @@
         </div>
         <div class="cards">
           @for (task of group.tasks; track task.id) {
-            <app-task-card [task]="task" (opened)="openTask.emit(task.id)" (toggled)="toggle(task)" />
+            <app-task-card
+              [task]="task"
+              (opened)="openTask.emit(task.id)"
+              (toggled)="toggle(task)"
+              (started)="toggleStarted(task)"
+            />
+          }
+        </div>
+      </section>
+    }
+    @if (store.doneTodayTasks().length > 0) {
+      <section class="group done-today">
+        <div class="group-head">
+          <h2>Terminées aujourd’hui</h2>
+          <span class="group-count">{{ store.doneTodayTasks().length }}</span>
+          <i></i>
+        </div>
+        <div class="cards">
+          @for (task of store.doneTodayTasks(); track task.id) {
+            <app-task-card
+              [task]="task"
+              (opened)="openTask.emit(task.id)"
+              (toggled)="toggle(task)"
+              (started)="toggleStarted(task)"
+            />
           }
         </div>
       </section>
@@ -90,7 +134,12 @@
     @if (filteredTasks().length > 0) {
       <div class="cards">
         @for (task of filteredTasks(); track task.id) {
-          <app-task-card [task]="task" (opened)="openTask.emit(task.id)" (toggled)="toggle(task)" />
+          <app-task-card
+              [task]="task"
+              (opened)="openTask.emit(task.id)"
+              (toggled)="toggle(task)"
+              (started)="toggleStarted(task)"
+            />
         }
       </div>
     } @else {

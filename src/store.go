@@ -63,7 +63,47 @@ func openStoreAt(dir string) (*store, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("initialisation de la base: %w", err)
 	}
+	if err := migrate(db); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("migration de la base: %w", err)
+	}
 	return &store{db: db, dataDir: dir, imageDir: imageDir}, nil
+}
+
+// migrate upgrades databases created by earlier versions by adding the
+// columns they lack.
+func migrate(db *sql.DB) error {
+	rows, err := db.Query(`PRAGMA table_info(tasks)`)
+	if err != nil {
+		return err
+	}
+	have := map[string]bool{}
+	for rows.Next() {
+		var cid, notNull, pk int
+		var name, typ string
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &dflt, &pk); err != nil {
+			_ = rows.Close()
+			return err
+		}
+		have[name] = true
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	columns := []struct{ name, ddl string }{
+		{"started_at", "INTEGER"},
+		{"time_spent", "INTEGER NOT NULL DEFAULT 0"},
+	}
+	for _, c := range columns {
+		if have[c.name] {
+			continue
+		}
+		if _, err := db.Exec(`ALTER TABLE tasks ADD COLUMN ` + c.name + ` ` + c.ddl); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *store) close() error { return s.db.Close() }

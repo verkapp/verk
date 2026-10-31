@@ -34,3 +34,10 @@ func (a *App) DeleteTask(id string) error {
 	}
 	return a.store.deleteTask(id)
 }
+
+func (a *App) SetTaskStarted(id string, started bool) (Task, error) {
+	if err := a.ready(); err != nil {
+		return Task{}, err
+	}
+	return a.store.setStarted(id, started)
+}

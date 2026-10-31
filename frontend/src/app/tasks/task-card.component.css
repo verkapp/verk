@@ -205,3 +205,43 @@ h3.struck {
 .task-card.done .meta {
   margin-top: 5px;
 }
+
+.start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--muted-2);
+  opacity: 0;
+  transition:
+    opacity 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.task-card:hover .start-btn,
+.start-btn:focus-visible,
+.start-btn.on {
+  opacity: 1;
+}
+
+.start-btn:hover {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.start-btn.on {
+  color: var(--accent);
+}
+
+.task-card.started {
+  border-color: var(--accent-ring);
+}
+
+.meta-item.running {
+  color: var(--accent-strong);
+}

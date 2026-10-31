@@ -15,7 +15,7 @@
 
   @if (collapsed()) {
     <button class="expand" type="button" (click)="toggleCollapsed.emit()" title="Déplier le menu" aria-label="Déplier le menu">
-      <app-icon name="sidebar" [size]="17" />
+      <app-icon name="sidebar-open" [size]="17" />
     </button>
   }
 
@@ -81,7 +81,7 @@
   </nav>
 
   <div class="sidebar-footer">
-    @if (!collapsed()) {
+    @if (!collapsed() && store.settings().showMomentum) {
       <div class="focus-card">
         <div class="focus-head">
           <span class="focus-icon"><app-icon name="leaf" [size]="16" /></span>

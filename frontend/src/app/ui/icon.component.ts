@@ -23,6 +23,9 @@ export type IconName =
   | 'alert'
   | 'folder'
   | 'sidebar'
+  | 'sidebar-open'
+  | 'play'
+  | 'pause'
   | 'refresh'
   | 'check-circle'
   | 'leaf';
@@ -129,6 +132,17 @@ export type IconName =
         }
         @case ('folder') {
           <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+        }
+        @case ('sidebar-open') {
+          <rect x="3" y="4" width="18" height="16" rx="3" />
+          <path d="M9.5 4v16" />
+          <path d="M13.5 10l2 2-2 2" />
+        }
+        @case ('play') {
+          <path d="M7 4.5v15l12-7.5-12-7.5z" />
+        }
+        @case ('pause') {
+          <path d="M8 5v14M16 5v14" />
         }
         @case ('sidebar') {
           <rect x="3" y="4" width="18" height="16" rx="3" />

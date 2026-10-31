@@ -41,6 +41,52 @@
 
     <section class="card">
       <div class="card-head">
+        <span class="card-icon"><app-icon name="clock" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Suivi</h2>
+          <p>Ce que l’application mesure et affiche.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Suivi du temps</p>
+          <p class="row-sub">Le bouton ▶ d’une tâche chronomètre le temps passé dessus. Désactivé, il marque seulement la tâche « en cours ».</p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().timeTracking"
+          [attr.aria-checked]="store.settings().timeTracking"
+          (click)="toggleTimeTracking()"
+          aria-label="Activer le suivi du temps"
+        >
+          <span></span>
+        </button>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Ton élan du jour</p>
+          <p class="row-sub">La carte de progression en bas du menu latéral.</p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().showMomentum"
+          [attr.aria-checked]="store.settings().showMomentum"
+          (click)="toggleMomentum()"
+          aria-label="Afficher Ton élan du jour"
+        >
+          <span></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
         <span class="card-icon"><app-icon name="leaf" [size]="17" /></span>
         <div class="card-copy">
           <h2>Coach</h2>
