@@ -27,6 +27,14 @@ export class SettingsComponent implements OnInit {
     void this.store.saveSettings({ accent });
   }
 
+  toggleTimeTracking(): void {
+    void this.store.saveSettings({ timeTracking: !this.store.settings().timeTracking });
+  }
+
+  toggleMomentum(): void {
+    void this.store.saveSettings({ showMomentum: !this.store.settings().showMomentum });
+  }
+
   toggleCoachEnabled(): void {
     void this.store.saveSettings({ coachEnabled: !this.store.settings().coachEnabled });
   }

@@ -10,6 +10,8 @@ type Task struct {
 	CreatedAt   int64       `json:"createdAt"`
 	DueAt       *int64      `json:"dueAt"`
 	CompletedAt *int64      `json:"completedAt"`
+	StartedAt   *int64      `json:"startedAt"`
+	TimeSpent   int64       `json:"timeSpent"`
 	Subtasks    []Subtask   `json:"subtasks"`
 	Images      []TaskImage `json:"images"`
 }
@@ -38,6 +40,8 @@ type Settings struct {
 	Accent       string `json:"accent"`
 	CoachEnabled bool   `json:"coachEnabled"`
 	CoachOnStart bool   `json:"coachOnStart"`
+	TimeTracking bool   `json:"timeTracking"`
+	ShowMomentum bool   `json:"showMomentum"`
 	ClaudePath   string `json:"claudePath"`
 }
 

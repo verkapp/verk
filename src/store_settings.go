@@ -3,7 +3,7 @@ package src
 import "strings"
 
 func (s *store) getSettings() (Settings, error) {
-	out := Settings{Accent: "lavande", CoachEnabled: true}
+	out := Settings{Accent: "lavande", CoachEnabled: true, TimeTracking: true, ShowMomentum: true}
 	rows, err := s.db.Query(`SELECT key, value FROM settings`)
 	if err != nil {
 		return out, err
@@ -23,6 +23,10 @@ func (s *store) getSettings() (Settings, error) {
 			out.CoachEnabled = v == "1"
 		case "coach_on_start":
 			out.CoachOnStart = v == "1"
+		case "time_tracking":
+			out.TimeTracking = v == "1"
+		case "show_momentum":
+			out.ShowMomentum = v == "1"
 		case "claude_path":
 			out.ClaudePath = v
 		}
@@ -43,6 +47,8 @@ func (s *store) saveSettings(in Settings) error {
 		"accent":         in.Accent,
 		"coach_enabled":  boolIntString(in.CoachEnabled),
 		"coach_on_start": boolIntString(in.CoachOnStart),
+		"time_tracking":  boolIntString(in.TimeTracking),
+		"show_momentum":  boolIntString(in.ShowMomentum),
 		"claude_path":    strings.TrimSpace(in.ClaudePath),
 	}
 	for k, v := range values {

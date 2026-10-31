@@ -20,6 +20,8 @@ export interface Task {
   createdAt: number;
   dueAt: number | null;
   completedAt: number | null;
+  startedAt: number | null;
+  timeSpent: number;
   subtasks: Subtask[];
   images: TaskImage[];
 }
@@ -34,6 +36,8 @@ export interface Settings {
   accent: AccentName;
   coachEnabled: boolean;
   coachOnStart: boolean;
+  timeTracking: boolean;
+  showMomentum: boolean;
   claudePath: string;
 }
 

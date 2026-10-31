@@ -20,7 +20,7 @@ const DAY = 86_400_000;
 @Injectable({ providedIn: 'root' })
 export class Store {
   readonly tasks = signal<Task[]>([]);
-  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, claudePath: '' });
+  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, claudePath: '' });
   readonly claude = signal<ClaudeStatus | null>(null);
   readonly info = signal<AppInfo | null>(null);
   readonly loading = signal(true);
@@ -31,6 +31,18 @@ export class Store {
   readonly nudgeError = signal<string | null>(null);
 
   readonly openTasks = computed(() => this.tasks().filter((task) => !task.done).sort(compareOpenTasks));
+  readonly startedTasks = computed(() =>
+    this.openTasks()
+      .filter((task) => task.startedAt !== null)
+      .sort((a, b) => (a.startedAt ?? 0) - (b.startedAt ?? 0)),
+  );
+  /** Wall clock refreshed every 15 s so running timers update on screen. */
+  readonly now = signal(Date.now());
+  readonly doneTodayTasks = computed(() =>
+    this.tasks()
+      .filter((task) => task.done && task.completedAt !== null && isSameDay(task.completedAt, this.now()))
+      .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0)),
+  );
   readonly doneTasks = computed(() =>
     this.tasks()
       .filter((task) => task.done)
@@ -75,6 +87,7 @@ export class Store {
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   async init(): Promise<void> {
+    setInterval(() => this.now.set(Date.now()), 15_000);
     try {
       const [tasks, settings, info] = await Promise.all([api.listTasks(), api.getSettings(), api.appInfo()]);
       this.tasks.set(tasks);
@@ -168,6 +181,17 @@ export class Store {
     try {
       const task = await this.mutate(api.setTaskDone(id, done));
       this.notify(done ? 'Tâche terminée. Bien joué.' : 'Tâche rouverte.', done ? 'accent' : 'default');
+      return task;
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  async setTaskStarted(id: string, started: boolean): Promise<Task> {
+    try {
+      const task = await this.mutate(api.setTaskStarted(id, started));
+      this.notify(started ? 'Tâche en cours.' : 'Tâche remise en attente.', 'default');
       return task;
     } catch (error) {
       this.fail(error);

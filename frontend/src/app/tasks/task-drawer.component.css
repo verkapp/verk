@@ -627,7 +627,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
   color: var(--text-soft);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   opacity: 0;
   transition:
     opacity 0.15s ease,
@@ -716,7 +716,7 @@
   max-width: 86vw;
   max-height: 86vh;
   border-radius: 12px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
 }
 
 .lightbox-close {
@@ -736,4 +736,19 @@
 
 .lightbox-close:hover {
   background: rgba(255, 255, 255, 0.24);
+}
+
+.sugg-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+.suggestion:focus-within {
+  border-color: var(--accent);
 }

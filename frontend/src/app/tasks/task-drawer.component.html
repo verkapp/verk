@@ -108,13 +108,21 @@
       @if (suggestions().length > 0) {
         <div class="suggestions">
           <p class="sugg-label">Suggestions</p>
-          @for (suggestion of suggestions(); track suggestion) {
+          @for (suggestion of suggestions(); track $index) {
             <div class="suggestion">
-              <span class="sugg-text">{{ suggestion }}</span>
+              <input
+                class="sugg-input"
+                type="text"
+                maxlength="240"
+                [value]="suggestion"
+                (input)="editSuggestion($index, $any($event.target).value)"
+                (keydown.enter)="addSuggestion($index)"
+                aria-label="Modifier la suggestion"
+              />
               <button
                 class="sugg-add"
                 type="button"
-                (click)="addSuggestion(suggestion)"
+                (click)="addSuggestion($index)"
                 [attr.aria-label]="'Ajouter ' + suggestion"
               >
                 <app-icon name="plus" [size]="14" />

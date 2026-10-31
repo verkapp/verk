@@ -92,3 +92,40 @@ func TestTaskLifecycle(t *testing.T) {
 		t.Fatal("empty title should be rejected")
 	}
 }
+
+func TestTimeTracking(t *testing.T) {
+	st := newTestStore(t)
+	task, err := st.createTask(TaskInput{Title: "chrono"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.setStarted(task.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	// Backdate the timer by one minute, then pause.
+	if _, err := st.db.Exec(`UPDATE tasks SET started_at = started_at - 60000 WHERE id = ?`, task.ID); err != nil {
+		t.Fatal(err)
+	}
+	got, err := st.setStarted(task.ID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.StartedAt != nil || got.TimeSpent < 60000 {
+		t.Fatalf("pause should bank the time: %+v", got)
+	}
+
+	// Finishing a running task banks its time too.
+	if _, err := st.setStarted(task.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.db.Exec(`UPDATE tasks SET started_at = started_at - 60000 WHERE id = ?`, task.ID); err != nil {
+		t.Fatal(err)
+	}
+	done, err := st.setDone(task.ID, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if done.StartedAt != nil || done.TimeSpent < 120000 {
+		t.Fatalf("done should bank the time: %+v", done)
+	}
+}

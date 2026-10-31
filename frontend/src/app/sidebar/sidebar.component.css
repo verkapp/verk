@@ -37,7 +37,7 @@
   border-radius: 9px;
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 6px 14px -9px var(--accent);
+  box-shadow: none;
 }
 
 .wordmark {

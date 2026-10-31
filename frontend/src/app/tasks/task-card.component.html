@@ -1,6 +1,7 @@
 <article
   class="task-card"
   [class.done]="task().done"
+  [class.started]="task().startedAt !== null && !task().done"
   [class.overdue]="due()?.tone === 'danger'"
   tabindex="0"
   (click)="opened.emit()"
@@ -35,6 +36,14 @@
         Créée {{ age() }}
       </span>
 
+      @if (tracked(); as time) {
+        <span class="sep"></span>
+        <span class="meta-item" [class.running]="task().startedAt !== null" title="Temps passé">
+          <app-icon name="play" [size]="12" />
+          {{ time }}
+        </span>
+      }
+
       @if (task().subtasks.length > 0) {
         <span class="sep"></span>
         <span class="meta-item" [title]="doneSubtasks() + ' sous-tâche(s) terminée(s)'">
@@ -53,6 +62,19 @@
       }
     </div>
   </div>
+
+  @if (!task().done) {
+    <button
+      class="start-btn"
+      type="button"
+      [class.on]="task().startedAt !== null"
+      [attr.title]="task().startedAt !== null ? 'Mettre en pause' : (store.settings().timeTracking ? 'Commencer et chronométrer' : 'Commencer')"
+      [attr.aria-label]="task().startedAt !== null ? 'Mettre en pause' : 'Commencer la tâche'"
+      (click)="onStart($event)"
+    >
+      <app-icon [name]="task().startedAt !== null ? 'pause' : 'play'" [size]="13" [strokeWidth]="2.2" />
+    </button>
+  }
 
   <span class="chevron" aria-hidden="true">
     <app-icon name="chevron-right" [size]="15" />

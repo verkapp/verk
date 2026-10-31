@@ -219,3 +219,21 @@ export function subtaskProgress(task: Task): number {
   }
   return Math.round((task.subtasks.filter((subtask) => subtask.done).length / task.subtasks.length) * 100);
 }
+
+/** Total tracked time in ms, including the currently running session. */
+export function elapsedMs(task: Task, now = Date.now()): number {
+  return task.timeSpent + (task.startedAt !== null ? Math.max(0, now - task.startedAt) : 0);
+}
+
+export function formatDuration(ms: number): string {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) {
+    return '< 1 min';
+  }
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
+}

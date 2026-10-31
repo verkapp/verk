@@ -1,6 +1,7 @@
 package src
 
 import (
+	"database/sql"
 	"errors"
 	"os"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 )
 
 func (s *store) listTasks() ([]Task, error) {
-	rows, err := s.db.Query(`SELECT id, title, description, done, created_at, due_at, completed_at FROM tasks`)
+	rows, err := s.db.Query(`SELECT id, title, description, done, created_at, due_at, completed_at, started_at, time_spent FROM tasks`)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +22,7 @@ func (s *store) listTasks() ([]Task, error) {
 	for rows.Next() {
 		var t Task
 		var done int
-		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &done, &t.CreatedAt, &t.DueAt, &t.CompletedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &done, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent); err != nil {
 			return nil, err
 		}
 		t.Done = done == 1
@@ -153,7 +154,32 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 		now := time.Now().UnixMilli()
 		completedAt = &now
 	}
-	res, err := s.db.Exec(`UPDATE tasks SET done = ?, completed_at = ? WHERE id = ?`, boolInt(done), completedAt, id)
+	// Finishing (or reopening) a task stops a running timer and banks its time.
+	res, err := s.db.Exec(`UPDATE tasks SET done = ?, completed_at = ?,
+		time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
+		started_at = NULL WHERE id = ?`, boolInt(done), completedAt, time.Now().UnixMilli(), id)
+	if err != nil {
+		return Task{}, err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return Task{}, errNotFound
+	}
+	return s.getTask(id)
+}
+
+// setStarted starts or stops the timer of an open task. Stopping banks the
+// elapsed time into time_spent.
+func (s *store) setStarted(id string, started bool) (Task, error) {
+	now := time.Now().UnixMilli()
+	var res sql.Result
+	var err error
+	if started {
+		res, err = s.db.Exec(`UPDATE tasks SET started_at = COALESCE(started_at, ?) WHERE id = ? AND done = 0`, now, id)
+	} else {
+		res, err = s.db.Exec(`UPDATE tasks SET
+			time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
+			started_at = NULL WHERE id = ? AND done = 0`, now, id)
+	}
 	if err != nil {
 		return Task{}, err
 	}

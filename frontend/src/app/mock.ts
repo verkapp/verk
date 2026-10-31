@@ -54,6 +54,8 @@ function seed(): Task[] {
       createdAt: now - 2 * DAY,
       dueAt: at(0, 23, 30),
       completedAt: null,
+      startedAt: now - 3_600_000,
+      timeSpent: 0,
       subtasks: [
         sub('Écrire le fil rouge', true, 0),
         sub('Vérifier les chiffres clés', true, 1),
@@ -70,6 +72,8 @@ function seed(): Task[] {
       createdAt: now - 4 * DAY,
       dueAt: at(1, 11, 30),
       completedAt: null,
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [sub('Annoter les écrans', true, 0), sub('Regrouper les retours', false, 1), sub('Envoyer à Camille', false, 2)],
       images: [image('Onboarding · écran 1', '#e7e1ff', '#f7d9e8'), image('Onboarding · écran 2', '#dff3ec', '#e4ecff')],
     },
@@ -81,6 +85,8 @@ function seed(): Task[] {
       createdAt: now - 6 * DAY,
       dueAt: at(-1, 18, 0),
       completedAt: null,
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [],
       images: [],
     },
@@ -92,6 +98,8 @@ function seed(): Task[] {
       createdAt: now - 5 * DAY,
       dueAt: null,
       completedAt: null,
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [sub('Lister deux ou trois idées', false, 0)],
       images: [],
     },
@@ -103,6 +111,8 @@ function seed(): Task[] {
       createdAt: now - 1 * DAY,
       dueAt: null,
       completedAt: at(0, 10, 12),
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [],
       images: [],
     },
@@ -114,6 +124,8 @@ function seed(): Task[] {
       createdAt: now - 2 * DAY,
       dueAt: null,
       completedAt: at(0, 9, 5),
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [],
       images: [],
     },
@@ -125,6 +137,8 @@ function seed(): Task[] {
       createdAt: now - 4 * DAY,
       dueAt: null,
       completedAt: at(-1, 17, 40),
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [],
       images: [],
     },
@@ -136,6 +150,8 @@ function seed(): Task[] {
       createdAt: now - 7 * DAY,
       dueAt: null,
       completedAt: at(-3, 18, 20),
+      startedAt: null,
+      timeSpent: 0,
       subtasks: [],
       images: [],
     },
@@ -146,12 +162,19 @@ let tasks = seed();
 let settings: Settings = loadSettings();
 
 function loadSettings(): Settings {
-  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, claudePath: '' };
+  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, claudePath: '' };
   try {
     const raw = localStorage.getItem('todo.settings');
     return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<Settings>) } : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function bank(task: Task): void {
+  if (task.startedAt !== null) {
+    task.timeSpent += Math.max(0, Date.now() - task.startedAt);
+    task.startedAt = null;
   }
 }
 
@@ -182,6 +205,8 @@ function createTask(input: TaskInput): Task {
     createdAt: Date.now(),
     dueAt: input.dueAt,
     completedAt: null,
+    startedAt: null,
+    timeSpent: 0,
     subtasks: [],
     images: [],
   };
@@ -209,6 +234,16 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       const task = findTask(args[0] as string);
       task.done = args[1] as boolean;
       task.completedAt = task.done ? Date.now() : null;
+      bank(task);
+      return clone(task) as T;
+    }
+    case 'SetTaskStarted': {
+      const task = findTask(args[0] as string);
+      if (args[1]) {
+        task.startedAt ??= task.done ? null : Date.now();
+      } else {
+        bank(task);
+      }
       return clone(task) as T;
     }
     case 'DeleteTask':
