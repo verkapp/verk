@@ -213,8 +213,9 @@
   transform: translateX(17px);
 }
 
-/* --------------------------------- Claude -------------------------------- */
-.claude-status {
+/* ------------------------------ Claude & git ------------------------------ */
+.claude-status,
+.sync-status {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -225,9 +226,14 @@
   border: 1px solid var(--line);
 }
 
-.claude-status.offline {
+.claude-status.offline,
+.sync-status.error {
   background: #fffaf7;
   border-color: #f1e4da;
+}
+
+.sync-folder {
+  margin-top: 10px;
 }
 
 .status-dot {

@@ -64,8 +64,9 @@ func (s *store) importImage(taskID, sourcePath string) (Task, error) {
 		return Task{}, err
 	}
 
-	if _, err := s.db.Exec(`INSERT INTO images (id, task_id, name, file, created_at) VALUES (?, ?, ?, ?, ?)`,
-		newID(), taskID, clip(filepath.Base(sourcePath), 200), fileName, time.Now().UnixMilli()); err != nil {
+	now := time.Now().UnixMilli()
+	if _, err := s.db.Exec(`INSERT INTO images (id, task_id, name, file, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		newID(), taskID, clip(filepath.Base(sourcePath), 200), fileName, now, now); err != nil {
 		_ = os.Remove(filepath.Join(s.imageDir, fileName))
 		return Task{}, err
 	}
@@ -95,7 +96,19 @@ func (s *store) deleteImage(id string) (Task, error) {
 		}
 		return Task{}, err
 	}
-	if _, err := s.db.Exec(`DELETE FROM images WHERE id = ?`, id); err != nil {
+	now := time.Now().UnixMilli()
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Task{}, err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`DELETE FROM images WHERE id = ?`, id); err != nil {
+		return Task{}, err
+	}
+	if err := recordTombstone(tx, "image", id, taskID, now); err != nil {
+		return Task{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return Task{}, err
 	}
 	_ = os.Remove(filepath.Join(s.imageDir, file))

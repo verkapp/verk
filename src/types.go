@@ -51,3 +51,17 @@ type ClaudeStatus struct {
 	Version   string `json:"version"`
 	Error     string `json:"error"`
 }
+
+// SyncStatus is the state of the optional git synchronisation, polled by the
+// frontend to refresh the task list after a pull.
+type SyncStatus struct {
+	Configured   bool   `json:"configured"`
+	Remote       string `json:"remote"`
+	Branch       string `json:"branch"`
+	Enabled      bool   `json:"enabled"`
+	Syncing      bool   `json:"syncing"`
+	LastSyncAt   int64  `json:"lastSyncAt"`
+	LastError    string `json:"lastError"`
+	Generation   int64  `json:"generation"`
+	GitAvailable bool   `json:"gitAvailable"`
+}

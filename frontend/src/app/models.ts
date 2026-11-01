@@ -48,6 +48,18 @@ export interface ClaudeStatus {
   error: string;
 }
 
+export interface SyncStatus {
+  configured: boolean;
+  remote: string;
+  branch: string;
+  enabled: boolean;
+  syncing: boolean;
+  lastSyncAt: number;
+  lastError: string;
+  generation: number;
+  gitAvailable: boolean;
+}
+
 export interface AppInfo {
   version: string;
   dataDir: string;

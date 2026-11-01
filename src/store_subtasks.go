@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 )
 
 func (s *store) addSubtask(taskID, title string) (Task, error) {
@@ -13,8 +14,9 @@ func (s *store) addSubtask(taskID, title string) (Task, error) {
 	}
 	var pos int
 	_ = s.db.QueryRow(`SELECT COALESCE(MAX(position), -1) + 1 FROM subtasks WHERE task_id = ?`, taskID).Scan(&pos)
-	if _, err := s.db.Exec(`INSERT INTO subtasks (id, task_id, title, done, position) VALUES (?, ?, ?, 0, ?)`,
-		newID(), taskID, clip(title, 240), pos); err != nil {
+	now := time.Now().UnixMilli()
+	if _, err := s.db.Exec(`INSERT INTO subtasks (id, task_id, title, done, position, updated_at) VALUES (?, ?, ?, 0, ?, ?)`,
+		newID(), taskID, clip(title, 240), pos, now); err != nil {
 		return Task{}, err
 	}
 	return s.getTask(taskID)
@@ -41,7 +43,8 @@ func (s *store) updateSubtask(id, title string) (Task, error) {
 	if err != nil {
 		return Task{}, err
 	}
-	if _, err := s.db.Exec(`UPDATE subtasks SET title = ? WHERE id = ?`, clip(title, 240), id); err != nil {
+	now := time.Now().UnixMilli()
+	if _, err := s.db.Exec(`UPDATE subtasks SET title = ?, updated_at = ? WHERE id = ?`, clip(title, 240), now, id); err != nil {
 		return Task{}, err
 	}
 	return s.getTask(taskID)
@@ -52,7 +55,8 @@ func (s *store) setSubtaskDone(id string, done bool) (Task, error) {
 	if err != nil {
 		return Task{}, err
 	}
-	if _, err := s.db.Exec(`UPDATE subtasks SET done = ? WHERE id = ?`, boolInt(done), id); err != nil {
+	now := time.Now().UnixMilli()
+	if _, err := s.db.Exec(`UPDATE subtasks SET done = ?, updated_at = ? WHERE id = ?`, boolInt(done), now, id); err != nil {
 		return Task{}, err
 	}
 	return s.getTask(taskID)
@@ -63,7 +67,19 @@ func (s *store) deleteSubtask(id string) (Task, error) {
 	if err != nil {
 		return Task{}, err
 	}
-	if _, err := s.db.Exec(`DELETE FROM subtasks WHERE id = ?`, id); err != nil {
+	now := time.Now().UnixMilli()
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Task{}, err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`DELETE FROM subtasks WHERE id = ?`, id); err != nil {
+		return Task{}, err
+	}
+	if err := recordTombstone(tx, "subtask", id, taskID, now); err != nil {
+		return Task{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return Task{}, err
 	}
 	return s.getTask(taskID)

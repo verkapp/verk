@@ -1,4 +1,4 @@
-import { AppInfo, ClaudeStatus, Settings, Subtask, Task, TaskImage, TaskInput } from './models';
+import { AppInfo, ClaudeStatus, Settings, Subtask, SyncStatus, Task, TaskImage, TaskInput } from './models';
 
 /**
  * In-memory fallback used when the Angular app runs in a plain browser
@@ -160,6 +160,17 @@ function seed(): Task[] {
 
 let tasks = seed();
 let settings: Settings = loadSettings();
+let syncStatus: SyncStatus = {
+  configured: false,
+  remote: '',
+  branch: 'main',
+  enabled: false,
+  syncing: false,
+  lastSyncAt: 0,
+  lastError: '',
+  generation: 0,
+  gitAvailable: true,
+};
 
 function loadSettings(): Settings {
   const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, claudePath: '' };
@@ -343,6 +354,37 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       }
       return `Ta liste avance bien, et c'est déjà beaucoup. Choisis la tâche la plus courte et fais-la maintenant, sans chercher à tout finir aujourd'hui.` as T;
     }
+    case 'SyncStatus':
+      return clone(syncStatus) as T;
+    case 'SetSyncConfig': {
+      const remote = String(args[0] ?? '').trim();
+      const enabled = Boolean(args[1]);
+      syncStatus = {
+        ...syncStatus,
+        configured: remote !== '',
+        remote,
+        enabled: remote !== '' && enabled,
+        lastError: '',
+        generation: syncStatus.generation + 1,
+      };
+      return undefined as T;
+    }
+    case 'SyncNow':
+      if (!syncStatus.configured) {
+        throw new Error('Aucun dépôt git configuré');
+      }
+      syncStatus = { ...syncStatus, syncing: true };
+      await wait(700);
+      syncStatus = {
+        ...syncStatus,
+        syncing: false,
+        lastSyncAt: Date.now(),
+        lastError: '',
+        generation: syncStatus.generation + 1,
+      };
+      return clone(syncStatus) as T;
+    case 'OpenSyncFolder':
+      return undefined as T;
     case 'OpenDataFolder':
       return undefined as T;
     case 'AppInfo': {

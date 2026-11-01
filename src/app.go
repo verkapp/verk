@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -13,11 +15,22 @@ type App struct {
 	ctx     context.Context
 	store   *store
 	initErr error
+
+	// Git synchronisation runtime state. The configuration itself lives in
+	// the local settings table so each machine keeps its own remote.
+	gitAvailable bool
+
+	syncRunMu sync.Mutex
+
+	syncStateMu    sync.Mutex
+	syncTimer      *time.Timer
+	syncSyncing    bool
+	syncGeneration int64
 }
 
 // NewApp opens the local database before the Wails window is created.
 func NewApp() *App {
-	app := &App{}
+	app := &App{gitAvailable: gitInstalled()}
 	if st, err := openStore(); err != nil {
 		app.initErr = err
 	} else {
@@ -35,11 +48,28 @@ func (a *App) startup(ctx context.Context) {
 			Title:   "Todo",
 			Message: "Impossible d'ouvrir la base de données.\n\n" + a.initErr.Error(),
 		})
+		return
 	}
+	// Pull remote changes without delaying the window: the frontend loads the
+	// local state first, then refreshes when the sync generation changes.
+	go a.autoSync()
 }
 
 func (a *App) shutdown(ctx context.Context) {
+	a.stopSyncTimer()
 	if a.store != nil {
+		if cfg, ok := a.syncConfigured(); ok && cfg.Enabled {
+			// Flush pending edits on quit, but never wait for an already
+			// running sync that could take longer than the timeout.
+			if a.syncRunMu.TryLock() {
+				runCtx, cancel := context.WithTimeout(context.Background(), syncQuitTimeout)
+				a.setSyncing(true)
+				_, _ = a.performSync(runCtx, cfg)
+				a.setSyncing(false)
+				cancel()
+				a.syncRunMu.Unlock()
+			}
+		}
 		_ = a.store.close()
 	}
 }

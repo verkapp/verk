@@ -24,12 +24,20 @@ func (a *App) AddImage(taskID string) (Task, error) {
 	if path == "" {
 		return a.store.getTask(taskID)
 	}
-	return a.store.importImage(taskID, path)
+	task, err := a.store.importImage(taskID, path)
+	if err == nil {
+		a.requestSync()
+	}
+	return task, err
 }
 
 func (a *App) DeleteImage(id string) (Task, error) {
 	if err := a.ready(); err != nil {
 		return Task{}, err
 	}
-	return a.store.deleteImage(id)
+	task, err := a.store.deleteImage(id)
+	if err == nil {
+		a.requestSync()
+	}
+	return task, err
 }

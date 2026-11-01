@@ -13,21 +13,31 @@ const schema = `
 		due_at INTEGER,
 		completed_at INTEGER,
 		started_at INTEGER,
-		time_spent INTEGER NOT NULL DEFAULT 0
+		time_spent INTEGER NOT NULL DEFAULT 0,
+		updated_at INTEGER NOT NULL DEFAULT 0
 	);
 	CREATE TABLE IF NOT EXISTS subtasks (
 		id TEXT PRIMARY KEY,
 		task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
 		title TEXT NOT NULL,
 		done INTEGER NOT NULL DEFAULT 0,
-		position INTEGER NOT NULL DEFAULT 0
+		position INTEGER NOT NULL DEFAULT 0,
+		updated_at INTEGER NOT NULL DEFAULT 0
 	);
 	CREATE TABLE IF NOT EXISTS images (
 		id TEXT PRIMARY KEY,
 		task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
 		name TEXT NOT NULL,
 		file TEXT NOT NULL,
-		created_at INTEGER NOT NULL
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL DEFAULT 0
+	);
+	CREATE TABLE IF NOT EXISTS tombstones (
+		kind TEXT NOT NULL,
+		id TEXT NOT NULL,
+		task_id TEXT NOT NULL DEFAULT '',
+		deleted_at INTEGER NOT NULL,
+		PRIMARY KEY (kind, id)
 	);
 	CREATE TABLE IF NOT EXISTS settings (
 		key TEXT PRIMARY KEY,

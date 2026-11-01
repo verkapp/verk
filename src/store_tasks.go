@@ -124,8 +124,8 @@ func (s *store) createTask(input TaskInput) (Task, error) {
 	}
 	id := newID()
 	now := time.Now().UnixMilli()
-	_, err := s.db.Exec(`INSERT INTO tasks (id, title, description, done, created_at, due_at) VALUES (?, ?, ?, 0, ?, ?)`,
-		id, title, strings.TrimSpace(input.Description), now, normalizeDue(input.DueAt))
+	_, err := s.db.Exec(`INSERT INTO tasks (id, title, description, done, created_at, due_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?)`,
+		id, title, strings.TrimSpace(input.Description), now, normalizeDue(input.DueAt), now)
 	if err != nil {
 		return Task{}, err
 	}
@@ -137,8 +137,8 @@ func (s *store) updateTask(id string, input TaskInput) (Task, error) {
 	if title == "" {
 		return Task{}, errors.New("le titre est obligatoire")
 	}
-	res, err := s.db.Exec(`UPDATE tasks SET title = ?, description = ?, due_at = ? WHERE id = ?`,
-		title, strings.TrimSpace(input.Description), normalizeDue(input.DueAt), id)
+	res, err := s.db.Exec(`UPDATE tasks SET title = ?, description = ?, due_at = ?, updated_at = ? WHERE id = ?`,
+		title, strings.TrimSpace(input.Description), normalizeDue(input.DueAt), time.Now().UnixMilli(), id)
 	if err != nil {
 		return Task{}, err
 	}
@@ -155,9 +155,10 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 		completedAt = &now
 	}
 	// Finishing (or reopening) a task stops a running timer and banks its time.
+	now := time.Now().UnixMilli()
 	res, err := s.db.Exec(`UPDATE tasks SET done = ?, completed_at = ?,
 		time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
-		started_at = NULL WHERE id = ?`, boolInt(done), completedAt, time.Now().UnixMilli(), id)
+		started_at = NULL, updated_at = ? WHERE id = ?`, boolInt(done), completedAt, now, now, id)
 	if err != nil {
 		return Task{}, err
 	}
@@ -174,11 +175,11 @@ func (s *store) setStarted(id string, started bool) (Task, error) {
 	var res sql.Result
 	var err error
 	if started {
-		res, err = s.db.Exec(`UPDATE tasks SET started_at = COALESCE(started_at, ?) WHERE id = ? AND done = 0`, now, id)
+		res, err = s.db.Exec(`UPDATE tasks SET started_at = COALESCE(started_at, ?), updated_at = ? WHERE id = ? AND done = 0`, now, now, id)
 	} else {
 		res, err = s.db.Exec(`UPDATE tasks SET
 			time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
-			started_at = NULL WHERE id = ? AND done = 0`, now, id)
+			started_at = NULL, updated_at = ? WHERE id = ? AND done = 0`, now, now, id)
 	}
 	if err != nil {
 		return Task{}, err
@@ -194,12 +195,23 @@ func (s *store) deleteTask(id string) error {
 	if err != nil {
 		return err
 	}
-	res, err := s.db.Exec(`DELETE FROM tasks WHERE id = ?`, id)
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	res, err := tx.Exec(`DELETE FROM tasks WHERE id = ?`, id)
 	if err != nil {
 		return err
 	}
 	if n, _ := res.RowsAffected(); n == 0 {
 		return errNotFound
+	}
+	if err := recordTombstone(tx, "task", id, id, time.Now().UnixMilli()); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
 	}
 	for _, f := range files {
 		_ = os.Remove(filepath.Join(s.imageDir, f))
