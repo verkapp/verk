@@ -73,37 +73,65 @@ func openStoreAt(dir string) (*store, error) {
 // migrate upgrades databases created by earlier versions by adding the
 // columns they lack.
 func migrate(db *sql.DB) error {
-	rows, err := db.Query(`PRAGMA table_info(tasks)`)
-	if err != nil {
-		return err
+	columns := map[string][]struct{ name, ddl string }{
+		"tasks": {
+			{"started_at", "INTEGER"},
+			{"time_spent", "INTEGER NOT NULL DEFAULT 0"},
+			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
+		},
+		"subtasks": {
+			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
+		},
+		"images": {
+			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
+		},
 	}
+	for table, wanted := range columns {
+		have, err := tableColumns(db, table)
+		if err != nil {
+			return err
+		}
+		for _, c := range wanted {
+			if have[c.name] {
+				continue
+			}
+			if _, err := db.Exec(`ALTER TABLE ` + table + ` ADD COLUMN ` + c.name + ` ` + c.ddl); err != nil {
+				return err
+			}
+		}
+	}
+	// Existing rows get a sensible timestamp so their first sync does not
+	// overwrite newer data coming from another machine.
+	backfills := []string{
+		`UPDATE tasks SET updated_at = COALESCE(completed_at, created_at, 0) WHERE updated_at = 0`,
+		`UPDATE subtasks SET updated_at = COALESCE((SELECT created_at FROM tasks WHERE tasks.id = subtasks.task_id), 0) WHERE updated_at = 0`,
+		`UPDATE images SET updated_at = created_at WHERE updated_at = 0`,
+	}
+	for _, query := range backfills {
+		if _, err := db.Exec(query); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func tableColumns(db *sql.DB, table string) (map[string]bool, error) {
+	rows, err := db.Query(`PRAGMA table_info(` + table + `)`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 	have := map[string]bool{}
 	for rows.Next() {
 		var cid, notNull, pk int
 		var name, typ string
 		var dflt sql.NullString
 		if err := rows.Scan(&cid, &name, &typ, &notNull, &dflt, &pk); err != nil {
-			_ = rows.Close()
-			return err
+			return nil, err
 		}
 		have[name] = true
 	}
-	if err := rows.Close(); err != nil {
-		return err
-	}
-	columns := []struct{ name, ddl string }{
-		{"started_at", "INTEGER"},
-		{"time_spent", "INTEGER NOT NULL DEFAULT 0"},
-	}
-	for _, c := range columns {
-		if have[c.name] {
-			continue
-		}
-		if _, err := db.Exec(`ALTER TABLE tasks ADD COLUMN ` + c.name + ` ` + c.ddl); err != nil {
-			return err
-		}
-	}
-	return nil
+	return have, rows.Err()
 }
 
 func (s *store) close() error { return s.db.Close() }

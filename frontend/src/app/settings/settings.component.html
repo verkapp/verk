@@ -201,10 +201,102 @@
 
     <section class="card">
       <div class="card-head">
+        <span class="card-icon"><app-icon name="refresh" [size]="17" [class.spin]="store.sync()?.syncing" /></span>
+        <div class="card-copy">
+          <h2>Synchronisation</h2>
+          <p>Tes tâches et tes images dans un dépôt git privé, entre tes ordinateurs.</p>
+        </div>
+        @if (store.sync()?.lastError) {
+          <span class="pill pill-danger status-pill">Erreur</span>
+        } @else if (store.sync()?.configured) {
+          <span class="pill pill-accent status-pill">{{ store.sync()?.enabled ? 'Active' : 'En pause' }}</span>
+        } @else {
+          <span class="pill status-pill">Inactive</span>
+        }
+      </div>
+
+      <div class="path-block">
+        <label class="field-label" for="sync-remote">Adresse du dépôt git</label>
+        <div class="path-row">
+          <input
+            id="sync-remote"
+            class="input mono"
+            type="text"
+            [value]="syncRemote()"
+            (input)="onSyncRemoteInput($any($event.target).value)"
+            placeholder="git@github.com:toi/todo.git"
+            spellcheck="false"
+            [disabled]="syncBusy()"
+          />
+          <button class="btn btn-ghost" type="button" (click)="saveSyncRemote()" [disabled]="syncBusy()">
+            {{ store.sync()?.configured ? 'Mettre à jour' : 'Configurer' }}
+          </button>
+        </div>
+        <p class="hint">
+          Un dépôt privé, vide ou déjà utilisé par Todo. Git doit être installé et tes identifiants
+          (SSH ou gestionnaire d’identifiants) déjà en place. Laisse vide pour désactiver.
+        </p>
+      </div>
+
+      @if (store.sync()?.configured) {
+        <div class="row" [class.disabled]="!store.sync()?.enabled">
+          <div class="row-copy">
+            <p class="row-title">Synchronisation automatique</p>
+            <p class="row-sub">
+              Un envoi quelques secondes après chaque changement, et une récupération au démarrage.
+            </p>
+          </div>
+          <button
+            class="switch"
+            type="button"
+            role="switch"
+            [class.on]="store.sync()?.enabled"
+            [attr.aria-checked]="store.sync()?.enabled"
+            [disabled]="syncBusy()"
+            (click)="toggleSync()"
+            aria-label="Activer la synchronisation automatique"
+          >
+            <span></span>
+          </button>
+        </div>
+
+        <div class="sync-status" [class.error]="store.sync()?.lastError">
+          <span class="status-dot" [class.ok]="!store.sync()?.lastError && store.sync()?.configured"></span>
+          <div class="status-copy">
+            <p class="row-title">{{ syncHeadline() }}</p>
+            <p class="row-sub">{{ syncDetail() }}</p>
+          </div>
+          <button
+            class="btn btn-ghost btn-sm"
+            type="button"
+            (click)="syncNow()"
+            [disabled]="syncBusy() || store.sync()?.syncing"
+          >
+            <app-icon name="refresh" [size]="14" [class.spin]="syncBusy() || store.sync()?.syncing" />
+            Synchroniser
+          </button>
+        </div>
+
+        <div class="sync-folder">
+          <button class="btn btn-ghost btn-sm" type="button" (click)="openSyncFolder()">
+            <app-icon name="folder" [size]="14" />
+            Ouvrir le dossier de synchronisation
+          </button>
+        </div>
+
+        <p class="hint">
+          Les réglages et les chemins locaux (comme Claude Code) restent propres à cet ordinateur.
+          Les images voyagent avec les tâches et les suppressions sont conservées six mois.
+        </p>
+      }
+    </section>
+
+    <section class="card">
+      <div class="card-head">
         <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
         <div class="card-copy">
           <h2>Données</h2>
-          <p>Ta liste et tes images restent sur cet ordinateur.</p>
+          <p>Ta liste et tes images, sur cet ordinateur et dans ton dépôt git si tu l’as configuré.</p>
         </div>
       </div>
 

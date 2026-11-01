@@ -16,11 +16,14 @@ coach propulsé par **Claude Code (haiku)**.
 - **Reprendre demain ou lundi** : reporte une tâche au lendemain, ou au lundi quand le week-end
   approche, et met le minuteur en pause.
 - **Historique** des tâches terminées, regroupées par jour, réouvrables d'un clic.
+- **Synchronisation git optionnelle** : un dépôt privé (GitHub, GitLab, serveur perso) pour
+  retrouver tâches et images sur plusieurs machines. Fusion sans conflit, suppressions propagées,
+  réglages propres à chaque ordinateur.
 - **Coach Claude Code** : un mot court et bienveillant pour repartir, et un découpage assisté
   des tâches en sous-tâches concrètes. Le coach peut être désactivé dans les réglages.
 - **Six accents pastel** : lavande, menthe, ciel, pêche, rose, beurre.
-- **Local-first** : SQLite et images stockés sur la machine, aucune donnée envoyée par l'app
-  ailleurs qu'à Claude Code lorsque tu le sollicites.
+- **Local-first** : SQLite et images stockés sur la machine. L'app n'envoie des données qu'à
+  Claude Code lorsque tu le sollicites, et à ton dépôt git si tu actives la synchronisation.
 - **Windows et macOS** via Wails, avec CI GitHub Actions.
 
 <img src="docs/screenshot-claude.png" alt="Découpage d'une tâche avec Claude" width="100%" />
@@ -39,6 +42,8 @@ coach propulsé par **Claude Code (haiku)**.
 
 - Go **1.26+**
 - Node.js **22+** et npm
+- [git](https://git-scm.com) **2.28+** pour la synchronisation optionnelle, avec tes identifiants
+  déjà configurés (SSH ou gestionnaire d'identifiants). Le reste de l'application fonctionne sans git.
 - Wails CLI v2.17 :
 
 ```bash
@@ -118,8 +123,29 @@ L'intégration passe par la CLI locale, sans serveur intermédiaire :
 | macOS | `~/Library/Application Support/todo/` |
 | Windows | `%AppData%\todo\` |
 
-On y trouve `todo.db` (SQLite, WAL) et le dossier `images/`. Réglages → Données permet
-d'ouvrir ce dossier. La suppression est locale : aucune synchronisation cloud.
+On y trouve `todo.db` (SQLite, WAL), le dossier `images/` et, si la synchronisation est
+configurée, le clone `sync/` géré par l'application. Réglages → Données permet d'ouvrir ce
+dossier. Sans dépôt git configuré, tout reste strictement local.
+
+## Synchronisation git
+
+Réglages → Synchronisation accepte l'adresse d'un dépôt **privé** (vide ou dédié à Todo).
+L'application utilise le client `git` de la machine, donc tes identifiants SSH ou ton
+gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
+
+- Un envoi part quelques secondes après chaque changement, une récupération a lieu au démarrage,
+  et une dernière synchronisation est tentée à la fermeture. Le bouton **Synchroniser** force
+  un aller-retour.
+- Le dépôt contient `todo.json` (instantané lisible) et `images/`. La base SQLite n'est jamais
+  commitée : il n'y a donc pas de conflit binaire.
+- La fusion se fait entité par entité (`updated_at`, dernier écrivain gagnant). Les sous-tâches
+  et les images fusionnent indépendamment de leur tâche. Une modification plus récente qu'une
+  suppression ressuscite l'élément ; les pierres tombales sont conservées 180 jours.
+- Les réglages (accent, coach, chemin de Claude Code) et l'état d'un minuteur en cours restent
+  propres à chaque ordinateur.
+- Hors ligne ou sans identifiants valides, l'application continue de fonctionner : l'erreur est
+  affichée dans les réglages et une nouvelle tentative part au prochain changement ou démarrage.
+- Chaque machine garde sa propre configuration du dépôt ; l'adresse n'est pas synchronisée.
 
 ## CI et releases
 
@@ -146,8 +172,9 @@ git push origin v1.0.0
 ├── src/                    # Tout le code Go de l'application
 │   ├── run.go              # Fenêtre, thème clair, options Wails
 │   ├── app.go              # Cycle de vie et état de l'application
-│   ├── api_*.go            # API exposée à Angular (tâches, images, réglages…)
-│   ├── store*.go           # SQLite : schéma, tâches, sous-tâches, images
+│   ├── api_*.go            # API exposée à Angular (tâches, images, réglages, sync…)
+│   ├── store*.go           # SQLite : schéma, tâches, sous-tâches, images, instantané
+│   ├── sync*.go            # Synchronisation git : fusion, worker, commandes git
 │   ├── claude*.go          # Détection Claude Code, prompts, parsing
 │   └── types.go            # Structures partagées avec le frontend
 ├── build/appicon.png       # Icône de l'application

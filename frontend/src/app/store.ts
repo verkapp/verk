@@ -19,6 +19,7 @@ import {
   HistoryGroup,
   Settings,
   Stats,
+  SyncStatus,
   Task,
   TaskInput,
   ToastMessage,
@@ -32,6 +33,7 @@ export class Store {
   readonly tasks = signal<Task[]>([]);
   readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, claudePath: '' });
   readonly claude = signal<ClaudeStatus | null>(null);
+  readonly sync = signal<SyncStatus | null>(null);
   readonly info = signal<AppInfo | null>(null);
   readonly loading = signal(true);
   readonly fatalError = signal<string | null>(null);
@@ -95,15 +97,21 @@ export class Store {
   readonly coachNudge = computed(() => this.nudge());
 
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private syncGeneration = -1;
+  private syncPolling = false;
 
   async init(): Promise<void> {
-    setInterval(() => this.now.set(Date.now()), 15_000);
+    setInterval(() => {
+      this.now.set(Date.now());
+      void this.pollSync();
+    }, 15_000);
     try {
       const [tasks, settings, info] = await Promise.all([api.listTasks(), api.getSettings(), api.appInfo()]);
       this.tasks.set(tasks);
       this.info.set(info);
       this.applySettings(settings);
       void this.refreshClaude();
+      void this.pollSync();
       if (settings.coachEnabled && settings.coachOnStart) {
         setTimeout(() => void this.requestNudge(true), 1200);
       }
@@ -139,6 +147,65 @@ export class Store {
       await api.saveSettings(next);
     } catch (error) {
       this.notify(errorMessage(error), 'error');
+    }
+  }
+
+  /** Reads the git sync status and refreshes the task list after a pull. */
+  async refreshSync(): Promise<SyncStatus | null> {
+    try {
+      const status = await api.syncStatus();
+      const previousGeneration = this.syncGeneration;
+      this.sync.set(status);
+      this.syncGeneration = status.generation;
+      if (status.generation !== previousGeneration) {
+        await this.reload();
+      }
+      return status;
+    } catch {
+      this.sync.set(null);
+      return null;
+    }
+  }
+
+  private async pollSync(): Promise<void> {
+    if (this.syncPolling) {
+      return;
+    }
+    this.syncPolling = true;
+    try {
+      await this.refreshSync();
+    } finally {
+      this.syncPolling = false;
+    }
+  }
+
+  async configureSync(remote: string, enabled: boolean): Promise<SyncStatus | null> {
+    try {
+      await api.setSyncConfig(remote, enabled);
+      const status = await this.refreshSync();
+      this.notify(remote ? 'Synchronisation git configurée.' : 'Synchronisation désactivée.', remote ? 'accent' : 'default');
+      return status;
+    } catch (error) {
+      this.notify(errorMessage(error), 'error');
+      await this.refreshSync();
+      return null;
+    }
+  }
+
+  async syncNow(): Promise<boolean> {
+    try {
+      await api.syncNow();
+      const status = await this.refreshSync();
+      if (status?.lastError) {
+        this.notify(status.lastError, 'error');
+        return false;
+      }
+      this.notify('Synchronisation terminée.', 'accent');
+      return true;
+    } catch (error) {
+      this.notify(errorMessage(error), 'error');
+      await this.refreshSync();
+      return false;
     }
   }
 
@@ -346,6 +413,14 @@ export class Store {
   async openDataFolder(): Promise<void> {
     try {
       await api.openDataFolder();
+    } catch (error) {
+      this.fail(error);
+    }
+  }
+
+  async openSyncFolder(): Promise<void> {
+    try {
+      await api.openSyncFolder();
     } catch (error) {
       this.fail(error);
     }

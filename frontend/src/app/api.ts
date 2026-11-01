@@ -1,5 +1,5 @@
 import { mockCall } from './mock';
-import { AppInfo, ClaudeStatus, Settings, Task, TaskInput } from './models';
+import { AppInfo, ClaudeStatus, Settings, SyncStatus, Task, TaskInput } from './models';
 
 type Bridge = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
@@ -46,6 +46,11 @@ export const api = {
 
   openDataFolder: () => call<void>('OpenDataFolder'),
   appInfo: () => call<AppInfo>('AppInfo'),
+
+  syncStatus: () => call<SyncStatus>('SyncStatus'),
+  setSyncConfig: (remote: string, enabled: boolean) => call<void>('SetSyncConfig', remote, enabled),
+  syncNow: () => call<SyncStatus>('SyncNow'),
+  openSyncFolder: () => call<void>('OpenSyncFolder'),
 };
 
 export function errorMessage(error: unknown): string {
