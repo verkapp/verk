@@ -1,7 +1,17 @@
 import { computed, Injectable, signal } from '@angular/core';
 
 import { api, errorMessage } from './api';
-import { compareOpenTasks, endOfToday, groupHistory, isDueToday, isOverdue, isSameDay, startOfDay } from './dates';
+import {
+  compareOpenTasks,
+  endOfToday,
+  groupHistory,
+  isDueToday,
+  isOverdue,
+  isSameDay,
+  resumeDay,
+  resumeDueAt,
+  startOfDay,
+} from './dates';
 import {
   AccentName,
   AppInfo,
@@ -193,6 +203,28 @@ export class Store {
       const task = await this.mutate(api.setTaskStarted(id, started));
       this.notify(started ? 'Tâche en cours.' : 'Tâche remise en attente.', 'default');
       return task;
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  /** Pushes a task back to tomorrow (or Monday after the weekend) and pauses it. */
+  async deferTask(task: Task): Promise<Task> {
+    const { label } = resumeDay();
+    try {
+      if (task.startedAt !== null) {
+        await api.setTaskStarted(task.id, false);
+      }
+      const updated = await this.mutate(
+        api.updateTask(task.id, {
+          title: task.title,
+          description: task.description,
+          dueAt: resumeDueAt(task),
+        }),
+      );
+      this.notify(`Tâche reportée à ${label}.`, 'default');
+      return updated;
     } catch (error) {
       this.fail(error);
       throw error;

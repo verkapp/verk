@@ -13,6 +13,8 @@ coach propulsé par **Claude Code (haiku)**.
 - **Images** jointes (copiées dans le dossier de données de l'application), avec aperçu plein écran.
 - **Aujourd'hui** : tâches en retard, du jour, à venir et sans date, regroupées automatiquement.
 - **Toutes les tâches** avec filtres (en retard, aujourd'hui, sans date) et ajout rapide.
+- **Reprendre demain ou lundi** : reporte une tâche au lendemain, ou au lundi quand le week-end
+  approche, et met le minuteur en pause.
 - **Historique** des tâches terminées, regroupées par jour, réouvrables d'un clic.
 - **Coach Claude Code** : un mot court et bienveillant pour repartir, et un découpage assisté
   des tâches en sous-tâches concrètes. Le coach peut être désactivé dans les réglages.

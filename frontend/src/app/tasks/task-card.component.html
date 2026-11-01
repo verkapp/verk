@@ -65,6 +65,16 @@
 
   @if (!task().done) {
     <button
+      class="start-btn defer-btn"
+      type="button"
+      [attr.title]="'Reprendre ' + resumeLabel()"
+      [attr.aria-label]="'Reprendre ' + resumeLabel()"
+      (click)="onDefer($event)"
+    >
+      <app-icon name="sunrise" [size]="14" [strokeWidth]="2" />
+    </button>
+
+    <button
       class="start-btn"
       type="button"
       [class.on]="task().startedAt !== null"

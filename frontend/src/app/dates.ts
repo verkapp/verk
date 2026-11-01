@@ -127,6 +127,27 @@ export function dueMeta(task: Task, now = Date.now()): DueMeta | null {
   return { label: `${formatShortDate(due)}${time}`, tone: 'later', full };
 }
 
+/** Day a task is picked back up: Monday when the weekend is ahead, tomorrow otherwise. */
+export function resumeDay(now = Date.now()): { date: Date; label: 'demain' | 'lundi' } {
+  const today = new Date(now);
+  const weekday = today.getDay();
+  const daysAhead = weekday === 5 ? 3 : weekday === 6 ? 2 : 1;
+  const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysAhead);
+  return { date, label: daysAhead === 1 ? 'demain' : 'lundi' };
+}
+
+/** Due timestamp for "reprendre": keeps a specific time, otherwise end of day. */
+export function resumeDueAt(task: Task, now = Date.now()): number {
+  const { date } = resumeDay(now);
+  if (task.dueAt !== null && hasSpecificTime(task.dueAt)) {
+    const time = new Date(task.dueAt);
+    date.setHours(time.getHours(), time.getMinutes(), 0, 0);
+  } else {
+    date.setHours(23, 59, 0, 0);
+  }
+  return date.getTime();
+}
+
 export function createdAgo(value: number, now = Date.now()): string {
   if (isToday(value)) {
     return "aujourd'hui";
