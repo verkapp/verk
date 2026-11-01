@@ -176,6 +176,10 @@ export class TaskListComponent {
     void this.store.setTaskStarted(task.id, task.startedAt === null).catch(() => undefined);
   }
 
+  defer(task: Task): void {
+    void this.store.deferTask(task).catch(() => undefined);
+  }
+
   setFilter(filter: TaskFilter): void {
     this.filter.set(filter);
   }

@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 
 import { errorMessage } from '../api';
-import { formatCreatedAt, fromDueInputs, toDueInputs } from '../dates';
+import { formatCreatedAt, fromDueInputs, resumeDay, toDueInputs } from '../dates';
 import { Subtask, Task, TaskImage } from '../models';
 import { Store } from '../store';
 import { IconComponent } from '../ui/icon.component';
@@ -68,6 +68,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     return created ? `Créée le ${formatCreatedAt(created)}` : 'À la création';
   });
   readonly dueAt = computed(() => fromDueInputs(this.dueDate(), this.dueTime()));
+  readonly resumeLabel = computed(() => resumeDay().label);
 
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private saveQueue: Promise<Task | null> = Promise.resolve(null);
@@ -253,6 +254,23 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     }
     try {
       await this.store.setTaskDone(id, !this.isDone());
+      this.closed.emit();
+    } catch {
+      // The store already surfaced the error.
+    }
+  }
+
+  async defer(): Promise<void> {
+    const id = await this.ensureSaved();
+    if (!id) {
+      return;
+    }
+    const task = this.store.tasks().find((candidate) => candidate.id === id);
+    if (!task) {
+      return;
+    }
+    try {
+      await this.store.deferTask(task);
       this.closed.emit();
     } catch {
       // The store already surfaced the error.

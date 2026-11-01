@@ -250,6 +250,12 @@
     </div>
     <div class="foot-right">
       @if (taskId()) {
+        @if (!isDone()) {
+          <button class="btn btn-ghost" type="button" (click)="defer()">
+            <app-icon name="sunrise" [size]="15" />
+            Reprendre {{ resumeLabel() }}
+          </button>
+        }
         <button class="btn btn-soft" type="button" (click)="toggleDone()">
           <app-icon name="check" [size]="15" />
           {{ isDone() ? 'Rouvrir' : 'Marquer faite' }}

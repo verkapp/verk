@@ -28,6 +28,7 @@ export type IconName =
   | 'pause'
   | 'refresh'
   | 'check-circle'
+  | 'sunrise'
   | 'leaf';
 
 @Component({
@@ -152,6 +153,15 @@ export type IconName =
         @case ('refresh') {
           <path d="M20 11a8 8 0 1 0-2 5.3" />
           <path d="M20 4v7h-7" />
+        }
+        @case ('sunrise') {
+          <path d="M12 2v8" />
+          <path d="m4.93 10.93 1.41 1.41" />
+          <path d="M2 18h2M20 18h2" />
+          <path d="m19.07 10.93-1.41 1.41" />
+          <path d="M22 22H2" />
+          <path d="m8 6 4-4 4 4" />
+          <path d="M16 18a4 4 0 0 0-8 0" />
         }
         @case ('leaf') {
           <path d="M20 4c0 9-5.5 14-12 14a5 5 0 0 1-4-8c3-5 9-6 16-6z" />

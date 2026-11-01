@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 
-import { createdAgo, dueMeta, elapsedMs, formatDuration, subtaskProgress } from '../dates';
+import { createdAgo, dueMeta, elapsedMs, formatDuration, resumeDay, subtaskProgress } from '../dates';
 import { Task } from '../models';
 import { Store } from '../store';
 import { IconComponent } from '../ui/icon.component';
@@ -19,8 +19,10 @@ export class TaskCardComponent {
   readonly opened = output<void>();
   readonly toggled = output<void>();
   readonly started = output<void>();
+  readonly deferred = output<void>();
 
   readonly due = computed(() => dueMeta(this.task()));
+  readonly resumeLabel = computed(() => resumeDay(this.store.now()).label);
   readonly progress = computed(() => subtaskProgress(this.task()));
   readonly doneSubtasks = computed(() => this.task().subtasks.filter((subtask) => subtask.done).length);
   readonly age = computed(() => createdAgo(this.task().createdAt));
@@ -42,6 +44,11 @@ export class TaskCardComponent {
   onStart(event: Event): void {
     event.stopPropagation();
     this.started.emit();
+  }
+
+  onDefer(event: Event): void {
+    event.stopPropagation();
+    this.deferred.emit();
   }
 
   onKeydown(event: Event): void {
