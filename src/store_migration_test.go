@@ -75,7 +75,7 @@ func TestOpenStoreMigratesLegacyDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("openStoreAt should migrate the legacy database: %v", err)
 	}
-	defer st.close()
+	t.Cleanup(func() { _ = st.close() })
 
 	columns, err := tableColumns(st.db, "tasks")
 	if err != nil {
