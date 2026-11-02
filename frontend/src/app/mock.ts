@@ -508,7 +508,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
     case 'CheckForUpdates':
     case 'DownloadUpdate': {
       const info: UpdateInfo = {
-        currentVersion: '1.2.2 · aperçu navigateur',
+        currentVersion: '1.2.3 · aperçu navigateur',
         latestVersion: '',
         available: false,
         downloading: false,
@@ -525,7 +525,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       return undefined as T;
     case 'AppInfo': {
       const info: AppInfo = {
-        version: '1.2.2 · aperçu navigateur',
+        version: '1.2.3 · aperçu navigateur',
         dataDir: '~/Library/Application Support/todo',
         database: 'todo.db',
         databasePath: '~/Library/Application Support/todo/todo.db',
