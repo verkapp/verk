@@ -11,7 +11,7 @@ import (
 )
 
 func (s *store) listTasks() ([]Task, error) {
-	rows, err := s.db.Query(`SELECT id, title, description, done, created_at, due_at, completed_at, started_at, time_spent FROM tasks`)
+	rows, err := s.db.Query(`SELECT id, profile_id, title, description, done, position, created_at, due_at, completed_at, started_at, time_spent FROM tasks`)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func (s *store) listTasks() ([]Task, error) {
 	for rows.Next() {
 		var t Task
 		var done int
-		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &done, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent); err != nil {
+		if err := rows.Scan(&t.ID, &t.ProfileID, &t.Title, &t.Description, &done, &t.Position, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent); err != nil {
 			return nil, err
 		}
 		t.Done = done == 1
@@ -94,6 +94,12 @@ func sortTasks(tasks []Task) {
 			}
 			return ac > bc
 		}
+		// Open tasks follow the manual order. Position is the primary key;
+		// the legacy due/creation sort only breaks ties (old rows, or tasks
+		// created before the first reorder).
+		if a.Position != b.Position {
+			return a.Position < b.Position
+		}
 		if (a.DueAt == nil) != (b.DueAt == nil) {
 			return a.DueAt != nil
 		}
@@ -117,15 +123,52 @@ func (s *store) getTask(id string) (Task, error) {
 	return Task{}, errNotFound
 }
 
+// profileOrDefault resolves a profile id, falling back to the first profile
+// when the id is empty or unknown (e.g. a task synced from an older version).
+func (s *store) profileOrDefault(id string) (string, error) {
+	if id != "" {
+		var exists int
+		err := s.db.QueryRow(`SELECT 1 FROM profiles WHERE id = ?`, id).Scan(&exists)
+		if err == nil {
+			return id, nil
+		}
+		if !errors.Is(err, sql.ErrNoRows) {
+			return "", err
+		}
+	}
+	var fallback string
+	err := s.db.QueryRow(`SELECT id FROM profiles ORDER BY position ASC, created_at ASC, id ASC LIMIT 1`).Scan(&fallback)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", errors.New("aucun profil n'est disponible")
+	}
+	return fallback, err
+}
+
+// nextTopPosition returns the position that puts a task at the top of its
+// profile. Positions are only compared inside a profile.
+func (s *store) nextTopPosition(profileID string) (int64, error) {
+	var position int64
+	err := s.db.QueryRow(`SELECT COALESCE(MIN(position), 0) FROM tasks WHERE profile_id = ?`, profileID).Scan(&position)
+	return position - 1, err
+}
+
 func (s *store) createTask(input TaskInput) (Task, error) {
 	title := cleanTitle(input.Title)
 	if title == "" {
 		return Task{}, errors.New("le titre est obligatoire")
 	}
+	profileID, err := s.profileOrDefault(input.ProfileID)
+	if err != nil {
+		return Task{}, err
+	}
+	position, err := s.nextTopPosition(profileID)
+	if err != nil {
+		return Task{}, err
+	}
 	id := newID()
 	now := time.Now().UnixMilli()
-	_, err := s.db.Exec(`INSERT INTO tasks (id, title, description, done, created_at, due_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?)`,
-		id, title, strings.TrimSpace(input.Description), now, normalizeDue(input.DueAt), now)
+	_, err = s.db.Exec(`INSERT INTO tasks (id, profile_id, title, description, done, position, created_at, due_at, updated_at) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+		id, profileID, title, strings.TrimSpace(input.Description), position, now, normalizeDue(input.DueAt), now)
 	if err != nil {
 		return Task{}, err
 	}
@@ -137,8 +180,28 @@ func (s *store) updateTask(id string, input TaskInput) (Task, error) {
 	if title == "" {
 		return Task{}, errors.New("le titre est obligatoire")
 	}
-	res, err := s.db.Exec(`UPDATE tasks SET title = ?, description = ?, due_at = ?, updated_at = ? WHERE id = ?`,
-		title, strings.TrimSpace(input.Description), normalizeDue(input.DueAt), time.Now().UnixMilli(), id)
+	profileID, err := s.profileOrDefault(input.ProfileID)
+	if err != nil {
+		return Task{}, err
+	}
+	var currentProfile string
+	if err := s.db.QueryRow(`SELECT profile_id FROM tasks WHERE id = ?`, id).Scan(&currentProfile); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Task{}, errNotFound
+		}
+		return Task{}, err
+	}
+	position := int64(0)
+	moveToTop := currentProfile != profileID
+	if moveToTop {
+		if position, err = s.nextTopPosition(profileID); err != nil {
+			return Task{}, err
+		}
+	}
+	res, err := s.db.Exec(`UPDATE tasks SET title = ?, description = ?, due_at = ?, profile_id = ?,
+		position = CASE WHEN ? THEN ? ELSE position END, updated_at = ? WHERE id = ?`,
+		title, strings.TrimSpace(input.Description), normalizeDue(input.DueAt), profileID,
+		boolInt(moveToTop), position, time.Now().UnixMilli(), id)
 	if err != nil {
 		return Task{}, err
 	}
@@ -154,11 +217,28 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 		now := time.Now().UnixMilli()
 		completedAt = &now
 	}
+	var top *int64
+	if !done {
+		var profileID string
+		if err := s.db.QueryRow(`SELECT profile_id FROM tasks WHERE id = ?`, id).Scan(&profileID); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return Task{}, errNotFound
+			}
+			return Task{}, err
+		}
+		position, err := s.nextTopPosition(profileID)
+		if err != nil {
+			return Task{}, err
+		}
+		top = &position
+	}
 	// Finishing (or reopening) a task stops a running timer and banks its time.
+	// Reopened tasks come back at the top of their profile.
 	now := time.Now().UnixMilli()
 	res, err := s.db.Exec(`UPDATE tasks SET done = ?, completed_at = ?,
 		time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
-		started_at = NULL, updated_at = ? WHERE id = ?`, boolInt(done), completedAt, now, now, id)
+		started_at = NULL, position = COALESCE(?, position), updated_at = ? WHERE id = ?`,
+		boolInt(done), completedAt, now, top, now, id)
 	if err != nil {
 		return Task{}, err
 	}

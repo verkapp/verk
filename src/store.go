@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -75,6 +76,8 @@ func openStoreAt(dir string) (*store, error) {
 func migrate(db *sql.DB) error {
 	columns := map[string][]struct{ name, ddl string }{
 		"tasks": {
+			{"profile_id", "TEXT NOT NULL DEFAULT ''"},
+			{"position", "INTEGER NOT NULL DEFAULT 0"},
 			{"started_at", "INTEGER"},
 			{"time_spent", "INTEGER NOT NULL DEFAULT 0"},
 			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
@@ -86,6 +89,7 @@ func migrate(db *sql.DB) error {
 			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
 		},
 	}
+	positionAdded := false
 	for table, wanted := range columns {
 		have, err := tableColumns(db, table)
 		if err != nil {
@@ -97,6 +101,9 @@ func migrate(db *sql.DB) error {
 			}
 			if _, err := db.Exec(`ALTER TABLE ` + table + ` ADD COLUMN ` + c.name + ` ` + c.ddl); err != nil {
 				return err
+			}
+			if table == "tasks" && c.name == "position" {
+				positionAdded = true
 			}
 		}
 	}
@@ -112,7 +119,84 @@ func migrate(db *sql.DB) error {
 			return err
 		}
 	}
-	return nil
+	// Order existing tasks exactly like the previous automatic sort did, so
+	// enabling manual reordering does not shuffle the user's list.
+	if positionAdded {
+		if err := backfillTaskPositions(db); err != nil {
+			return err
+		}
+	}
+	return ensureProfiles(db)
+}
+
+// ensureProfiles seeds the two starter profiles and makes sure every task
+// belongs to one. It is idempotent and runs on every startup.
+func ensureProfiles(db *sql.DB) error {
+	var count int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM profiles`).Scan(&count); err != nil {
+		return err
+	}
+	if count == 0 {
+		now := time.Now().UnixMilli()
+		starters := []Profile{
+			{ID: newID(), Name: "Perso", Color: profileColors[0], Position: 0, CreatedAt: now},
+			{ID: newID(), Name: "Travail", Color: profileColors[1], Position: 1, CreatedAt: now},
+		}
+		for _, p := range starters {
+			if _, err := db.Exec(`INSERT INTO profiles (id, name, color, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+				p.ID, p.Name, p.Color, p.Position, p.CreatedAt, now); err != nil {
+				return err
+			}
+		}
+	}
+	var fallback string
+	if err := db.QueryRow(`SELECT id FROM profiles ORDER BY position ASC, created_at ASC, id ASC LIMIT 1`).Scan(&fallback); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		return err
+	}
+	_, err := db.Exec(`UPDATE tasks SET profile_id = ? WHERE profile_id = '' OR profile_id NOT IN (SELECT id FROM profiles)`, fallback)
+	return err
+}
+
+// backfillTaskPositions assigns a position to every task using the legacy
+// automatic order. sortTasks relies on due dates and creation time when all
+// positions are equal, which is exactly what we need here.
+func backfillTaskPositions(db *sql.DB) error {
+	rows, err := db.Query(`SELECT id, done, created_at, due_at, completed_at FROM tasks`)
+	if err != nil {
+		return err
+	}
+	tasks := []Task{}
+	for rows.Next() {
+		var t Task
+		var done int
+		if err := rows.Scan(&t.ID, &done, &t.CreatedAt, &t.DueAt, &t.CompletedAt); err != nil {
+			_ = rows.Close()
+			return err
+		}
+		t.Done = done == 1
+		tasks = append(tasks, t)
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	sortTasks(tasks)
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	for index, task := range tasks {
+		if _, err := tx.Exec(`UPDATE tasks SET position = ? WHERE id = ?`, index, task.ID); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func tableColumns(db *sql.DB, table string) (map[string]bool, error) {

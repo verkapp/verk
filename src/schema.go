@@ -4,11 +4,21 @@ const schema = `
 	PRAGMA journal_mode = WAL;
 	PRAGMA foreign_keys = ON;
 	PRAGMA busy_timeout = 5000;
+	CREATE TABLE IF NOT EXISTS profiles (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		color TEXT NOT NULL DEFAULT '#7b6cf0',
+		position INTEGER NOT NULL DEFAULT 0,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL DEFAULT 0
+	);
 	CREATE TABLE IF NOT EXISTS tasks (
 		id TEXT PRIMARY KEY,
+		profile_id TEXT NOT NULL DEFAULT '',
 		title TEXT NOT NULL,
 		description TEXT NOT NULL DEFAULT '',
 		done INTEGER NOT NULL DEFAULT 0,
+		position INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,
 		due_at INTEGER,
 		completed_at INTEGER,
@@ -45,4 +55,5 @@ const schema = `
 	);
 	CREATE INDEX IF NOT EXISTS idx_subtasks_task ON subtasks(task_id);
 	CREATE INDEX IF NOT EXISTS idx_images_task ON images(task_id);
+	CREATE INDEX IF NOT EXISTS idx_tasks_profile ON tasks(profile_id);
 `

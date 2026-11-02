@@ -5,6 +5,14 @@ export interface Subtask {
   position: number;
 }
 
+export interface Profile {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+  createdAt: number;
+}
+
 export interface TaskImage {
   id: string;
   name: string;
@@ -14,9 +22,11 @@ export interface TaskImage {
 
 export interface Task {
   id: string;
+  profileId: string;
   title: string;
   description: string;
   done: boolean;
+  position: number;
   createdAt: number;
   dueAt: number | null;
   completedAt: number | null;
@@ -30,6 +40,7 @@ export interface TaskInput {
   title: string;
   description: string;
   dueAt: number | null;
+  profileId: string;
 }
 
 export interface Settings {
@@ -38,7 +49,14 @@ export interface Settings {
   coachOnStart: boolean;
   timeTracking: boolean;
   showMomentum: boolean;
+  notifications: boolean;
   claudePath: string;
+}
+
+export interface NotificationStatus {
+  available: boolean;
+  authorized: boolean;
+  error: string;
 }
 
 export interface ClaudeStatus {

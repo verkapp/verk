@@ -172,6 +172,11 @@ export function compareOpenTasks(a: Task, b: Task): number {
   if (a.done) {
     return (b.completedAt ?? 0) - (a.completedAt ?? 0);
   }
+  // Open tasks follow the manual order stored in position. The legacy
+  // due/creation sort only breaks ties.
+  if (a.position !== b.position) {
+    return a.position - b.position;
+  }
   if ((a.dueAt === null) !== (b.dueAt === null)) {
     return a.dueAt === null ? 1 : -1;
   }

@@ -9,6 +9,9 @@ coach propulsé par **Claude Code (haiku)**.
 ## Fonctionnalités
 
 - **Tâches** avec titre, description, échéance (date + heure optionnelle), date de création.
+- **Réordonnancement** : glisse les tâches et les sous-tâches par leur poignée pour choisir ton ordre.
+- **Profils** (Travail, Perso, …) : des listes séparées qui regroupent leurs propres tâches,
+  statistiques et historique. Création, renommage, couleur et suppression depuis le menu ou les réglages.
 - **Sous-tâches** avec progression, ajout, renommage, suppression.
 - **Images** jointes (copiées dans le dossier de données de l'application), avec aperçu plein écran.
 - **Aujourd'hui** : tâches en retard, du jour, à venir et sans date, regroupées automatiquement.
@@ -16,8 +19,10 @@ coach propulsé par **Claude Code (haiku)**.
 - **Reprendre demain ou lundi** : reporte une tâche au lendemain, ou au lundi quand le week-end
   approche, et met le minuteur en pause.
 - **Historique** des tâches terminées, regroupées par jour, réouvrables d'un clic.
+- **Notifications bureau** : un rappel natif quand l'échéance d'une tâche ouverte est atteinte,
+  avec un bouton de test et une activation dans les réglages.
 - **Synchronisation git optionnelle** : un dépôt privé (GitHub, GitLab, serveur perso) pour
-  retrouver tâches et images sur plusieurs machines. Fusion sans conflit, suppressions propagées,
+  retrouver tâches, profils et images sur plusieurs machines. Fusion sans conflit, suppressions propagées,
   réglages propres à chaque ordinateur.
 - **Coach Claude Code** : un mot court et bienveillant pour repartir, et un découpage assisté
   des tâches en sous-tâches concrètes. Le coach peut être désactivé dans les réglages.

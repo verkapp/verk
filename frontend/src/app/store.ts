@@ -17,6 +17,8 @@ import {
   AppInfo,
   ClaudeStatus,
   HistoryGroup,
+  NotificationStatus,
+  Profile,
   Settings,
   Stats,
   SyncStatus,
@@ -31,8 +33,11 @@ const DAY = 86_400_000;
 @Injectable({ providedIn: 'root' })
 export class Store {
   readonly tasks = signal<Task[]>([]);
-  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, claudePath: '' });
+  readonly profiles = signal<Profile[]>([]);
+  readonly activeProfileId = signal<string>('');
+  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, claudePath: '' });
   readonly claude = signal<ClaudeStatus | null>(null);
+  readonly notifications = signal<NotificationStatus | null>(null);
   readonly sync = signal<SyncStatus | null>(null);
   readonly info = signal<AppInfo | null>(null);
   readonly loading = signal(true);
@@ -42,7 +47,27 @@ export class Store {
   readonly nudgeLoading = signal(false);
   readonly nudgeError = signal<string | null>(null);
 
-  readonly openTasks = computed(() => this.tasks().filter((task) => !task.done).sort(compareOpenTasks));
+  readonly activeProfile = computed(() =>
+    this.profiles().find((profile) => profile.id === this.activeProfileId()) ?? this.profiles()[0] ?? null,
+  );
+
+  /** Tasks of the active profile. Profiles are containers: every view is scoped. */
+  readonly scopedTasks = computed(() => {
+    const profileId = this.activeProfile()?.id;
+    return profileId ? this.tasks().filter((task) => task.profileId === profileId) : this.tasks();
+  });
+
+  readonly profileCounts = computed<Record<string, number>>(() => {
+    const counts: Record<string, number> = {};
+    for (const task of this.tasks()) {
+      if (!task.done) {
+        counts[task.profileId] = (counts[task.profileId] ?? 0) + 1;
+      }
+    }
+    return counts;
+  });
+
+  readonly openTasks = computed(() => this.scopedTasks().filter((task) => !task.done).sort(compareOpenTasks));
   readonly startedTasks = computed(() =>
     this.openTasks()
       .filter((task) => task.startedAt !== null)
@@ -51,21 +76,21 @@ export class Store {
   /** Wall clock refreshed every 15 s so running timers update on screen. */
   readonly now = signal(Date.now());
   readonly doneTodayTasks = computed(() =>
-    this.tasks()
+    this.scopedTasks()
       .filter((task) => task.done && task.completedAt !== null && isSameDay(task.completedAt, this.now()))
       .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0)),
   );
   readonly doneTasks = computed(() =>
-    this.tasks()
+    this.scopedTasks()
       .filter((task) => task.done)
       .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0)),
   );
-  readonly history = computed<HistoryGroup[]>(() => groupHistory(this.tasks()));
+  readonly history = computed<HistoryGroup[]>(() => groupHistory(this.scopedTasks()));
 
   readonly stats = computed<Stats>(() => {
     const now = Date.now();
-    const open = this.tasks().filter((task) => !task.done);
-    const doneToday = this.tasks().filter(
+    const open = this.scopedTasks().filter((task) => !task.done);
+    const doneToday = this.scopedTasks().filter(
       (task) => task.done && task.completedAt !== null && isSameDay(task.completedAt, now),
     ).length;
     const dueToday = open.filter((task) => isDueToday(task) && !isOverdue(task, now)).length;
@@ -106,11 +131,19 @@ export class Store {
       void this.pollSync();
     }, 15_000);
     try {
-      const [tasks, settings, info] = await Promise.all([api.listTasks(), api.getSettings(), api.appInfo()]);
+      const [tasks, settings, info, profiles] = await Promise.all([
+        api.listTasks(),
+        api.getSettings(),
+        api.appInfo(),
+        api.listProfiles(),
+      ]);
       this.tasks.set(tasks);
+      this.profiles.set(profiles);
+      this.restoreProfile(profiles);
       this.info.set(info);
       this.applySettings(settings);
       void this.refreshClaude();
+      void this.refreshNotifications();
       void this.pollSync();
       if (settings.coachEnabled && settings.coachOnStart) {
         setTimeout(() => void this.requestNudge(true), 1200);
@@ -132,9 +165,106 @@ export class Store {
     }
   }
 
-  applyAccent(accent: AccentName): void {
+  private applyAccent(accent: AccentName): void {
     document.documentElement.dataset['accent'] = accent;
   }
+
+  private restoreProfile(profiles: Profile[]): void {
+    let stored = '';
+    try {
+      stored = localStorage.getItem('todo.profile') ?? '';
+    } catch {
+      // storage can be unavailable in some webview contexts
+    }
+    const id = profiles.some((profile) => profile.id === stored) ? stored : (profiles[0]?.id ?? '');
+    this.activeProfileId.set(id);
+  }
+
+  private ensureActiveProfile(profiles: Profile[]): void {
+    if (profiles.some((profile) => profile.id === this.activeProfileId())) {
+      return;
+    }
+    this.activeProfileId.set(profiles[0]?.id ?? '');
+  }
+
+  selectProfile(id: string): void {
+    if (!this.profiles().some((profile) => profile.id === id)) {
+      return;
+    }
+    this.activeProfileId.set(id);
+    try {
+      localStorage.setItem('todo.profile', id);
+    } catch {
+      // ignore storage restrictions
+    }
+  }
+
+  async createProfile(name: string): Promise<Profile | null> {
+    try {
+      const profile = await api.createProfile(name);
+      const profiles = await api.listProfiles();
+      this.profiles.set(profiles);
+      this.selectProfile(profile.id);
+      this.notify(`Profil « ${profile.name} » créé.`, 'accent');
+      return profile;
+    } catch (error) {
+      this.fail(error);
+      return null;
+    }
+  }
+
+  async updateProfile(id: string, name: string, color: string): Promise<Profile | null> {
+    try {
+      const profile = await api.updateProfile(id, name, color);
+      this.profiles.update((profiles) => profiles.map((item) => (item.id === id ? profile : item)));
+      return profile;
+    } catch (error) {
+      this.fail(error);
+      return null;
+    }
+  }
+
+  async deleteProfile(id: string): Promise<void> {
+    try {
+      await api.deleteProfile(id);
+      await this.reload();
+      this.notify('Profil supprimé. Ses tâches ont été déplacées.', 'default');
+    } catch (error) {
+      this.fail(error);
+    }
+  }
+
+  async refreshNotifications(): Promise<NotificationStatus | null> {
+    try {
+      const status = await api.notificationStatus();
+      this.notifications.set(status);
+      return status;
+    } catch {
+      this.notifications.set(null);
+      return null;
+    }
+  }
+
+  async requestNotifications(): Promise<NotificationStatus | null> {
+    try {
+      const status = await api.requestNotifications();
+      this.notifications.set(status);
+      return status;
+    } catch (error) {
+      this.fail(error);
+      return null;
+    }
+  }
+
+  async testNotification(): Promise<void> {
+    try {
+      await api.testNotification();
+      this.notify('Notification de test envoyée.', 'accent');
+    } catch (error) {
+      this.fail(error);
+    }
+  }
+
 
   async saveSettings(patch: Partial<Settings>): Promise<void> {
     const next: Settings = { ...this.settings(), ...patch };
@@ -221,7 +351,10 @@ export class Store {
   }
 
   private async reload(): Promise<void> {
-    this.tasks.set(await api.listTasks());
+    const [tasks, profiles] = await Promise.all([api.listTasks(), api.listProfiles()]);
+    this.tasks.set(tasks);
+    this.profiles.set(profiles);
+    this.ensureActiveProfile(profiles);
   }
 
   private fail(error: unknown): void {
@@ -238,7 +371,8 @@ export class Store {
 
   async createTask(input: TaskInput): Promise<Task> {
     try {
-      return await this.mutate(api.createTask(input));
+      const profileId = input.profileId || this.activeProfile()?.id || '';
+      return await this.mutate(api.createTask({ ...input, profileId }));
     } catch (error) {
       this.fail(error);
       throw error;
@@ -288,6 +422,7 @@ export class Store {
           title: task.title,
           description: task.description,
           dueAt: resumeDueAt(task),
+          profileId: task.profileId,
         }),
       );
       this.notify(`Tâche reportée à ${label}.`, 'default');
@@ -302,6 +437,16 @@ export class Store {
     try {
       await this.mutate(api.deleteTask(id), true);
       this.notify('Tâche supprimée.', 'default');
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  /** Persists the manual order of the open tasks of the active profile. */
+  async reorderTasks(ids: string[]): Promise<void> {
+    try {
+      await this.mutate(api.reorderTasks(ids));
     } catch (error) {
       this.fail(error);
       throw error;
@@ -353,6 +498,15 @@ export class Store {
     }
   }
 
+  async reorderSubtasks(taskId: string, ids: string[]): Promise<Task> {
+    try {
+      return await this.mutate(api.reorderSubtasks(taskId, ids));
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
   async addImage(taskId: string): Promise<Task> {
     try {
       return await this.mutate(api.addImage(taskId));
@@ -377,7 +531,12 @@ export class Store {
     if (!clean) {
       return null;
     }
-    return this.createTask({ title: clean, description: '', dueAt: endOfToday() });
+    return this.createTask({
+      title: clean,
+      description: '',
+      dueAt: endOfToday(),
+      profileId: this.activeProfile()?.id ?? '',
+    });
   }
 
   async breakDown(taskId: string): Promise<string[]> {

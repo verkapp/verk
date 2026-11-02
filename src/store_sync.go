@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	snapshotVersion    = 1
+	snapshotVersion    = 2
 	tombstoneRetention = 180 * 24 * time.Hour
 
+	tombstoneProfile = "profile"
 	tombstoneTask    = "task"
 	tombstoneSubtask = "subtask"
 	tombstoneImage   = "image"
@@ -32,17 +33,29 @@ type syncConfig struct {
 type snapshot struct {
 	Version     int                 `json:"version"`
 	GeneratedAt int64               `json:"generatedAt"`
+	Profiles    []snapshotProfile   `json:"profiles"`
 	Tasks       []snapshotTask      `json:"tasks"`
 	Subtasks    []snapshotSubtask   `json:"subtasks"`
 	Images      []snapshotImage     `json:"images"`
 	Tombstones  []snapshotTombstone `json:"tombstones"`
 }
 
+type snapshotProfile struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Color     string `json:"color"`
+	Position  int    `json:"position"`
+	CreatedAt int64  `json:"createdAt"`
+	UpdatedAt int64  `json:"updatedAt"`
+}
+
 type snapshotTask struct {
 	ID          string `json:"id"`
+	ProfileID   string `json:"profileId"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
+	Position    int64  `json:"position"`
 	CreatedAt   int64  `json:"createdAt"`
 	DueAt       *int64 `json:"dueAt"`
 	CompletedAt *int64 `json:"completedAt"`
@@ -78,6 +91,7 @@ type snapshotTombstone struct {
 
 type snapshotBody struct {
 	Version    int                 `json:"version"`
+	Profiles   []snapshotProfile   `json:"profiles"`
 	Tasks      []snapshotTask      `json:"tasks"`
 	Subtasks   []snapshotSubtask   `json:"subtasks"`
 	Images     []snapshotImage     `json:"images"`
@@ -87,6 +101,7 @@ type snapshotBody struct {
 func (s snapshot) body() snapshotBody {
 	return snapshotBody{
 		Version:    s.Version,
+		Profiles:   s.Profiles,
 		Tasks:      s.Tasks,
 		Subtasks:   s.Subtasks,
 		Images:     s.Images,
@@ -97,6 +112,7 @@ func (s snapshot) body() snapshotBody {
 func emptySnapshot() snapshot {
 	return snapshot{
 		Version:    snapshotVersion,
+		Profiles:   []snapshotProfile{},
 		Tasks:      []snapshotTask{},
 		Subtasks:   []snapshotSubtask{},
 		Images:     []snapshotImage{},
@@ -118,6 +134,9 @@ func decodeSnapshot(data []byte) (snapshot, error) {
 	if out.Tasks == nil {
 		out.Tasks = []snapshotTask{}
 	}
+	if out.Profiles == nil {
+		out.Profiles = []snapshotProfile{}
+	}
 	if out.Subtasks == nil {
 		out.Subtasks = []snapshotSubtask{}
 	}
@@ -136,14 +155,33 @@ func (s *store) snapshot() (snapshot, error) {
 	out := emptySnapshot()
 	out.GeneratedAt = time.Now().UnixMilli()
 
-	rows, err := s.db.Query(`SELECT id, title, description, done, created_at, due_at, completed_at, started_at, time_spent, updated_at FROM tasks ORDER BY id`)
+	profileRows, err := s.db.Query(`SELECT id, name, color, position, created_at, updated_at FROM profiles ORDER BY position, created_at, id`)
+	if err != nil {
+		return snapshot{}, err
+	}
+	for profileRows.Next() {
+		var p snapshotProfile
+		if err := profileRows.Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			_ = profileRows.Close()
+			return snapshot{}, err
+		}
+		out.Profiles = append(out.Profiles, p)
+	}
+	if err := profileRows.Close(); err != nil {
+		return snapshot{}, err
+	}
+	if err := profileRows.Err(); err != nil {
+		return snapshot{}, err
+	}
+
+	rows, err := s.db.Query(`SELECT id, profile_id, title, description, done, position, created_at, due_at, completed_at, started_at, time_spent, updated_at FROM tasks ORDER BY id`)
 	if err != nil {
 		return snapshot{}, err
 	}
 	for rows.Next() {
 		var t snapshotTask
 		var done int
-		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &done, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.ProfileID, &t.Title, &t.Description, &done, &t.Position, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent, &t.UpdatedAt); err != nil {
 			_ = rows.Close()
 			return snapshot{}, err
 		}
@@ -253,6 +291,41 @@ func mergeSnapshots(local, remote snapshot, now int64) snapshot {
 		}
 	}
 
+	localProfiles := mapProfiles(local.Profiles)
+	remoteProfiles := mapProfiles(remote.Profiles)
+	survivingProfiles := map[string]bool{}
+	for _, id := range unionKeys(localProfiles, remoteProfiles) {
+		l, lok := localProfiles[id]
+		r, rok := remoteProfiles[id]
+		var win snapshotProfile
+		switch {
+		case lok && rok:
+			win = l
+			if remoteWins(l.UpdatedAt, r.UpdatedAt, mustJSON(l), mustJSON(r)) {
+				win = r
+			}
+		case lok:
+			win = l
+		default:
+			win = r
+		}
+		if t, ok := tombs[tombstoneKey{tombstoneProfile, id}]; ok && win.UpdatedAt <= t.DeletedAt {
+			continue
+		}
+		out.Profiles = append(out.Profiles, win)
+		survivingProfiles[id] = true
+	}
+	// Tasks always need a container. If a profile was deleted on another
+	// machine, its tasks fall back to the first remaining profile.
+	fallbackProfile := ""
+	fallbackPosition := 0
+	for _, p := range out.Profiles {
+		if fallbackProfile == "" || p.Position < fallbackPosition {
+			fallbackProfile = p.ID
+			fallbackPosition = p.Position
+		}
+	}
+
 	localTasks := mapTasks(local.Tasks)
 	remoteTasks := mapTasks(remote.Tasks)
 	surviving := map[string]bool{}
@@ -279,6 +352,9 @@ func mergeSnapshots(local, remote snapshot, now int64) snapshot {
 			if aliveAt <= t.DeletedAt {
 				continue
 			}
+		}
+		if !survivingProfiles[win.ProfileID] {
+			win.ProfileID = fallbackProfile
 		}
 		out.Tasks = append(out.Tasks, win)
 		surviving[id] = true
@@ -340,6 +416,16 @@ func mergeSnapshots(local, remote snapshot, now int64) snapshot {
 		out.Tombstones = append(out.Tombstones, t)
 	}
 
+	sort.Slice(out.Profiles, func(i, j int) bool {
+		a, b := out.Profiles[i], out.Profiles[j]
+		if a.Position != b.Position {
+			return a.Position < b.Position
+		}
+		if a.CreatedAt != b.CreatedAt {
+			return a.CreatedAt < b.CreatedAt
+		}
+		return a.ID < b.ID
+	})
 	sort.Slice(out.Tasks, func(i, j int) bool { return out.Tasks[i].ID < out.Tasks[j].ID })
 	sort.Slice(out.Subtasks, func(i, j int) bool {
 		a, b := out.Subtasks[i], out.Subtasks[j]
@@ -409,6 +495,14 @@ func mustJSON(value any) string {
 
 func mapTasks(items []snapshotTask) map[string]snapshotTask {
 	out := make(map[string]snapshotTask, len(items))
+	for _, item := range items {
+		out[item.ID] = item
+	}
+	return out
+}
+
+func mapProfiles(items []snapshotProfile) map[string]snapshotProfile {
+	out := make(map[string]snapshotProfile, len(items))
 	for _, item := range items {
 		out[item.ID] = item
 	}
@@ -501,15 +595,21 @@ func (s *store) replaceSnapshot(snap snapshot) error {
 	}
 	defer tx.Rollback()
 
-	for _, stmt := range []string{`DELETE FROM subtasks`, `DELETE FROM images`, `DELETE FROM tasks`, `DELETE FROM tombstones`} {
+	for _, stmt := range []string{`DELETE FROM subtasks`, `DELETE FROM images`, `DELETE FROM tasks`, `DELETE FROM profiles`, `DELETE FROM tombstones`} {
 		if _, err := tx.Exec(stmt); err != nil {
 			return err
 		}
 	}
+	for _, p := range snap.Profiles {
+		if _, err := tx.Exec(`INSERT INTO profiles (id, name, color, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			p.ID, p.Name, p.Color, p.Position, p.CreatedAt, p.UpdatedAt); err != nil {
+			return err
+		}
+	}
 	for _, t := range snap.Tasks {
-		if _, err := tx.Exec(`INSERT INTO tasks (id, title, description, done, created_at, due_at, completed_at, started_at, time_spent, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			t.ID, t.Title, t.Description, boolInt(t.Done), t.CreatedAt, t.DueAt, t.CompletedAt, t.StartedAt, t.TimeSpent, t.UpdatedAt); err != nil {
+		if _, err := tx.Exec(`INSERT INTO tasks (id, profile_id, title, description, done, position, created_at, due_at, completed_at, started_at, time_spent, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			t.ID, t.ProfileID, t.Title, t.Description, boolInt(t.Done), t.Position, t.CreatedAt, t.DueAt, t.CompletedAt, t.StartedAt, t.TimeSpent, t.UpdatedAt); err != nil {
 			return err
 		}
 	}

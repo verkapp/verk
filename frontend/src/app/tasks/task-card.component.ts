@@ -16,10 +16,15 @@ import { IconComponent } from '../ui/icon.component';
 export class TaskCardComponent {
   readonly store = inject(Store);
   readonly task = input.required<Task>();
+  readonly reorderable = input(false);
+  readonly dragging = input(false);
+  readonly dropPosition = input<'before' | 'after' | null>(null);
   readonly opened = output<void>();
   readonly toggled = output<void>();
   readonly started = output<void>();
   readonly deferred = output<void>();
+
+  private suppressClick = false;
 
   readonly due = computed(() => dueMeta(this.task()));
   readonly resumeLabel = computed(() => resumeDay(this.store.now()).label);
@@ -39,6 +44,24 @@ export class TaskCardComponent {
   onToggle(event: Event): void {
     event.stopPropagation();
     this.toggled.emit();
+  }
+
+  onClick(): void {
+    if (this.suppressClick) {
+      return;
+    }
+    this.opened.emit();
+  }
+
+  onDragStart(): void {
+    this.suppressClick = true;
+  }
+
+  onDragEnd(): void {
+    // The click that follows a drag must not open the drawer.
+    setTimeout(() => {
+      this.suppressClick = false;
+    });
   }
 
   onStart(event: Event): void {

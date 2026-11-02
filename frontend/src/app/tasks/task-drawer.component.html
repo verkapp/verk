@@ -65,6 +65,20 @@
         <span class="field-label"><app-icon name="clock" [size]="13" /> Création</span>
         <p class="field-static">{{ createdLabel() }}</p>
       </div>
+
+      <div class="field">
+        <span class="field-label"><app-icon name="folder" [size]="13" /> Profil</span>
+        <select
+          class="profile-select"
+          [value]="profileId()"
+          (change)="onProfileChange($any($event.target).value)"
+          aria-label="Profil de la tâche"
+        >
+          @for (profile of store.profiles(); track profile.id) {
+            <option [value]="profile.id">{{ profile.name }}</option>
+          }
+        </select>
+      </div>
     </div>
 
     <div class="section">
@@ -154,7 +168,23 @@
         <div class="progress" aria-hidden="true"><i [style.width.%]="progress()"></i></div>
         <div class="sub-list">
           @for (subtask of subtasks(); track subtask.id) {
-            <div class="sub-row">
+            <div
+              class="sub-row"
+              [class.dragging]="draggedSubtaskId() === subtask.id"
+              [class.drop-before]="subtaskDropPosition(subtask.id) === 'before'"
+              [class.drop-after]="subtaskDropPosition(subtask.id) === 'after'"
+              (dragover)="onSubtaskDragOver($event, subtask)"
+              (drop)="onSubtaskDrop($event, subtask)"
+            >
+              <span
+                class="sub-grip"
+                draggable="true"
+                (dragstart)="onSubtaskDragStart($event, subtask)"
+                (dragend)="onSubtaskDragEnd()"
+                aria-hidden="true"
+              >
+                <app-icon name="grip" [size]="12" />
+              </span>
               <button
                 class="mini-check"
                 type="button"

@@ -28,7 +28,7 @@ import { IconComponent } from '../ui/icon.component';
   styleUrl: './task-drawer.component.css',
 })
 export class TaskDrawerComponent implements OnInit, AfterViewInit {
-  private readonly store = inject(Store);
+  readonly store = inject(Store);
 
   readonly task = input<Task | null>(null);
   readonly presetDue = input<number | null>(null);
@@ -38,6 +38,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
   readonly description = signal('');
   readonly dueDate = signal('');
   readonly dueTime = signal('');
+  readonly profileId = signal('');
   readonly taskId = signal<string | null>(null);
   readonly createdAt = signal<number | null>(null);
   readonly isDone = signal(false);
@@ -54,6 +55,8 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
   readonly breakingDown = signal(false);
   readonly aiError = signal<string | null>(null);
   readonly addSubtaskTitle = signal('');
+  readonly draggedSubtaskId = signal<string | null>(null);
+  readonly subtaskDrop = signal<{ id: string; after: boolean } | null>(null);
 
   readonly titleInput = viewChild<ElementRef<HTMLTextAreaElement>>('titleInput');
 
@@ -82,6 +85,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
       const due = toDueInputs(this.presetDue());
       this.dueDate.set(due.date);
       this.dueTime.set(due.time);
+      this.profileId.set(this.store.activeProfile()?.id ?? '');
     }
   }
 
@@ -112,6 +116,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     this.isDone.set(task.done);
     this.title.set(task.title);
     this.description.set(task.description);
+    this.profileId.set(task.profileId);
     const due = toDueInputs(task.dueAt);
     this.dueDate.set(due.date);
     this.dueTime.set(due.time);
@@ -151,7 +156,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     if (!title) {
       return Promise.resolve(null);
     }
-    const input = { title, description: this.description(), dueAt: this.dueAt() };
+    const input = { title, description: this.description(), dueAt: this.dueAt(), profileId: this.profileId() };
     this.dirty.set(false);
     this.saving.set(true);
 
@@ -230,6 +235,11 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
 
   onTime(value: string): void {
     this.dueTime.set(value);
+    this.markDirty();
+  }
+
+  onProfileChange(value: string): void {
+    this.profileId.set(value);
     this.markDirty();
   }
 
@@ -351,6 +361,91 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     } catch {
       // handled by the store
     }
+  }
+
+  /* ----------------------- réordonnancement des sous-tâches ------------------- */
+
+  onSubtaskDragStart(event: DragEvent, subtask: Subtask): void {
+    this.draggedSubtaskId.set(subtask.id);
+    this.subtaskDrop.set(null);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', subtask.id);
+      const row = (event.target as HTMLElement | null)?.closest('.sub-row');
+      if (row) {
+        event.dataTransfer.setDragImage(row, 14, 18);
+      }
+    }
+  }
+
+  onSubtaskDragOver(event: DragEvent, subtask: Subtask): void {
+    const dragged = this.draggedSubtaskId();
+    if (!dragged) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    if (dragged === subtask.id) {
+      this.subtaskDrop.set(null);
+      return;
+    }
+    const row = (event.target as HTMLElement | null)?.closest('.sub-row');
+    if (!row) {
+      return;
+    }
+    const rect = row.getBoundingClientRect();
+    this.subtaskDrop.set({ id: subtask.id, after: event.clientY > rect.top + rect.height / 2 });
+  }
+
+  onSubtaskDrop(event: DragEvent, subtask: Subtask): void {
+    const dragged = this.draggedSubtaskId();
+    const target = this.subtaskDrop();
+    this.resetSubtaskDrag();
+    if (!dragged || dragged === subtask.id) {
+      return;
+    }
+    event.preventDefault();
+    const targetId = target?.id ?? subtask.id;
+    const after = target?.after ?? false;
+    const ids = this.subtasks()
+      .map((item) => item.id)
+      .filter((id) => id !== dragged);
+    const targetIndex = ids.indexOf(targetId);
+    if (targetIndex < 0) {
+      return;
+    }
+    ids.splice(targetIndex + (after ? 1 : 0), 0, dragged);
+    const ordered = ids
+      .map((id) => this.subtasks().find((item) => item.id === id))
+      .filter((item): item is Subtask => item !== undefined);
+    this.subtasks.set(ordered);
+    const taskId = this.taskId();
+    if (!taskId) {
+      return;
+    }
+    void this.store
+      .reorderSubtasks(taskId, ids)
+      .then((task) => this.applyTask(task))
+      .catch(() => undefined);
+  }
+
+  onSubtaskDragEnd(): void {
+    this.resetSubtaskDrag();
+  }
+
+  subtaskDropPosition(id: string): 'before' | 'after' | null {
+    const target = this.subtaskDrop();
+    if (!target || target.id !== id) {
+      return null;
+    }
+    return target.after ? 'after' : 'before';
+  }
+
+  private resetSubtaskDrag(): void {
+    this.draggedSubtaskId.set(null);
+    this.subtaskDrop.set(null);
   }
 
   /* -------------------------------- images ----------------------------- */
