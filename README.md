@@ -169,8 +169,8 @@ gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
 - Un tag `v*` crée automatiquement une **GitHub Release** avec les deux archives.
 
 ```bash
-git tag v1.2.2
-git push origin v1.2.2
+git tag v1.2.3
+git push origin v1.2.3
 ```
 
 ## Mises à jour

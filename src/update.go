@@ -72,7 +72,7 @@ type updater struct {
 
 // Version is overridden at build time with
 // -ldflags "-X todo/src.Version=<tag>".
-var Version = "1.2.2"
+var Version = "1.2.3"
 
 func (a *App) updateStatus() UpdateInfo {
 	a.updates.mu.Lock()
@@ -212,9 +212,9 @@ func fetchPublicRelease(ctx context.Context) (*githubRelease, error) {
 }
 
 func fetchReleaseWithGH(ctx context.Context) (*githubRelease, error) {
-	gh, err := exec.LookPath("gh")
+	gh, err := resolveGHPath()
 	if err != nil {
-		return nil, errors.New("gh est introuvable")
+		return nil, err
 	}
 	runCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -231,13 +231,45 @@ func fetchReleaseWithGH(ctx context.Context) (*githubRelease, error) {
 	return &release, nil
 }
 
+// resolveGHPath avoids relying on PATH: a macOS app launched from Finder
+// inherits a minimal environment and would miss Homebrew's gh.
+func resolveGHPath() (string, error) {
+	if path, err := exec.LookPath("gh"); err == nil {
+		return path, nil
+	}
+	home, _ := os.UserHomeDir()
+	var candidates []string
+	if runtime.GOOS == "windows" {
+		if base := os.Getenv("ProgramFiles"); base != "" {
+			candidates = append(candidates, filepath.Join(base, "GitHub CLI", "gh.exe"))
+		}
+		if base := os.Getenv("LOCALAPPDATA"); base != "" {
+			candidates = append(candidates, filepath.Join(base, "Programs", "GitHub CLI", "gh.exe"))
+		}
+	} else {
+		if runtime.GOOS == "darwin" {
+			candidates = append(candidates, "/opt/homebrew/bin/gh", "/usr/local/bin/gh")
+		}
+		if home != "" {
+			candidates = append(candidates, filepath.Join(home, ".local", "bin", "gh"))
+		}
+		candidates = append(candidates, "/usr/bin/gh", "/bin/gh")
+	}
+	for _, candidate := range candidates {
+		if isExecutableFile(candidate) {
+			return candidate, nil
+		}
+	}
+	return "", errors.New("gh est introuvable")
+}
+
 // downloadAsset either streams the public asset or asks gh to fetch it from
 // the private repository.
 func downloadAsset(ctx context.Context, asset githubAsset, tag string, useGH bool, destination string) error {
 	if !useGH {
 		return downloadFile(ctx, asset.BrowserDownloadURL, destination, maxUpdateBytes)
 	}
-	gh, err := exec.LookPath("gh")
+	gh, err := resolveGHPath()
 	if err != nil {
 		return errors.New("gh est introuvable pour télécharger la mise à jour")
 	}
