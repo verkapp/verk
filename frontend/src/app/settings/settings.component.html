@@ -416,6 +416,119 @@
 
     <section class="card">
       <div class="card-head">
+        <span class="card-icon"><app-icon name="refresh" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Mises à jour</h2>
+          <p>Todo se met à jour depuis GitHub, sans repasser par le site.</p>
+        </div>
+        @if (store.update(); as update) {
+          @if (update.downloading) {
+            <span class="pill status-pill">Téléchargement…</span>
+          } @else if (update.ready) {
+            <span class="pill pill-accent status-pill">Prête</span>
+          } @else if (update.available) {
+            <span class="pill status-pill">Disponible</span>
+          } @else if (update.latestVersion) {
+            <span class="pill pill-accent status-pill">À jour</span>
+          } @else {
+            <span class="pill status-pill">Jamais vérifiée</span>
+          }
+        } @else {
+          <span class="pill status-pill">Todo {{ store.info()?.version }}</span>
+        }
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Mises à jour automatiques</p>
+          <p class="row-sub">
+            Une vérification au démarrage puis toutes les six heures. Une version plus récente est téléchargée en
+            arrière-plan et installée à la fermeture de l’application.
+          </p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().autoUpdate"
+          [attr.aria-checked]="store.settings().autoUpdate"
+          (click)="toggleAutoUpdate()"
+          aria-label="Activer les mises à jour automatiques"
+        >
+          <span></span>
+        </button>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Version {{ store.info()?.version }}</p>
+          <p class="row-sub">La dernière version est publiée dans les GitHub Releases du projet.</p>
+        </div>
+        <button
+          class="btn btn-ghost btn-sm"
+          type="button"
+          (click)="checkUpdates()"
+          [disabled]="store.checkingUpdate() || store.update()?.downloading"
+        >
+          <app-icon name="refresh" [size]="14" [class.spin]="store.checkingUpdate()" />
+          Vérifier les mises à jour
+        </button>
+      </div>
+
+      @if (store.update(); as update) {
+        @if (update.available || update.ready || update.error) {
+          <div class="sync-status" [class.error]="update.error">
+            <span class="status-dot" [class.ok]="!update.error && (update.ready || !update.available)"></span>
+            <div class="status-copy">
+              <p class="row-title">
+                @if (update.ready) {
+                  Todo {{ update.latestVersion }} est prêt
+                } @else if (update.error) {
+                  La mise à jour n’a pas pu aboutir
+                } @else if (update.downloading) {
+                  Téléchargement de Todo {{ update.latestVersion }}…
+                } @else {
+                  Todo {{ update.latestVersion }} est disponible
+                }
+              </p>
+              <p class="row-sub">
+                @if (update.error) {
+                  {{ update.error }}
+                } @else if (update.ready) {
+                  Redémarre pour l’installer maintenant, ou laisse l’application se mettre à jour à sa fermeture.
+                } @else if (update.downloading) {
+                  L’archive est vérifiée puis préparée en arrière-plan.
+                } @else {
+                  La mise à jour se télécharge automatiquement si les mises à jour automatiques sont activées.
+                }
+              </p>
+            </div>
+            @if (update.ready) {
+              <button class="btn btn-primary btn-sm" type="button" (click)="installUpdate()" [disabled]="store.installingUpdate()">
+                <app-icon name="refresh" [size]="14" [class.spin]="store.installingUpdate()" />
+                Redémarrer
+              </button>
+            } @else if (update.available && !update.downloading) {
+              <button class="btn btn-ghost btn-sm" type="button" (click)="downloadUpdate()">
+                Télécharger
+              </button>
+            } @else if (update.error) {
+              <button class="btn btn-ghost btn-sm" type="button" (click)="openUpdatePage()">
+                Ouvrir la page
+              </button>
+            }
+          </div>
+        }
+      }
+
+      <p class="hint">
+        L’archive est vérifiée par son empreinte SHA-256 quand la release en fournit une. En cas d’échec,
+        la page GitHub des releases reste accessible pour installer la nouvelle version à la main.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
         <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
         <div class="card-copy">
           <h2>Données</h2>

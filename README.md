@@ -21,6 +21,9 @@ coach propulsé par **Claude Code (haiku)**.
 - **Historique** des tâches terminées, regroupées par jour, réouvrables d'un clic.
 - **Notifications bureau** : un rappel natif quand l'échéance d'une tâche ouverte est atteinte,
   avec un bouton de test et une activation dans les réglages.
+- **Mises à jour automatiques** : l'app vérifie les GitHub Releases, télécharge la nouvelle
+  version en arrière-plan, la vérifie (SHA-256) et l'installe à la fermeture. Un bouton
+  « Vérifier les mises à jour » et un redémarrage immédiat sont disponibles dans les réglages.
 - **Synchronisation git optionnelle** : un dépôt privé (GitHub, GitLab, serveur perso) pour
   retrouver tâches, profils et images sur plusieurs machines. Fusion sans conflit, suppressions propagées,
   réglages propres à chaque ordinateur.
@@ -158,16 +161,38 @@ gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
 
 - **Tests** sur macOS : ESLint (angular-eslint), build Angular, `go test`, `go vet`, golangci-lint.
 - **Build** en matrice : `darwin/universal` (`.app` zippée) et `windows/amd64` (`.exe` zippé),
-  artefacts téléchargeables depuis chaque run.
+  artefacts téléchargeables depuis chaque run. La CI injecte la version dans le binaire
+  (`-ldflags "-X todo/src.Version=…"`) et publie une empreinte `*.sha256` à côté de chaque archive.
 - Chaque push sur `main` met à jour la pré-release **`dev`** avec les deux archives : la
   release et son tag sont recréés sur le dernier commit, les liens de téléchargement changent donc
   à chaque fois.
 - Un tag `v*` crée automatiquement une **GitHub Release** avec les deux archives.
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.2.2
+git push origin v1.2.2
 ```
+
+## Mises à jour
+
+Réglages → Mises à jour affiche la version courante et permet de vérifier les nouveautés à la
+demande. Par défaut, l'application vérifie aussi la dernière release stable au démarrage puis
+toutes les six heures :
+
+1. l'archive de la plateforme (`Todo-macos-universal.zip` ou `Todo-windows-x64.zip`) est
+   téléchargée dans `updates/` du dossier de données ;
+2. son empreinte SHA-256 est comparée à l'asset `*.sha256` de la release quand il existe ;
+3. l'application est remplacée au moment de la fermeture, ou immédiatement avec
+   **Redémarrer** dans les réglages. Au prochain lancement, la nouvelle version est active.
+
+Les builds de développement (`main`) portent une version `x.y.z-dev.<sha>` : elle ne remplace
+jamais une release stable plus récente. Sur macOS, l'application doit être lancée depuis un
+bundle `.app` inscriptible (par exemple `~/Applications`) ; la translocation Gatekeeper et un
+dossier `/Applications` verrouillé sont détectés et signalés dans les réglages.
+
+Le dépôt peut rester privé : si l'API publique de GitHub ne voit pas la release, Todo se rabat
+sur la CLI `gh` (si elle est installée et connectée avec `gh auth login`) pour lire la release
+et télécharger l'archive avec tes droits. Sans `gh`, il faut un dépôt public.
 
 ## Structure
 

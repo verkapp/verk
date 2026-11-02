@@ -53,6 +53,12 @@ const schema = `
 		key TEXT PRIMARY KEY,
 		value TEXT NOT NULL
 	);
+`
+
+// indexes are created after migrate: an index may reference a column that only
+// exists in recent databases (profile_id), and creating it before the ALTER
+// TABLE that adds the column made older databases fail to open.
+const indexes = `
 	CREATE INDEX IF NOT EXISTS idx_subtasks_task ON subtasks(task_id);
 	CREATE INDEX IF NOT EXISTS idx_images_task ON images(task_id);
 	CREATE INDEX IF NOT EXISTS idx_tasks_profile ON tasks(profile_id);

@@ -56,7 +56,22 @@ type Settings struct {
 	TimeTracking  bool   `json:"timeTracking"`
 	ShowMomentum  bool   `json:"showMomentum"`
 	Notifications bool   `json:"notifications"`
+	AutoUpdate    bool   `json:"autoUpdate"`
 	ClaudePath    string `json:"claudePath"`
+}
+
+// UpdateInfo is the state of the automatic update, shown in the settings and
+// pushed to the frontend through the update:status event.
+type UpdateInfo struct {
+	CurrentVersion string `json:"currentVersion"`
+	LatestVersion  string `json:"latestVersion"`
+	Available      bool   `json:"available"`
+	Downloading    bool   `json:"downloading"`
+	Ready          bool   `json:"ready"`
+	Notes          string `json:"notes"`
+	ReleaseURL     string `json:"releaseUrl"`
+	PublishedAt    int64  `json:"publishedAt"`
+	Error          string `json:"error"`
 }
 
 // NotificationStatus describes whether desktop notifications can be shown.

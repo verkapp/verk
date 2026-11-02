@@ -144,6 +144,30 @@ export class SettingsComponent implements OnInit {
     void this.store.openDataFolder();
   }
 
+  toggleAutoUpdate(): void {
+    const enabled = !this.store.settings().autoUpdate;
+    void this.store.saveSettings({ autoUpdate: enabled });
+    if (enabled) {
+      void this.store.checkForUpdates();
+    }
+  }
+
+  checkUpdates(): void {
+    void this.store.checkForUpdates();
+  }
+
+  downloadUpdate(): void {
+    void this.store.downloadUpdate();
+  }
+
+  installUpdate(): void {
+    void this.store.installUpdate();
+  }
+
+  openUpdatePage(): void {
+    this.store.openUpdatePage();
+  }
+
   onSyncRemoteInput(value: string): void {
     this.syncRemote.set(value);
   }
