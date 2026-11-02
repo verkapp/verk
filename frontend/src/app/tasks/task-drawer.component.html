@@ -75,7 +75,7 @@
           aria-label="Profil de la tâche"
         >
           @for (profile of store.profiles(); track profile.id) {
-            <option [value]="profile.id">{{ profile.name }}</option>
+            <option [value]="profile.id" [selected]="profile.id === profileId()">{{ profile.name }}</option>
           }
         </select>
       </div>
