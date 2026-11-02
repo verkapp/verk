@@ -29,11 +29,14 @@ type App struct {
 	syncTimer      *time.Timer
 	syncSyncing    bool
 	syncGeneration int64
+
+	updates    updater
+	updateStop chan struct{}
 }
 
 // NewApp opens the local database before the Wails window is created.
 func NewApp() *App {
-	app := &App{gitAvailable: gitInstalled()}
+	app := &App{gitAvailable: gitInstalled(), updateStop: make(chan struct{})}
 	if st, err := openStore(); err != nil {
 		app.initErr = err
 	} else {
@@ -56,13 +59,16 @@ func (a *App) startup(ctx context.Context) {
 	// Pull remote changes without delaying the window: the frontend loads the
 	// local state first, then refreshes when the sync generation changes.
 	go a.autoSync()
+	go a.autoUpdateLoop()
 	a.startNotifications()
 }
 
 func (a *App) shutdown(ctx context.Context) {
+	close(a.updateStop)
 	a.stopNotifications()
 	a.stopSyncTimer()
 	if a.store != nil {
+		a.installUpdateOnQuit()
 		if cfg, ok := a.syncConfigured(); ok && cfg.Enabled {
 			// Flush pending edits on quit, but never wait for an already
 			// running sync that could take longer than the timeout.

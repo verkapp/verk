@@ -50,6 +50,7 @@ export interface Settings {
   timeTracking: boolean;
   showMomentum: boolean;
   notifications: boolean;
+  autoUpdate: boolean;
   claudePath: string;
 }
 
@@ -83,6 +84,18 @@ export interface AppInfo {
   dataDir: string;
   database: string;
   databasePath: string;
+}
+
+export interface UpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  available: boolean;
+  downloading: boolean;
+  ready: boolean;
+  notes: string;
+  releaseUrl: string;
+  publishedAt: number;
+  error: string;
 }
 
 export type ViewName = 'today' | 'all' | 'coach' | 'history' | 'settings';

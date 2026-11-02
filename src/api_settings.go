@@ -38,7 +38,7 @@ func (a *App) OpenDataFolder() error {
 }
 
 func (a *App) AppInfo() map[string]string {
-	info := map[string]string{"version": "1.2.1", "database": "todo.db"}
+	info := map[string]string{"version": Version, "database": "todo.db"}
 	if a.store != nil {
 		info["dataDir"] = a.store.dataDir
 		info["databasePath"] = filepath.Join(a.store.dataDir, "todo.db")

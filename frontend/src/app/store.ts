@@ -1,6 +1,6 @@
 import { computed, Injectable, signal } from '@angular/core';
 
-import { api, errorMessage } from './api';
+import { api, errorMessage, onRuntimeEvent } from './api';
 import {
   compareOpenTasks,
   endOfToday,
@@ -26,6 +26,7 @@ import {
   TaskInput,
   ToastMessage,
   ToastTone,
+  UpdateInfo,
 } from './models';
 
 const DAY = 86_400_000;
@@ -35,10 +36,13 @@ export class Store {
   readonly tasks = signal<Task[]>([]);
   readonly profiles = signal<Profile[]>([]);
   readonly activeProfileId = signal<string>('');
-  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, claudePath: '' });
+  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudePath: '' });
   readonly claude = signal<ClaudeStatus | null>(null);
   readonly notifications = signal<NotificationStatus | null>(null);
   readonly sync = signal<SyncStatus | null>(null);
+  readonly update = signal<UpdateInfo | null>(null);
+  readonly checkingUpdate = signal(false);
+  readonly installingUpdate = signal(false);
   readonly info = signal<AppInfo | null>(null);
   readonly loading = signal(true);
   readonly fatalError = signal<string | null>(null);
@@ -126,6 +130,7 @@ export class Store {
   private syncPolling = false;
 
   async init(): Promise<void> {
+    this.listenForUpdates();
     setInterval(() => {
       this.now.set(Date.now());
       void this.pollSync();
@@ -145,6 +150,7 @@ export class Store {
       void this.refreshClaude();
       void this.refreshNotifications();
       void this.pollSync();
+      void this.refreshUpdateStatus();
       if (settings.coachEnabled && settings.coachOnStart) {
         setTimeout(() => void this.requestNudge(true), 1200);
       }
@@ -263,6 +269,86 @@ export class Store {
     } catch (error) {
       this.fail(error);
     }
+  }
+
+  private listenForUpdates(): void {
+    onRuntimeEvent<UpdateInfo>('update:status', (info) => this.applyUpdate(info));
+  }
+
+  private applyUpdate(info: UpdateInfo): void {
+    const previous = this.update();
+    this.update.set(info);
+    if (info.ready && !previous?.ready) {
+      this.notify(`Todo ${info.latestVersion} est prêt. Il s’installera à la fermeture.`, 'accent');
+    }
+  }
+
+  async refreshUpdateStatus(): Promise<UpdateInfo | null> {
+    try {
+      const info = await api.updateStatus();
+      this.applyUpdate(info);
+      return info;
+    } catch {
+      return null;
+    }
+  }
+
+  async checkForUpdates(): Promise<UpdateInfo | null> {
+    if (this.checkingUpdate()) {
+      return this.update();
+    }
+    this.checkingUpdate.set(true);
+    try {
+      const info = await api.checkForUpdates();
+      this.applyUpdate(info);
+      if (info.error) {
+        this.notify(info.error, 'error');
+      } else if (info.available) {
+        this.notify(`Version ${info.latestVersion} disponible.`, 'accent');
+        if (this.settings().autoUpdate && !info.ready && !info.downloading) {
+          void this.downloadUpdate();
+        }
+      } else {
+        this.notify('Todo est à jour.', 'accent');
+      }
+      return info;
+    } catch (error) {
+      this.fail(error);
+      return null;
+    } finally {
+      this.checkingUpdate.set(false);
+    }
+  }
+
+  async downloadUpdate(): Promise<UpdateInfo | null> {
+    try {
+      const info = await api.downloadUpdate();
+      this.applyUpdate(info);
+      if (info.error) {
+        this.notify(info.error, 'error');
+      }
+      return info;
+    } catch (error) {
+      this.fail(error);
+      return null;
+    }
+  }
+
+  async installUpdate(): Promise<void> {
+    if (this.installingUpdate()) {
+      return;
+    }
+    this.installingUpdate.set(true);
+    try {
+      await api.installUpdate();
+    } catch (error) {
+      this.installingUpdate.set(false);
+      this.fail(error);
+    }
+  }
+
+  openUpdatePage(): void {
+    void api.openUpdatePage();
   }
 
 

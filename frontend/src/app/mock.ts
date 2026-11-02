@@ -1,4 +1,4 @@
-import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, Subtask, SyncStatus, Task, TaskImage, TaskInput } from './models';
+import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, Subtask, SyncStatus, Task, TaskImage, TaskInput, UpdateInfo } from './models';
 
 /**
  * In-memory fallback used when the Angular app runs in a plain browser
@@ -197,7 +197,7 @@ let syncStatus: SyncStatus = {
 };
 
 function loadSettings(): Settings {
-  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, claudePath: '' };
+  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudePath: '' };
   try {
     const raw = localStorage.getItem('todo.settings');
     return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<Settings>) } : fallback;
@@ -504,9 +504,28 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       return undefined as T;
     case 'OpenDataFolder':
       return undefined as T;
+    case 'UpdateStatus':
+    case 'CheckForUpdates':
+    case 'DownloadUpdate': {
+      const info: UpdateInfo = {
+        currentVersion: '1.2.2 · aperçu navigateur',
+        latestVersion: '',
+        available: false,
+        downloading: false,
+        ready: false,
+        notes: '',
+        releaseUrl: 'https://github.com/clementherve/todo/releases',
+        publishedAt: 0,
+        error: '',
+      };
+      return info as T;
+    }
+    case 'InstallUpdate':
+    case 'OpenUpdatePage':
+      return undefined as T;
     case 'AppInfo': {
       const info: AppInfo = {
-        version: '1.2.1 · aperçu navigateur',
+        version: '1.2.2 · aperçu navigateur',
         dataDir: '~/Library/Application Support/todo',
         database: 'todo.db',
         databasePath: '~/Library/Application Support/todo/todo.db',

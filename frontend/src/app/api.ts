@@ -1,7 +1,11 @@
 import { mockCall } from './mock';
-import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, SyncStatus, Task, TaskInput } from './models';
+import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, SyncStatus, Task, TaskInput, UpdateInfo } from './models';
 
 type Bridge = Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+interface RuntimeBridge {
+  EventsOn?: (event: string, callback: (...data: unknown[]) => void) => () => void;
+}
 
 function bridge(): Bridge | null {
   const wails = (window as unknown as { go?: { src?: { App?: Bridge }; main?: { App?: Bridge } } }).go;
@@ -58,11 +62,26 @@ export const api = {
   openDataFolder: () => call<void>('OpenDataFolder'),
   appInfo: () => call<AppInfo>('AppInfo'),
 
+  updateStatus: () => call<UpdateInfo>('UpdateStatus'),
+  checkForUpdates: () => call<UpdateInfo>('CheckForUpdates'),
+  downloadUpdate: () => call<UpdateInfo>('DownloadUpdate'),
+  installUpdate: () => call<void>('InstallUpdate'),
+  openUpdatePage: () => call<void>('OpenUpdatePage'),
+
   syncStatus: () => call<SyncStatus>('SyncStatus'),
   setSyncConfig: (remote: string, enabled: boolean) => call<void>('SetSyncConfig', remote, enabled),
   syncNow: () => call<SyncStatus>('SyncNow'),
   openSyncFolder: () => call<void>('OpenSyncFolder'),
 };
+
+/** Subscribes to a Wails event. Returns a no-op in the browser preview. */
+export function onRuntimeEvent<T>(event: string, callback: (payload: T) => void): () => void {
+  const runtime = (window as unknown as { runtime?: RuntimeBridge }).runtime;
+  if (!runtime?.EventsOn) {
+    return () => undefined;
+  }
+  return runtime.EventsOn(event, (...data) => callback(data[0] as T));
+}
 
 export function errorMessage(error: unknown): string {
   if (typeof error === 'string') {

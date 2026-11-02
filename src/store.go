@@ -68,6 +68,10 @@ func openStoreAt(dir string) (*store, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("migration de la base: %w", err)
 	}
+	if _, err := db.Exec(indexes); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("indexation de la base: %w", err)
+	}
 	return &store{db: db, dataDir: dir, imageDir: imageDir}, nil
 }
 
