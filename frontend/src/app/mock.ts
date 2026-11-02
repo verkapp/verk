@@ -506,7 +506,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       return undefined as T;
     case 'AppInfo': {
       const info: AppInfo = {
-        version: '1.2.0 · aperçu navigateur',
+        version: '1.2.1 · aperçu navigateur',
         dataDir: '~/Library/Application Support/todo',
         database: 'todo.db',
         databasePath: '~/Library/Application Support/todo/todo.db',
