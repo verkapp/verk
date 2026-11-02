@@ -320,6 +320,86 @@
   background: var(--line-strong);
 }
 
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.profile-row.current {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: var(--accent-tint);
+}
+
+.profile-swatch {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  margin-left: 2px;
+  border-radius: 50%;
+}
+
+.profile-name {
+  flex: 1;
+  min-width: 90px;
+  height: 32px;
+  font-size: 12.6px;
+}
+
+.profile-palette {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: transform 0.12s ease;
+}
+
+.color-dot:hover {
+  transform: scale(1.15);
+}
+
+.color-dot.active {
+  border-color: var(--surface);
+  box-shadow: 0 0 0 1.5px var(--text-soft);
+}
+
+.profile-row .btn {
+  flex: none;
+}
+
+.profile-add {
+  display: flex;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.profile-add .input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+}
+
+.profile-add .btn {
+  flex: none;
+  height: 38px;
+}
+
 @media (max-width: 1180px) {
   .accent-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

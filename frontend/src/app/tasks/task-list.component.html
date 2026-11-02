@@ -1,7 +1,12 @@
 <section class="view">
   <header class="page-head">
     <div>
-      <p class="eyebrow">{{ eyebrow() }}</p>
+      <p class="eyebrow">
+        {{ eyebrow() }}
+        @if (store.activeProfile(); as profile) {
+          · {{ profile.name }}
+        }
+      </p>
       <h1>{{ title() }}</h1>
       <p class="page-sub">{{ subtitle() }}</p>
     </div>
@@ -85,10 +90,19 @@
           <span class="group-count">{{ group.tasks.length }}</span>
           <i></i>
         </div>
-        <div class="cards">
+        <div
+          class="cards"
+          (dragstart)="onDragStart($event, group.key)"
+          (dragover)="onDragOver($event, group.key)"
+          (drop)="onDrop($event, group.key)"
+          (dragend)="onDragEnd()"
+        >
           @for (task of group.tasks; track task.id) {
             <app-task-card
               [task]="task"
+              [reorderable]="!task.done"
+              [dragging]="draggedId() === task.id"
+              [dropPosition]="dropPositionFor(task.id)"
               (opened)="openTask.emit(task.id)"
               (toggled)="toggle(task)"
               (started)="toggleStarted(task)"
@@ -135,10 +149,19 @@
     }
   } @else {
     @if (filteredTasks().length > 0) {
-      <div class="cards">
+      <div
+        class="cards"
+        (dragstart)="onDragStart($event, 'filtered')"
+        (dragover)="onDragOver($event, 'filtered')"
+        (drop)="onDrop($event, 'filtered')"
+        (dragend)="onDragEnd()"
+      >
         @for (task of filteredTasks(); track task.id) {
           <app-task-card
               [task]="task"
+              [reorderable]="!task.done"
+              [dragging]="draggedId() === task.id"
+              [dropPosition]="dropPositionFor(task.id)"
               (opened)="openTask.emit(task.id)"
               (toggled)="toggle(task)"
               (started)="toggleStarted(task)"

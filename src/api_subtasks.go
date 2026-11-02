@@ -54,3 +54,14 @@ func (a *App) DeleteSubtask(id string) (Task, error) {
 	}
 	return task, err
 }
+
+func (a *App) ReorderSubtasks(taskID string, ids []string) (Task, error) {
+	if err := a.ready(); err != nil {
+		return Task{}, err
+	}
+	task, err := a.store.reorderSubtasks(taskID, ids)
+	if err == nil {
+		a.requestSync()
+	}
+	return task, err
+}

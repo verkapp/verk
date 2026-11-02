@@ -20,6 +20,9 @@ type App struct {
 	// the local settings table so each machine keeps its own remote.
 	gitAvailable bool
 
+	notificationErr error
+	reminder        *reminderState
+
 	syncRunMu sync.Mutex
 
 	syncStateMu    sync.Mutex
@@ -53,9 +56,11 @@ func (a *App) startup(ctx context.Context) {
 	// Pull remote changes without delaying the window: the frontend loads the
 	// local state first, then refreshes when the sync generation changes.
 	go a.autoSync()
+	a.startNotifications()
 }
 
 func (a *App) shutdown(ctx context.Context) {
+	a.stopNotifications()
 	a.stopSyncTimer()
 	if a.store != nil {
 		if cfg, ok := a.syncConfigured(); ok && cfg.Enabled {

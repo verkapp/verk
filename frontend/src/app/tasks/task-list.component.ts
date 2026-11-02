@@ -30,6 +30,9 @@ export class TaskListComponent {
   readonly quickTitle = signal('');
   readonly filter = signal<TaskFilter>('all');
   readonly bannerDismissed = signal(false);
+  readonly draggedId = signal<string | null>(null);
+  readonly dragList = signal<string>('');
+  readonly dropTarget = signal<{ id: string; after: boolean } | null>(null);
 
   readonly filters: { id: TaskFilter; label: string }[] = [
     { id: 'all', label: 'Toutes' },
@@ -158,7 +161,12 @@ export class TaskListComponent {
     const promise =
       this.mode() === 'today'
         ? this.store.quickAdd(title)
-        : this.store.createTask({ title, description: '', dueAt: null });
+        : this.store.createTask({
+            title,
+            description: '',
+            dueAt: null,
+            profileId: this.store.activeProfile()?.id ?? '',
+          });
     void promise
       .then((task) => {
         if (task) {
@@ -182,5 +190,89 @@ export class TaskListComponent {
 
   setFilter(filter: TaskFilter): void {
     this.filter.set(filter);
+  }
+
+  /* ----------------------------- réordonnancement ---------------------------- */
+
+  private cardFrom(event: Event): HTMLElement | null {
+    const target = event.target as HTMLElement | null;
+    return (target?.closest?.('.task-card[data-task-id]') as HTMLElement | null) ?? null;
+  }
+
+  onDragStart(event: DragEvent, listKey: string): void {
+    const id = this.cardFrom(event)?.dataset['taskId'];
+    if (!id) {
+      event.preventDefault();
+      return;
+    }
+    this.draggedId.set(id);
+    this.dragList.set(listKey);
+    this.dropTarget.set(null);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', id);
+    }
+  }
+
+  onDragOver(event: DragEvent, listKey: string): void {
+    if (!this.draggedId() || this.dragList() !== listKey) {
+      return;
+    }
+    const card = this.cardFrom(event);
+    if (!card) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    const id = card.dataset['taskId'];
+    if (!id || id === this.draggedId()) {
+      this.dropTarget.set(null);
+      return;
+    }
+    const rect = card.getBoundingClientRect();
+    this.dropTarget.set({ id, after: event.clientY > rect.top + rect.height / 2 });
+  }
+
+  onDrop(event: DragEvent, listKey: string): void {
+    if (!this.draggedId() || this.dragList() !== listKey) {
+      return;
+    }
+    event.preventDefault();
+    const dragged = this.draggedId();
+    const target = this.dropTarget();
+    this.resetDrag();
+    if (!dragged || !target || dragged === target.id) {
+      return;
+    }
+    const ids = this.store
+      .openTasks()
+      .map((task) => task.id)
+      .filter((id) => id !== dragged);
+    const targetIndex = ids.indexOf(target.id);
+    if (targetIndex < 0) {
+      return;
+    }
+    ids.splice(targetIndex + (target.after ? 1 : 0), 0, dragged);
+    void this.store.reorderTasks(ids).catch(() => undefined);
+  }
+
+  onDragEnd(): void {
+    this.resetDrag();
+  }
+
+  dropPositionFor(id: string): 'before' | 'after' | null {
+    const target = this.dropTarget();
+    if (!target || target.id !== id) {
+      return null;
+    }
+    return target.after ? 'after' : 'before';
+  }
+
+  private resetDrag(): void {
+    this.draggedId.set(null);
+    this.dragList.set('');
+    this.dropTarget.set(null);
   }
 }

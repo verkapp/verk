@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 
 import { formatCreatedAt } from '../dates';
-import { ACCENTS, AccentName } from '../models';
+import { ACCENTS, AccentName, Profile } from '../models';
 import { Store } from '../store';
 import { IconComponent } from '../ui/icon.component';
 
@@ -20,10 +20,13 @@ export class SettingsComponent implements OnInit {
   readonly checking = signal(false);
   readonly syncRemote = signal('');
   readonly syncBusy = signal(false);
+  readonly newProfileName = signal('');
+  readonly profileColors = ['#7b6cf0', '#4aa985', '#559fe0', '#ea8a62', '#dd7ba2', '#d3a640'];
 
   ngOnInit(): void {
     this.pathDraft.set(this.store.settings().claudePath);
     void this.store.refreshClaude();
+    void this.store.refreshNotifications();
     void this.loadSync();
   }
 
@@ -42,6 +45,65 @@ export class SettingsComponent implements OnInit {
 
   toggleMomentum(): void {
     void this.store.saveSettings({ showMomentum: !this.store.settings().showMomentum });
+  }
+
+  async toggleNotifications(): Promise<void> {
+    const enabled = !this.store.settings().notifications;
+    await this.store.saveSettings({ notifications: enabled });
+    if (enabled) {
+      const status = await this.store.requestNotifications();
+      if (status && !status.authorized) {
+        this.store.notify('Les notifications sont refusées par le système.', 'error');
+      }
+    }
+  }
+
+  async testNotification(): Promise<void> {
+    await this.store.testNotification();
+  }
+
+  async createProfile(event: Event): Promise<void> {
+    event.preventDefault();
+    const name = this.newProfileName().trim();
+    if (!name) {
+      return;
+    }
+    const profile = await this.store.createProfile(name);
+    if (profile) {
+      this.newProfileName.set('');
+    }
+  }
+
+  async renameProfile(profile: Profile, event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const name = input.value.trim();
+    if (!name || name === profile.name) {
+      input.value = profile.name;
+      return;
+    }
+    const updated = await this.store.updateProfile(profile.id, name, profile.color);
+    if (!updated) {
+      input.value = profile.name;
+    }
+  }
+
+  renameOnEnter(event: Event): void {
+    (event.target as HTMLInputElement).blur();
+  }
+
+  setProfileColor(profile: Profile, color: string): void {
+    if (profile.color === color) {
+      return;
+    }
+    void this.store.updateProfile(profile.id, profile.name, color);
+  }
+
+  deleteProfile(profile: Profile): void {
+    if (this.store.profiles().length <= 1) {
+      this.store.notify('Il faut conserver au moins un profil.', 'error');
+      return;
+    }
+    void this.store.deleteProfile(profile.id);
   }
 
   toggleCoachEnabled(): void {

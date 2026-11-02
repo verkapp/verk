@@ -1,4 +1,4 @@
-import { AppInfo, ClaudeStatus, Settings, Subtask, SyncStatus, Task, TaskImage, TaskInput } from './models';
+import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, Subtask, SyncStatus, Task, TaskImage, TaskInput } from './models';
 
 /**
  * In-memory fallback used when the Angular app runs in a plain browser
@@ -43,14 +43,24 @@ function image(name: string, from: string, to: string): TaskImage {
   return { id: id(), name, dataUrl: placeholder(name, from, to), createdAt: Date.now() - 2 * DAY };
 }
 
+const profileColors = ['#7b6cf0', '#4aa985', '#559fe0', '#ea8a62', '#dd7ba2', '#d3a640'];
+const persoProfile = 'mock-profile-perso';
+const travailProfile = 'mock-profile-travail';
+let profiles: Profile[] = [
+  { id: persoProfile, name: 'Perso', color: profileColors[0], position: 0, createdAt: Date.now() - 30 * DAY },
+  { id: travailProfile, name: 'Travail', color: profileColors[1], position: 1, createdAt: Date.now() - 30 * DAY },
+];
+
 function seed(): Task[] {
   const now = Date.now();
   return [
     {
       id: id(),
+      profileId: persoProfile,
       title: 'Préparer la démo de vendredi',
       description: 'Relire le scénario, vérifier les chiffres et tenir en 10 minutes. Garder trois slides maximum.',
       done: false,
+      position: 0,
       createdAt: now - 2 * DAY,
       dueAt: at(0, 23, 30),
       completedAt: null,
@@ -66,9 +76,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: travailProfile,
       title: 'Relire les maquettes du nouvel onboarding',
       description: 'Se concentrer sur le premier écran et le moment où on demande le nom de l’équipe.',
       done: false,
+      position: 1,
       createdAt: now - 4 * DAY,
       dueAt: at(1, 11, 30),
       completedAt: null,
@@ -79,9 +91,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: travailProfile,
       title: 'Écrire le compte-rendu de la réunion produit',
       description: 'Décisions, questions ouvertes et prochaines étapes. Cinq lignes suffisent.',
       done: false,
+      position: 0,
       createdAt: now - 6 * DAY,
       dueAt: at(-1, 18, 0),
       completedAt: null,
@@ -92,9 +106,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: persoProfile,
       title: 'Choisir un cadeau pour Léa',
       description: 'Quelque chose de simple, utile, et qui ne prend pas de place.',
       done: false,
+      position: 1,
       createdAt: now - 5 * DAY,
       dueAt: null,
       completedAt: null,
@@ -105,9 +121,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: persoProfile,
       title: 'Répondre aux e-mails en attente',
       description: '',
       done: true,
+      position: 2,
       createdAt: now - 1 * DAY,
       dueAt: null,
       completedAt: at(0, 10, 12),
@@ -118,9 +136,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: travailProfile,
       title: 'Mettre à jour le board de l’équipe',
       description: '',
       done: true,
+      position: 2,
       createdAt: now - 2 * DAY,
       dueAt: null,
       completedAt: at(0, 9, 5),
@@ -131,9 +151,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: travailProfile,
       title: 'Envoyer les factures de septembre',
       description: '',
       done: true,
+      position: 3,
       createdAt: now - 4 * DAY,
       dueAt: null,
       completedAt: at(-1, 17, 40),
@@ -144,9 +166,11 @@ function seed(): Task[] {
     },
     {
       id: id(),
+      profileId: persoProfile,
       title: 'Nettoyer les notes de la semaine',
       description: '',
       done: true,
+      position: 3,
       createdAt: now - 7 * DAY,
       dueAt: null,
       completedAt: at(-3, 18, 20),
@@ -173,7 +197,7 @@ let syncStatus: SyncStatus = {
 };
 
 function loadSettings(): Settings {
-  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, claudePath: '' };
+  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, claudePath: '' };
   try {
     const raw = localStorage.getItem('todo.settings');
     return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<Settings>) } : fallback;
@@ -207,12 +231,22 @@ function findSubtask(subtaskId: string): { task: Task; subtask: Subtask } {
   throw new Error('Sous-tâche introuvable');
 }
 
+function nextTopPosition(profileId: string): number {
+  const positions = tasks.filter((task) => task.profileId === profileId).map((task) => task.position);
+  return (positions.length > 0 ? Math.min(...positions) : 0) - 1;
+}
+
 function createTask(input: TaskInput): Task {
+  const profileId = profiles.some((profile) => profile.id === input.profileId)
+    ? input.profileId
+    : (profiles[0]?.id ?? '');
   const task: Task = {
     id: id(),
+    profileId,
     title: input.title.trim(),
     description: input.description,
     done: false,
+    position: nextTopPosition(profileId),
     createdAt: Date.now(),
     dueAt: input.dueAt,
     completedAt: null,
@@ -236,6 +270,10 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
     case 'UpdateTask': {
       const task = findTask(args[0] as string);
       const input = args[1] as TaskInput;
+      if (input.profileId && input.profileId !== task.profileId) {
+        task.profileId = input.profileId;
+        task.position = nextTopPosition(input.profileId);
+      }
       task.title = input.title.trim();
       task.description = input.description;
       task.dueAt = input.dueAt;
@@ -244,7 +282,12 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
     case 'SetTaskDone': {
       const task = findTask(args[0] as string);
       task.done = args[1] as boolean;
-      task.completedAt = task.done ? Date.now() : null;
+      if (task.done) {
+        task.completedAt = Date.now();
+      } else {
+        task.completedAt = null;
+        task.position = nextTopPosition(task.profileId);
+      }
       bank(task);
       return clone(task) as T;
     }
@@ -260,6 +303,16 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
     case 'DeleteTask':
       tasks = tasks.filter((task) => task.id !== args[0]);
       return undefined as T;
+    case 'ReorderTasks': {
+      const ids = args[0] as string[];
+      ids.forEach((taskId, index) => {
+        const task = tasks.find((candidate) => candidate.id === taskId);
+        if (task) {
+          task.position = index;
+        }
+      });
+      return undefined as T;
+    }
     case 'AddSubtask': {
       const task = findTask(args[0] as string);
       task.subtasks.push({ id: id(), title: args[1] as string, done: false, position: task.subtasks.length });
@@ -295,6 +348,17 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       owner.subtasks = owner.subtasks.filter((candidate) => candidate.id !== args[0]);
       return clone(owner) as T;
     }
+    case 'ReorderSubtasks': {
+      const task = findTask(args[0] as string);
+      const ids = args[1] as string[];
+      ids.forEach((subtaskId, index) => {
+        const subtask = task.subtasks.find((candidate) => candidate.id === subtaskId);
+        if (subtask) {
+          subtask.position = index;
+        }
+      });
+      return clone(task) as T;
+    }
     case 'AddImage': {
       const task = findTask(args[0] as string);
       const palettes = [
@@ -319,6 +383,59 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       owner.images = owner.images.filter((candidate) => candidate.id !== args[0]);
       return clone(owner) as T;
     }
+    case 'ListProfiles':
+      return clone(profiles) as T;
+    case 'CreateProfile': {
+      const name = String(args[0] ?? '').trim();
+      if (!name) {
+        throw new Error('Le nom du profil est obligatoire');
+      }
+      const profile: Profile = {
+        id: id(),
+        name: name.slice(0, 40),
+        color: profileColors[profiles.length % profileColors.length],
+        position: profiles.length,
+        createdAt: Date.now(),
+      };
+      profiles = [...profiles, profile];
+      return clone(profile) as T;
+    }
+    case 'UpdateProfile': {
+      const profile = profiles.find((candidate) => candidate.id === args[0]);
+      if (!profile) {
+        throw new Error('Profil introuvable');
+      }
+      const name = String(args[1] ?? '').trim();
+      if (!name) {
+        throw new Error('Le nom du profil est obligatoire');
+      }
+      profile.name = name.slice(0, 40);
+      const color = String(args[2] ?? '').trim();
+      if (color) {
+        profile.color = color;
+      }
+      return clone(profile) as T;
+    }
+    case 'DeleteProfile': {
+      if (profiles.length <= 1) {
+        throw new Error('Il faut conserver au moins un profil');
+      }
+      const replacement = profiles.find((candidate) => candidate.id !== args[0]);
+      tasks = tasks.map((task) => (task.profileId === args[0] ? { ...task, profileId: replacement?.id ?? task.profileId } : task));
+      profiles = profiles.filter((candidate) => candidate.id !== args[0]);
+      return undefined as T;
+    }
+    case 'NotificationStatus':
+    case 'RequestNotifications': {
+      const status: NotificationStatus = {
+        available: true,
+        authorized: true,
+        error: '',
+      };
+      return status as T;
+    }
+    case 'TestNotification':
+      return undefined as T;
     case 'GetSettings':
       return clone(settings) as T;
     case 'SaveSettings': {
@@ -389,7 +506,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       return undefined as T;
     case 'AppInfo': {
       const info: AppInfo = {
-        version: '1.1.0 · aperçu navigateur',
+        version: '1.2.0 · aperçu navigateur',
         dataDir: '~/Library/Application Support/todo',
         database: 'todo.db',
         databasePath: '~/Library/Application Support/todo/todo.db',

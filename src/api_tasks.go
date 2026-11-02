@@ -61,3 +61,14 @@ func (a *App) SetTaskStarted(id string, started bool) (Task, error) {
 	}
 	return task, err
 }
+
+func (a *App) ReorderTasks(ids []string) error {
+	if err := a.ready(); err != nil {
+		return err
+	}
+	if err := a.store.reorderTasks(ids); err != nil {
+		return err
+	}
+	a.requestSync()
+	return nil
+}

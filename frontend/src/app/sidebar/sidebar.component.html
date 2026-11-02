@@ -66,6 +66,46 @@
     }
 
     @if (!collapsed()) {
+      <p class="nav-label second">Profils</p>
+    }
+    @for (profile of store.profiles(); track profile.id) {
+      <button
+        class="nav-item profile-item"
+        type="button"
+        [class.active]="store.activeProfileId() === profile.id"
+        (click)="selectProfile(profile.id)"
+        [attr.title]="collapsed() ? profile.name : null"
+      >
+        <span class="profile-dot" [style.background]="profile.color"></span>
+        <span class="label">{{ profile.name }}</span>
+        <span class="count">{{ store.profileCounts()[profile.id] || 0 }}</span>
+      </button>
+    }
+    @if (!collapsed()) {
+      @if (creatingProfile()) {
+        <form class="profile-form" (submit)="createProfile($event)">
+          <input
+            type="text"
+            [value]="profileDraft()"
+            (input)="profileDraft.set($any($event.target).value)"
+            (keydown.escape)="cancelCreateProfile()"
+            placeholder="Nom du profil…"
+            maxlength="40"
+            aria-label="Nom du nouveau profil"
+          />
+          <button type="submit" [disabled]="!profileDraft().trim()" aria-label="Créer le profil">
+            <app-icon name="check" [size]="13" [strokeWidth]="2.6" />
+          </button>
+        </form>
+      } @else {
+        <button class="nav-item add-profile" type="button" (click)="startCreateProfile()">
+          <app-icon name="plus" [size]="16" />
+          <span class="label">Nouveau profil</span>
+        </button>
+      }
+    }
+
+    @if (!collapsed()) {
       <p class="nav-label second">Bibliothèque</p>
     }
     <button
@@ -117,7 +157,7 @@
       <app-icon name="settings" [size]="18" />
       <span class="label">Réglages</span>
       @if (!collapsed()) {
-        <span class="version">v1.0</span>
+        <span class="version">v1.2</span>
       }
     </button>
   </div>

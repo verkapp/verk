@@ -87,6 +87,129 @@
 
     <section class="card">
       <div class="card-head">
+        <span class="card-icon"><app-icon name="bell" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Notifications</h2>
+          <p>Un rappel sur le bureau quand une tâche arrive à échéance.</p>
+        </div>
+        @if (store.notifications(); as status) {
+          @if (!status.available) {
+            <span class="pill pill-danger status-pill">Indisponible</span>
+          } @else if (!status.authorized) {
+            <span class="pill status-pill">En attente</span>
+          } @else {
+            <span class="pill pill-accent status-pill">Active</span>
+          }
+        }
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Rappels de tâche</p>
+          <p class="row-sub">
+            Une notification native quand l’échéance d’une tâche ouverte est atteinte. L’application doit être lancée.
+          </p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().notifications"
+          [attr.aria-checked]="store.settings().notifications"
+          (click)="toggleNotifications()"
+          aria-label="Activer les notifications bureau"
+        >
+          <span></span>
+        </button>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Vérifier les permissions</p>
+          <p class="row-sub">
+            Envoie une notification de test. Sur macOS, autorise Todo dans Réglages Système › Notifications si besoin.
+          </p>
+        </div>
+        <button class="btn btn-ghost btn-sm" type="button" (click)="testNotification()">
+          <app-icon name="bell" [size]="14" />
+          Tester
+        </button>
+      </div>
+
+      @if (store.notifications()?.error) {
+        <p class="hint">{{ store.notifications()!.error }}</p>
+      }
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Profils</h2>
+          <p>Des listes séparées pour le travail, la maison, ou tout ce qui te ressemble.</p>
+        </div>
+      </div>
+
+      <div class="profile-list">
+        @for (profile of store.profiles(); track profile.id) {
+          <div class="profile-row" [class.current]="store.activeProfileId() === profile.id">
+            <span class="profile-swatch" [style.background]="profile.color"></span>
+            <input
+              class="input profile-name"
+              type="text"
+              [value]="profile.name"
+              (change)="renameProfile(profile, $event)"
+              (keydown.enter)="renameOnEnter($event)"
+              maxlength="40"
+              [attr.aria-label]="'Nom du profil ' + profile.name"
+            />
+            <div class="profile-palette" role="group" [attr.aria-label]="'Couleur de ' + profile.name">
+              @for (color of profileColors; track color) {
+                <button
+                  class="color-dot"
+                  type="button"
+                  [style.background]="color"
+                  [class.active]="profile.color === color"
+                  (click)="setProfileColor(profile, color)"
+                  [attr.aria-label]="'Choisir la couleur ' + color"
+                ></button>
+              }
+            </div>
+            @if (store.activeProfileId() === profile.id) {
+              <span class="pill pill-accent">Actif</span>
+            }
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              (click)="deleteProfile(profile)"
+              [disabled]="store.profiles().length <= 1"
+            >
+              Supprimer
+            </button>
+          </div>
+        }
+      </div>
+
+      <form class="profile-add" (submit)="createProfile($event)">
+        <input
+          class="input"
+          type="text"
+          [value]="newProfileName()"
+          (input)="newProfileName.set($any($event.target).value)"
+          placeholder="Nouveau profil (Travail, Perso…)"
+          maxlength="40"
+          aria-label="Nom du nouveau profil"
+        />
+        <button class="btn btn-primary" type="submit" [disabled]="!newProfileName().trim()">Créer</button>
+      </form>
+      <p class="hint">
+        Les tâches restent dans leur profil : les vues, les statistiques et l’historique suivent le profil actif.
+        Supprimer un profil déplace ses tâches vers un autre profil.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
         <span class="card-icon"><app-icon name="leaf" [size]="17" /></span>
         <div class="card-copy">
           <h2>Coach</h2>

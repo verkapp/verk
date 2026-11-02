@@ -3,11 +3,24 @@
   [class.done]="task().done"
   [class.started]="task().startedAt !== null && !task().done"
   [class.overdue]="due()?.tone === 'danger'"
+  [class.dragging]="dragging()"
+  [class.drop-before]="dropPosition() === 'before'"
+  [class.drop-after]="dropPosition() === 'after'"
+  [attr.draggable]="reorderable()"
+  [attr.data-task-id]="task().id"
   tabindex="0"
-  (click)="opened.emit()"
+  (click)="onClick()"
+  (dragstart)="onDragStart()"
+  (dragend)="onDragEnd()"
   (keydown.enter)="onKeydown($event)"
   (keydown.space)="onKeydown($event)"
 >
+  @if (reorderable()) {
+    <span class="grip" aria-hidden="true">
+      <app-icon name="grip" [size]="14" />
+    </span>
+  }
+
   <button
     class="checkbox"
     type="button"

@@ -29,7 +29,9 @@ export type IconName =
   | 'refresh'
   | 'check-circle'
   | 'sunrise'
-  | 'leaf';
+  | 'leaf'
+  | 'grip'
+  | 'bell';
 
 @Component({
   selector: 'app-icon',
@@ -166,6 +168,18 @@ export type IconName =
         @case ('leaf') {
           <path d="M20 4c0 9-5.5 14-12 14a5 5 0 0 1-4-8c3-5 9-6 16-6z" />
           <path d="M4 21c2-6 6-9 12-11" />
+        }
+        @case ('grip') {
+          <circle cx="9" cy="6" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="6" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="9" cy="12" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="12" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="9" cy="18" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="18" r="1.1" fill="currentColor" stroke="none" />
+        }
+        @case ('bell') {
+          <path d="M18 8a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6" />
+          <path d="M13.7 20a2 2 0 0 1-3.4 0" />
         }
       }
     </svg>
