@@ -93,6 +93,40 @@ func TestTaskLifecycle(t *testing.T) {
 	}
 }
 
+func TestCompletingTaskCompletesSubtasks(t *testing.T) {
+	st := newTestStore(t)
+	task, err := st.createTask(TaskInput{Title: "Préparer le lancement"})
+	if err != nil {
+		t.Fatalf("createTask: %v", err)
+	}
+	for _, title := range []string{"Écrire l’annonce", "Relire la page", "Envoyer l’e-mail"} {
+		if _, err := st.addSubtask(task.ID, title); err != nil {
+			t.Fatalf("addSubtask: %v", err)
+		}
+	}
+
+	done, err := st.setDone(task.ID, true)
+	if err != nil {
+		t.Fatalf("setDone: %v", err)
+	}
+	if !done.Done {
+		t.Fatal("task should be done")
+	}
+	for _, subtask := range done.Subtasks {
+		if !subtask.Done {
+			t.Fatalf("subtask %q should be done with its task", subtask.Title)
+		}
+	}
+
+	reopened, err := st.setDone(task.ID, false)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	if reopened.Done {
+		t.Fatal("task should be reopened")
+	}
+}
+
 func TestTimeTracking(t *testing.T) {
 	st := newTestStore(t)
 	task, err := st.createTask(TaskInput{Title: "chrono"})

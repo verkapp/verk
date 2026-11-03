@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 
+import { CollapsedSections } from '../collapse';
 import { formatTime } from '../dates';
 import { Task } from '../models';
 import { Store } from '../store';
@@ -15,6 +16,7 @@ import { IconComponent } from '../ui/icon.component';
 })
 export class HistoryComponent {
   readonly store = inject(Store);
+  readonly sections = new CollapsedSections('todo.sections.history');
   readonly openTask = output<string>();
 
   readonly groups = this.store.history;

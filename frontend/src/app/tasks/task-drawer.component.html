@@ -34,7 +34,7 @@
     ></textarea>
 
     <div class="meta-grid">
-      <div class="field">
+      <div class="field due-field">
         <span class="field-label"><app-icon name="calendar" [size]="13" /> Échéance</span>
         <div class="due-box" [class.is-empty]="!dueDate()">
           <input
@@ -45,20 +45,33 @@
             aria-label="Date d’échéance"
           />
           <span class="due-sep"></span>
-          <input
-            class="time-input"
-            type="time"
-            [value]="dueTime()"
+          <select
+            class="time-select"
+            [value]="timePreset()"
             [disabled]="!dueDate()"
-            (input)="onTime($any($event.target).value)"
-            aria-label="Heure d’échéance"
-          />
+            (change)="onTimePreset($any($event.target).value)"
+            aria-label="Moment de la journée"
+          >
+            @for (preset of timePresets; track preset.id) {
+              <option [value]="preset.id">{{ preset.label }}</option>
+            }
+            <option value="custom">Heure précise…</option>
+          </select>
           @if (dueDate()) {
             <button class="clear-due" type="button" (click)="clearDue()" aria-label="Effacer l’échéance">
               <app-icon name="close" [size]="13" />
             </button>
           }
         </div>
+        @if (dueDate() && timePreset() === 'custom') {
+          <input
+            class="custom-time"
+            type="time"
+            [value]="dueTime()"
+            (input)="onTime($any($event.target).value)"
+            aria-label="Heure d’échéance"
+          />
+        }
       </div>
 
       <div class="field">

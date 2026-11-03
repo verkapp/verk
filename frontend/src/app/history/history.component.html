@@ -24,51 +24,70 @@
     </div>
   } @else {
     @for (group of groups(); track group.key) {
-      <section class="day">
+      <section class="day" [class.is-collapsed]="sections.isCollapsed(group.key)">
         <div class="day-head">
-          <h2>{{ group.label }}</h2>
+          <h2>
+            <button
+              class="day-toggle"
+              type="button"
+              (click)="sections.toggle(group.key)"
+              [attr.aria-expanded]="!sections.isCollapsed(group.key)"
+              [attr.aria-controls]="'history-' + group.key"
+            >
+              <app-icon
+                class="section-chevron"
+                name="chevron-down"
+                [size]="13"
+                [strokeWidth]="2.1"
+                [class.collapsed]="sections.isCollapsed(group.key)"
+              />
+              {{ group.label }}
+            </button>
+          </h2>
           <span class="day-count">{{ group.tasks.length }}</span>
           <i></i>
         </div>
-        <div class="rows">
-          @for (task of group.tasks; track task.id) {
-            <article
-              class="done-row"
-              tabindex="0"
-              (click)="openTask.emit(task.id)"
-              (keydown.enter)="onKeydown($event, task)"
-              (keydown.space)="onKeydown($event, task)"
-            >
-              <button
-                class="check"
-                type="button"
-                (click)="toggle($event, task)"
-                aria-label="Rouvrir la tâche"
-                title="Rouvrir la tâche"
+        @if (!sections.isCollapsed(group.key)) {
+          <div class="rows" [id]="'history-' + group.key">
+            @for (task of group.tasks; track task.id) {
+              <article
+                class="done-row"
+                tabindex="0"
+                (click)="openTask.emit(task.id)"
+                (keydown.enter)="onKeydown($event, task)"
+                (keydown.space)="onKeydown($event, task)"
               >
-                <app-icon name="check" [size]="11" [strokeWidth]="2.9" />
-              </button>
-              <div class="row-main">
-                <p class="row-title">{{ task.title }}</p>
-                <div class="row-meta">
-                  @if (task.subtasks.length > 0) {
-                    <span><app-icon name="subtasks" [size]="12" /> {{ task.subtasks.length }}</span>
-                  }
-                  @if (task.images.length > 0) {
-                    <span><app-icon name="image" [size]="12" /> {{ task.images.length }}</span>
-                  }
-                  @if (task.description) {
-                    <span class="row-desc">{{ task.description }}</span>
-                  }
+                <button
+                  class="check"
+                  type="button"
+                  (click)="toggle($event, task)"
+                  aria-label="Rouvrir la tâche"
+                  title="Rouvrir la tâche"
+                >
+                  <app-icon name="check" [size]="11" [strokeWidth]="2.9" />
+                </button>
+                <div class="row-main">
+                  <p class="row-title">{{ task.title }}</p>
+                  <div class="row-meta">
+                    @if (task.subtasks.length > 0) {
+                      <span><app-icon name="subtasks" [size]="12" /> {{ task.subtasks.length }}</span>
+                    }
+                    @if (task.images.length > 0) {
+                      <span><app-icon name="image" [size]="12" /> {{ task.images.length }}</span>
+                    }
+                    @if (task.description) {
+                      <span class="row-desc">{{ task.description }}</span>
+                    }
+                  </div>
                 </div>
-              </div>
-              @if (task.completedAt) {
-                <time class="row-time">{{ formatTime(task.completedAt) }}</time>
-              }
-              <span class="chevron"><app-icon name="chevron-right" [size]="15" /></span>
-            </article>
-          }
-        </div>
+                @if (task.completedAt) {
+                  <time class="row-time">{{ formatTime(task.completedAt) }}</time>
+                }
+                <span class="chevron"><app-icon name="chevron-right" [size]="15" /></span>
+              </article>
+            }
+          </div>
+        }
       </section>
     }
   }

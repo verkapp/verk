@@ -233,9 +233,16 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 		top = &position
 	}
 	// Finishing (or reopening) a task stops a running timer and banks its time.
-	// Reopened tasks come back at the top of their profile.
+	// Reopened tasks come back at the top of their profile. Completing a task
+	// completes its subtasks too, so the two stay consistent.
 	now := time.Now().UnixMilli()
-	res, err := s.db.Exec(`UPDATE tasks SET done = ?, completed_at = ?,
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Task{}, err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec(`UPDATE tasks SET done = ?, completed_at = ?,
 		time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
 		started_at = NULL, position = COALESCE(?, position), updated_at = ? WHERE id = ?`,
 		boolInt(done), completedAt, now, top, now, id)
@@ -244,6 +251,14 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 	}
 	if n, _ := res.RowsAffected(); n == 0 {
 		return Task{}, errNotFound
+	}
+	if done {
+		if _, err := tx.Exec(`UPDATE subtasks SET done = 1, updated_at = ? WHERE task_id = ? AND done = 0`, now, id); err != nil {
+			return Task{}, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return Task{}, err
 	}
 	return s.getTask(id)
 }

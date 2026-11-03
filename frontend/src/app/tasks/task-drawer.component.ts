@@ -19,6 +19,24 @@ import { Subtask, Task, TaskImage } from '../models';
 import { Store } from '../store';
 import { IconComponent } from '../ui/icon.component';
 
+interface TimePreset {
+  id: string;
+  label: string;
+  value: string;
+}
+
+const TIME_PRESETS: TimePreset[] = [
+  { id: 'day', label: 'Fin de journée', value: '' },
+  { id: 'morning', label: 'Matin · 9h', value: '09:00' },
+  { id: 'noon', label: 'Midi · 12h', value: '12:00' },
+  { id: 'afternoon', label: 'Après-midi · 14h', value: '14:00' },
+  { id: 'evening', label: 'Soir · 18h', value: '18:00' },
+];
+
+function isPresetTime(time: string): boolean {
+  return time === '' || time === '23:59' || TIME_PRESETS.some((preset) => preset.value === time);
+}
+
 @Component({
   selector: 'app-task-drawer',
   standalone: true,
@@ -38,6 +56,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
   readonly description = signal('');
   readonly dueDate = signal('');
   readonly dueTime = signal('');
+  readonly customTime = signal(false);
   readonly profileId = signal('');
   readonly taskId = signal<string | null>(null);
   readonly createdAt = signal<number | null>(null);
@@ -71,6 +90,17 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     return created ? `Créée le ${formatCreatedAt(created)}` : 'À la création';
   });
   readonly dueAt = computed(() => fromDueInputs(this.dueDate(), this.dueTime()));
+  readonly timePresets = TIME_PRESETS;
+  readonly timePreset = computed(() => {
+    if (this.customTime()) {
+      return 'custom';
+    }
+    const time = this.dueTime();
+    if (time === '' || time === '23:59') {
+      return 'day';
+    }
+    return TIME_PRESETS.find((preset) => preset.value === time)?.id ?? 'custom';
+  });
   readonly resumeLabel = computed(() => resumeDay().label);
 
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -85,6 +115,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
       const due = toDueInputs(this.presetDue());
       this.dueDate.set(due.date);
       this.dueTime.set(due.time);
+      this.customTime.set(!isPresetTime(due.time));
       this.profileId.set(this.store.activeProfile()?.id ?? '');
     }
   }
@@ -120,6 +151,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     const due = toDueInputs(task.dueAt);
     this.dueDate.set(due.date);
     this.dueTime.set(due.time);
+    this.customTime.set(!isPresetTime(due.time));
     this.subtasks.set(task.subtasks);
     this.images.set(task.images);
   }
@@ -229,12 +261,34 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     this.dueDate.set(value);
     if (!value) {
       this.dueTime.set('');
+      this.customTime.set(false);
     }
+    this.markDirty();
+  }
+
+  onTimePreset(value: string): void {
+    if (value === 'custom') {
+      this.customTime.set(true);
+      if (!this.dueTime()) {
+        this.dueTime.set('09:00');
+      }
+      this.markDirty();
+      return;
+    }
+    const preset = TIME_PRESETS.find((candidate) => candidate.id === value);
+    if (!preset) {
+      return;
+    }
+    this.customTime.set(false);
+    this.dueTime.set(preset.value);
     this.markDirty();
   }
 
   onTime(value: string): void {
     this.dueTime.set(value);
+    if (!value) {
+      this.customTime.set(false);
+    }
     this.markDirty();
   }
 
@@ -246,6 +300,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
   clearDue(): void {
     this.dueDate.set('');
     this.dueTime.set('');
+    this.customTime.set(false);
     this.markDirty();
   }
 

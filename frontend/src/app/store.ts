@@ -128,9 +128,12 @@ export class Store {
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private syncGeneration = -1;
   private syncPolling = false;
+  private focusRefreshing = false;
+  private lastFocusRefresh = 0;
 
   async init(): Promise<void> {
     this.listenForUpdates();
+    this.listenForFocus();
     setInterval(() => {
       this.now.set(Date.now());
       void this.pollSync();
@@ -273,6 +276,47 @@ export class Store {
 
   private listenForUpdates(): void {
     onRuntimeEvent<UpdateInfo>('update:status', (info) => this.applyUpdate(info));
+  }
+
+  /** Refreshes from the local database when the window regains focus. */
+  private listenForFocus(): void {
+    window.addEventListener('focus', this.onWindowFocus);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+  }
+
+  private readonly onWindowFocus = (): void => {
+    if (document.visibilityState === 'hidden') {
+      return;
+    }
+    void this.refreshOnFocus();
+  };
+
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') {
+      void this.refreshOnFocus();
+    }
+  };
+
+  private async refreshOnFocus(): Promise<void> {
+    if (this.loading() || this.fatalError() || this.focusRefreshing) {
+      return;
+    }
+    // Focus and visibilitychange often fire together; one refresh is enough.
+    const now = Date.now();
+    if (now - this.lastFocusRefresh < 1500) {
+      return;
+    }
+    this.lastFocusRefresh = now;
+    this.focusRefreshing = true;
+    this.now.set(now);
+    try {
+      await this.reload();
+    } catch {
+      // A background refresh must never disrupt the current view.
+    } finally {
+      this.focusRefreshing = false;
+    }
+    await this.pollSync();
   }
 
   private applyUpdate(info: UpdateInfo): void {

@@ -19,10 +19,56 @@
 }
 
 .day-head h2 {
+  display: flex;
+  align-items: center;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--text-soft);
+}
+
+.day-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -3px 0 -3px -5px;
+  padding: 3px 6px 3px 5px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.day-toggle:hover {
+  color: var(--text);
+  background: var(--surface-soft);
+}
+
+.day-toggle:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+.section-chevron {
+  color: var(--muted-2);
+  transition: transform 0.16s ease;
+}
+
+.section-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.day.is-collapsed {
+  margin-bottom: 18px;
+}
+
+.day.is-collapsed .day-head {
+  margin-bottom: 0;
 }
 
 .day-count {

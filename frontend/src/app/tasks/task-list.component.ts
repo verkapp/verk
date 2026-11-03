@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 
+import { CollapsedSections } from '../collapse';
 import { formatLongDate, isDueToday, isOverdue, sortOpen } from '../dates';
 import { Task, TaskFilter } from '../models';
 import { Store } from '../store';
@@ -22,6 +23,7 @@ interface TaskGroup {
 })
 export class TaskListComponent {
   readonly store = inject(Store);
+  readonly sections = new CollapsedSections('todo.sections.tasks');
   readonly mode = input<'today' | 'all'>('today');
   readonly openTask = output<string>();
   readonly newTask = output<void>();
