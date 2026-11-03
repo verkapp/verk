@@ -62,74 +62,132 @@
   }
 
   @if (store.startedTasks().length > 0) {
-    <section class="group in-progress">
+    <section class="group in-progress" [class.is-collapsed]="sections.isCollapsed('in-progress')">
       <div class="group-head">
-        <h2>En cours</h2>
+        <h2>
+          <button
+            class="group-toggle"
+            type="button"
+            (click)="sections.toggle('in-progress')"
+            [attr.aria-expanded]="!sections.isCollapsed('in-progress')"
+            aria-controls="group-in-progress"
+          >
+            <app-icon
+              class="section-chevron"
+              name="chevron-down"
+              [size]="12"
+              [strokeWidth]="2.1"
+              [class.collapsed]="sections.isCollapsed('in-progress')"
+            />
+            En cours
+          </button>
+        </h2>
         <span class="group-count">{{ store.startedTasks().length }}</span>
         <i></i>
       </div>
-      <div class="cards">
-        @for (task of store.startedTasks(); track task.id) {
-          <app-task-card
+      @if (!sections.isCollapsed('in-progress')) {
+        <div class="cards" id="group-in-progress">
+          @for (task of store.startedTasks(); track task.id) {
+            <app-task-card
+                  [task]="task"
+                  (opened)="openTask.emit(task.id)"
+                  (toggled)="toggle(task)"
+                  (started)="toggleStarted(task)"
+                  (deferred)="defer(task)"
+                />
+          }
+        </div>
+      }
+    </section>
+  }
+
+  @if (isTodayMode()) {
+    @for (group of todayGroups(); track group.key) {
+      <section class="group" [class.is-collapsed]="sections.isCollapsed(group.key)">
+        <div class="group-head">
+          <h2>
+            <button
+              class="group-toggle"
+              type="button"
+              (click)="sections.toggle(group.key)"
+              [attr.aria-expanded]="!sections.isCollapsed(group.key)"
+              [attr.aria-controls]="'group-' + group.key"
+            >
+              <app-icon
+                class="section-chevron"
+                name="chevron-down"
+                [size]="12"
+                [strokeWidth]="2.1"
+                [class.collapsed]="sections.isCollapsed(group.key)"
+              />
+              {{ group.label }}
+            </button>
+          </h2>
+          <span class="group-count">{{ group.tasks.length }}</span>
+          <i></i>
+        </div>
+        @if (!sections.isCollapsed(group.key)) {
+          <div
+            class="cards"
+            [id]="'group-' + group.key"
+            (dragstart)="onDragStart($event, group.key)"
+            (dragover)="onDragOver($event, group.key)"
+            (drop)="onDrop($event, group.key)"
+            (dragend)="onDragEnd()"
+          >
+            @for (task of group.tasks; track task.id) {
+              <app-task-card
+                [task]="task"
+                [reorderable]="!task.done"
+                [dragging]="draggedId() === task.id"
+                [dropPosition]="dropPositionFor(task.id)"
+                (opened)="openTask.emit(task.id)"
+                (toggled)="toggle(task)"
+                (started)="toggleStarted(task)"
+                (deferred)="defer(task)"
+              />
+            }
+          </div>
+        }
+      </section>
+    }
+    @if (store.doneTodayTasks().length > 0) {
+      <section class="group done-today" [class.is-collapsed]="sections.isCollapsed('done-today')">
+        <div class="group-head">
+          <h2>
+            <button
+              class="group-toggle"
+              type="button"
+              (click)="sections.toggle('done-today')"
+              [attr.aria-expanded]="!sections.isCollapsed('done-today')"
+              aria-controls="group-done-today"
+            >
+              <app-icon
+                class="section-chevron"
+                name="chevron-down"
+                [size]="12"
+                [strokeWidth]="2.1"
+                [class.collapsed]="sections.isCollapsed('done-today')"
+              />
+              Terminées aujourd’hui
+            </button>
+          </h2>
+          <span class="group-count">{{ store.doneTodayTasks().length }}</span>
+          <i></i>
+        </div>
+        @if (!sections.isCollapsed('done-today')) {
+          <div class="cards" id="group-done-today">
+            @for (task of store.doneTodayTasks(); track task.id) {
+              <app-task-card
                 [task]="task"
                 (opened)="openTask.emit(task.id)"
                 (toggled)="toggle(task)"
                 (started)="toggleStarted(task)"
                 (deferred)="defer(task)"
               />
+            }
+          </div>
         }
-      </div>
-    </section>
-  }
-
-  @if (isTodayMode()) {
-    @for (group of todayGroups(); track group.key) {
-      <section class="group">
-        <div class="group-head">
-          <h2>{{ group.label }}</h2>
-          <span class="group-count">{{ group.tasks.length }}</span>
-          <i></i>
-        </div>
-        <div
-          class="cards"
-          (dragstart)="onDragStart($event, group.key)"
-          (dragover)="onDragOver($event, group.key)"
-          (drop)="onDrop($event, group.key)"
-          (dragend)="onDragEnd()"
-        >
-          @for (task of group.tasks; track task.id) {
-            <app-task-card
-              [task]="task"
-              [reorderable]="!task.done"
-              [dragging]="draggedId() === task.id"
-              [dropPosition]="dropPositionFor(task.id)"
-              (opened)="openTask.emit(task.id)"
-              (toggled)="toggle(task)"
-              (started)="toggleStarted(task)"
-              (deferred)="defer(task)"
-            />
-          }
-        </div>
-      </section>
-    }
-    @if (store.doneTodayTasks().length > 0) {
-      <section class="group done-today">
-        <div class="group-head">
-          <h2>Terminées aujourd’hui</h2>
-          <span class="group-count">{{ store.doneTodayTasks().length }}</span>
-          <i></i>
-        </div>
-        <div class="cards">
-          @for (task of store.doneTodayTasks(); track task.id) {
-            <app-task-card
-              [task]="task"
-              (opened)="openTask.emit(task.id)"
-              (toggled)="toggle(task)"
-              (started)="toggleStarted(task)"
-              (deferred)="defer(task)"
-            />
-          }
-        </div>
       </section>
     }
     @if (todayGroups().length === 0) {

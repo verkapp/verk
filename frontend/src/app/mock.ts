@@ -284,6 +284,9 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       task.done = args[1] as boolean;
       if (task.done) {
         task.completedAt = Date.now();
+        task.subtasks.forEach((subtask) => {
+          subtask.done = true;
+        });
       } else {
         task.completedAt = null;
         task.position = nextTopPosition(task.profileId);
