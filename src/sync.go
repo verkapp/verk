@@ -13,6 +13,7 @@ import (
 
 const (
 	syncDebounce    = 8 * time.Second
+	syncMaxBatch    = 45 * time.Second
 	syncRunTimeout  = 90 * time.Second
 	syncQuitTimeout = 12 * time.Second
 	syncAttempts    = 3
@@ -37,7 +38,9 @@ func (a *App) syncConfigured() (syncConfig, bool) {
 }
 
 // requestSync schedules a background push after a local change. Rapid edits
-// (typing a title, ticking several subtasks) are coalesced into one sync.
+// (typing a title, ticking several subtasks) are coalesced into one commit:
+// the timer restarts on each change, but a batch never waits longer than
+// syncMaxBatch so continuous activity still reaches the remote.
 func (a *App) requestSync() {
 	if a.store == nil {
 		return
@@ -47,11 +50,40 @@ func (a *App) requestSync() {
 		return
 	}
 	a.syncStateMu.Lock()
+	now := time.Now()
+	if a.syncPending == 0 {
+		a.syncBatchStart = now
+	}
+	a.syncPending++
 	if a.syncTimer != nil {
 		a.syncTimer.Stop()
 	}
-	a.syncTimer = time.AfterFunc(syncDebounce, a.autoSync)
+	delay := syncDebounce
+	if !a.syncBatchStart.IsZero() {
+		if remaining := syncMaxBatch - now.Sub(a.syncBatchStart); remaining < delay {
+			delay = remaining
+		}
+	}
+	if delay < 0 {
+		delay = 0
+	}
+	a.syncTimer = time.AfterFunc(delay, a.autoSync)
 	a.syncStateMu.Unlock()
+}
+
+// takeSyncBatch resets the pending action count and returns it for the commit
+// message.
+func (a *App) takeSyncBatch() int {
+	a.syncStateMu.Lock()
+	defer a.syncStateMu.Unlock()
+	pending := a.syncPending
+	a.syncPending = 0
+	a.syncBatchStart = time.Time{}
+	if a.syncTimer != nil {
+		a.syncTimer.Stop()
+		a.syncTimer = nil
+	}
+	return pending
 }
 
 func (a *App) stopSyncTimer() {
@@ -60,22 +92,30 @@ func (a *App) stopSyncTimer() {
 		a.syncTimer.Stop()
 		a.syncTimer = nil
 	}
+	a.syncPending = 0
+	a.syncBatchStart = time.Time{}
 	a.syncStateMu.Unlock()
 }
 
 func (a *App) autoSync() {
 	cfg, ok := a.syncConfigured()
 	if !ok || !cfg.Enabled {
+		a.takeSyncBatch()
 		return
 	}
+	pending := a.takeSyncBatch()
 	ctx, cancel := context.WithTimeout(context.Background(), syncRunTimeout)
 	defer cancel()
-	_, _ = a.syncNow(ctx, false)
+	_, _ = a.syncNowWithMessage(ctx, false, batchCommitMessage(pending))
 }
 
 // syncNow serialises all sync runs. Neither the automatic nor the manual path
 // can overlap with another run.
 func (a *App) syncNow(ctx context.Context, force bool) (bool, error) {
+	return a.syncNowWithMessage(ctx, force, "")
+}
+
+func (a *App) syncNowWithMessage(ctx context.Context, force bool, message string) (bool, error) {
 	a.syncRunMu.Lock()
 	defer a.syncRunMu.Unlock()
 
@@ -93,13 +133,13 @@ func (a *App) syncNow(ctx context.Context, force bool) (bool, error) {
 	a.setSyncing(true)
 	defer a.setSyncing(false)
 
-	changed, syncErr := a.performSync(ctx, cfg)
+	changed, syncErr := a.performSyncWithMessage(ctx, cfg, message)
 	now := time.Now().UnixMilli()
 	if syncErr != nil {
-		message := syncErr.Error()
+		errorText := syncErr.Error()
 		lastAt, _, metaErr := a.store.syncMeta()
 		if metaErr == nil {
-			_ = a.store.saveSyncMeta(lastAt, message)
+			_ = a.store.saveSyncMeta(lastAt, errorText)
 		}
 		return false, syncErr
 	}
@@ -113,6 +153,10 @@ func (a *App) syncNow(ctx context.Context, force bool) (bool, error) {
 }
 
 func (a *App) performSync(ctx context.Context, cfg syncConfig) (bool, error) {
+	return a.performSyncWithMessage(ctx, cfg, "")
+}
+
+func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, message string) (bool, error) {
 	dir := a.syncDirectory()
 	branch := cfg.Branch
 	if branch == "" {
@@ -175,8 +219,11 @@ func (a *App) performSync(ctx context.Context, cfg syncConfig) (bool, error) {
 			return changed, fmt.Errorf("état git : %w", err)
 		}
 		if strings.TrimSpace(status) != "" {
-			message := fmt.Sprintf("sync: %s %s", hostname(), time.Now().UTC().Format(time.RFC3339))
-			if _, err := runGit(ctx, dir, "commit", "-m", message); err != nil {
+			commitMessage := message
+			if commitMessage == "" {
+				commitMessage = fmt.Sprintf("sync: %s %s", hostname(), time.Now().UTC().Format(time.RFC3339))
+			}
+			if _, err := runGit(ctx, dir, "commit", "-m", commitMessage); err != nil {
 				return changed, fmt.Errorf("commit impossible : %w", err)
 			}
 		}
@@ -299,4 +346,16 @@ func hostname() string {
 		return "todo"
 	}
 	return name
+}
+
+// batchCommitMessage summarises the actions coalesced by the debounce timer.
+func batchCommitMessage(changes int) string {
+	if changes <= 0 {
+		return ""
+	}
+	label := "modification"
+	if changes > 1 {
+		label = "modifications"
+	}
+	return fmt.Sprintf("sync: %d %s — %s", changes, label, hostname())
 }

@@ -1,6 +1,7 @@
 package src
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -18,6 +19,37 @@ func testTask(id, title string, updatedAt int64) snapshotTask {
 
 func testSubtask(id, taskID, title string, updatedAt int64) snapshotSubtask {
 	return snapshotSubtask{ID: id, TaskID: taskID, Title: title, UpdatedAt: updatedAt}
+}
+
+func TestRequestSyncCoalescesActions(t *testing.T) {
+	st := newTestStore(t)
+	if err := st.saveSyncConfig(syncConfig{Remote: "git@example.com:todo.git", Enabled: true, Branch: "main"}); err != nil {
+		t.Fatalf("saveSyncConfig: %v", err)
+	}
+	app := testApp(st)
+
+	app.requestSync()
+	app.requestSync()
+	app.requestSync()
+
+	if pending := app.takeSyncBatch(); pending != 3 {
+		t.Fatalf("three actions should form one batch of 3, got %d", pending)
+	}
+	if pending := app.takeSyncBatch(); pending != 0 {
+		t.Fatalf("taking the batch should reset it, got %d", pending)
+	}
+}
+
+func TestBatchCommitMessage(t *testing.T) {
+	if got := batchCommitMessage(0); got != "" {
+		t.Fatalf("an empty batch should not produce a message, got %q", got)
+	}
+	if got := batchCommitMessage(1); !strings.Contains(got, "1 modification") {
+		t.Fatalf("unexpected single-action message: %q", got)
+	}
+	if got := batchCommitMessage(4); !strings.Contains(got, "4 modifications") {
+		t.Fatalf("unexpected batch message: %q", got)
+	}
 }
 
 func TestMergeSnapshotsUsesNewestTask(t *testing.T) {

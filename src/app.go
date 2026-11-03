@@ -29,6 +29,8 @@ type App struct {
 	syncTimer      *time.Timer
 	syncSyncing    bool
 	syncGeneration int64
+	syncPending    int
+	syncBatchStart time.Time
 
 	updates    updater
 	updateStop chan struct{}
