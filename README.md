@@ -25,7 +25,8 @@ coach propulsé par **Claude Code (haiku)**.
   version en arrière-plan, la vérifie (SHA-256) et l'installe à la fermeture. Un bouton
   « Vérifier les mises à jour » et un redémarrage immédiat sont disponibles dans les réglages.
 - **Synchronisation git optionnelle** : un dépôt privé (GitHub, GitLab, serveur perso) pour
-  retrouver tâches, profils et images sur plusieurs machines. Fusion sans conflit, suppressions propagées,
+  retrouver tâches, profils et images sur plusieurs machines. Les actions rapprochées sont
+  regroupées dans un même commit, fusion sans conflit, suppressions propagées,
   réglages propres à chaque ordinateur.
 - **Coach Claude Code** : un mot court et bienveillant pour repartir, et un découpage assisté
   des tâches en sous-tâches concrètes. Le coach peut être désactivé dans les réglages.
