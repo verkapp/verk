@@ -130,6 +130,7 @@ export class Store {
   private syncPolling = false;
   private focusRefreshing = false;
   private lastFocusRefresh = 0;
+  private lastFocusSync = 0;
 
   async init(): Promise<void> {
     this.listenForUpdates();
@@ -311,12 +312,22 @@ export class Store {
     this.now.set(now);
     try {
       await this.reload();
+      const status = await this.refreshSync();
+      if (status?.configured && status.enabled && !status.syncing && now - this.lastFocusSync >= 5000) {
+        this.lastFocusSync = now;
+        try {
+          await api.syncNow();
+        } catch {
+          // The error is kept in SyncStatus rather than shown as a toast here.
+        }
+        await this.refreshSync();
+        await this.reload();
+      }
     } catch {
       // A background refresh must never disrupt the current view.
     } finally {
       this.focusRefreshing = false;
     }
-    await this.pollSync();
   }
 
   private applyUpdate(info: UpdateInfo): void {
