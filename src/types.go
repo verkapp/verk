@@ -38,8 +38,18 @@ type Subtask struct {
 type TaskImage struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	Mime      string `json:"mime"`
+	Size      int64  `json:"size"`
 	DataURL   string `json:"dataUrl"`
 	CreatedAt int64  `json:"createdAt"`
+}
+
+// AttachmentInput carries a pasted file from the frontend. Data is a data URL
+// (or raw base64), so any clipboard document can reach the Go side without a
+// temporary file.
+type AttachmentInput struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
 }
 
 type TaskInput struct {

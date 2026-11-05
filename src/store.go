@@ -13,7 +13,7 @@ import (
 
 var errNotFound = errors.New("élément introuvable")
 
-const maxImageBytes = 15 << 20 // 15 MiB
+const maxAttachmentBytes = 25 << 20 // 25 MiB
 
 type store struct {
 	db       *sql.DB

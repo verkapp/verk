@@ -55,6 +55,11 @@ jobs:
         with:
           version: v2.15.0
 
+      - name: Verify release notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: ./scripts/release-notes.sh "${GITHUB_REF_NAME#v}" > /dev/null
+
   build:
     name: Build ${{ matrix.artifact }}
     if: startsWith(github.ref, 'refs/tags/v')
@@ -141,6 +146,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract release notes
+        shell: bash
+        run: ./scripts/release-notes.sh "${GITHUB_REF_NAME#v}" > release-notes.md
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -148,8 +159,8 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          body_path: release-notes.md
           files: |
             dist/*.zip
             dist/*.sha256
-          generate_release_notes: true
 

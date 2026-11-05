@@ -127,6 +127,43 @@ func TestCompletingTaskCompletesSubtasks(t *testing.T) {
 	}
 }
 
+func TestCompletingAllSubtasksCompletesTask(t *testing.T) {
+	st := newTestStore(t)
+	task, err := st.createTask(TaskInput{Title: "Préparer le lancement"})
+	if err != nil {
+		t.Fatalf("createTask: %v", err)
+	}
+	for _, title := range []string{"Écrire l’annonce", "Relire la page", "Envoyer l’e-mail"} {
+		if _, err := st.addSubtask(task.ID, title); err != nil {
+			t.Fatalf("addSubtask: %v", err)
+		}
+	}
+
+	loaded, err := st.getTask(task.ID)
+	if err != nil {
+		t.Fatalf("getTask: %v", err)
+	}
+	for i, subtask := range loaded.Subtasks {
+		updated, err := st.setSubtaskDone(subtask.ID, true)
+		if err != nil {
+			t.Fatalf("setSubtaskDone: %v", err)
+		}
+		if i < len(loaded.Subtasks)-1 && updated.Done {
+			t.Fatalf("task should stay open after %d/%d subtasks", i+1, len(loaded.Subtasks))
+		}
+		if i == len(loaded.Subtasks)-1 {
+			if !updated.Done || updated.CompletedAt == nil {
+				t.Fatal("task should be done when all subtasks are done")
+			}
+			for _, candidate := range updated.Subtasks {
+				if !candidate.Done {
+					t.Fatalf("subtask %q should be done with its task", candidate.Title)
+				}
+			}
+		}
+	}
+}
+
 func TestTimeTracking(t *testing.T) {
 	st := newTestStore(t)
 	task, err := st.createTask(TaskInput{Title: "chrono"})

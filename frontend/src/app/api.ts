@@ -1,5 +1,16 @@
 import { mockCall } from './mock';
-import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, SyncStatus, Task, TaskInput, UpdateInfo } from './models';
+import {
+  AppInfo,
+  AttachmentInput,
+  ClaudeStatus,
+  NotificationStatus,
+  Profile,
+  Settings,
+  SyncStatus,
+  Task,
+  TaskInput,
+  UpdateInfo,
+} from './models';
 
 type Bridge = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
@@ -45,8 +56,13 @@ export const api = {
   updateProfile: (id: string, name: string, color: string) => call<Profile>('UpdateProfile', id, name, color),
   deleteProfile: (id: string) => call<void>('DeleteProfile', id),
 
-  addImage: (taskId: string) => call<Task>('AddImage', taskId),
-  deleteImage: (id: string) => call<Task>('DeleteImage', id),
+  addAttachment: (taskId: string) => call<Task>('AddAttachment', taskId),
+  addAttachments: (taskId: string, files: AttachmentInput[]) =>
+    call<Task>('AddAttachments', taskId, files),
+  addAttachmentPaths: (taskId: string, paths: string[]) =>
+    call<Task>('AddAttachmentPaths', taskId, paths),
+  deleteAttachment: (id: string) => call<Task>('DeleteAttachment', id),
+  openAttachment: (id: string) => call<void>('OpenAttachment', id),
 
   getSettings: () => call<Settings>('GetSettings'),
   saveSettings: (settings: Settings) => call<void>('SaveSettings', settings),

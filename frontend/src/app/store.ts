@@ -15,6 +15,7 @@ import {
 import {
   AccentName,
   AppInfo,
+  AttachmentInput,
   ClaudeStatus,
   HistoryGroup,
   NotificationStatus,
@@ -648,18 +649,45 @@ export class Store {
     }
   }
 
-  async addImage(taskId: string): Promise<Task> {
+  async addAttachment(taskId: string): Promise<Task> {
     try {
-      return await this.mutate(api.addImage(taskId));
+      return await this.mutate(api.addAttachment(taskId));
     } catch (error) {
       this.fail(error);
       throw error;
     }
   }
 
-  async deleteImage(id: string): Promise<Task> {
+  async addAttachments(taskId: string, files: AttachmentInput[]): Promise<Task> {
     try {
-      return await this.mutate(api.deleteImage(id));
+      return await this.mutate(api.addAttachments(taskId, files));
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  async addAttachmentPaths(taskId: string, paths: string[]): Promise<Task> {
+    try {
+      return await this.mutate(api.addAttachmentPaths(taskId, paths));
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  async deleteAttachment(id: string): Promise<Task> {
+    try {
+      return await this.mutate(api.deleteAttachment(id));
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  async openAttachment(id: string): Promise<void> {
+    try {
+      await api.openAttachment(id);
     } catch (error) {
       this.fail(error);
       throw error;
