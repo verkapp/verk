@@ -210,8 +210,8 @@ func TestSyncMovesImageFiles(t *testing.T) {
 	if err := os.WriteFile(source, png, 0o644); err != nil {
 		t.Fatalf("write png: %v", err)
 	}
-	if _, err := st1.importImage(task.ID, source); err != nil {
-		t.Fatalf("importImage: %v", err)
+	if _, err := st1.importAttachment(task.ID, source); err != nil {
+		t.Fatalf("importAttachment: %v", err)
 	}
 
 	sync(a1)

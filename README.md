@@ -13,7 +13,9 @@ coach propulsé par **Claude Code (haiku)**.
 - **Profils** (Travail, Perso, …) : des listes séparées qui regroupent leurs propres tâches,
   statistiques et historique. Création, renommage, couleur et suppression depuis le menu ou les réglages.
 - **Sous-tâches** avec progression, ajout, renommage, suppression.
-- **Images** jointes (copiées dans le dossier de données de l'application), avec aperçu plein écran.
+- **Pièces jointes** de tout type (images, PDF, documents…), ajoutées depuis le disque ou collées
+  avec Ctrl+V, avec aperçu plein écran pour les images et ouverture par l’application système
+  pour les autres fichiers.
 - **Aujourd'hui** : tâches en retard, du jour, à venir et sans date, regroupées automatiquement.
 - **Toutes les tâches** avec filtres (en retard, aujourd'hui, sans date) et ajout rapide.
 - **Reprendre demain ou lundi** : reporte une tâche au lendemain, ou au lundi quand le week-end
@@ -132,8 +134,8 @@ L'intégration passe par la CLI locale, sans serveur intermédiaire :
 | macOS | `~/Library/Application Support/todo/` |
 | Windows | `%AppData%\todo\` |
 
-On y trouve `todo.db` (SQLite, WAL), le dossier `images/` et, si la synchronisation est
-configurée, le clone `sync/` géré par l'application. Réglages → Données permet d'ouvrir ce
+On y trouve `todo.db` (SQLite, WAL), le dossier `images/` (pièces jointes) et, si la
+synchronisation est configurée, le clone `sync/` géré par l'application. Réglages → Données permet d'ouvrir ce
 dossier. Sans dépôt git configuré, tout reste strictement local.
 
 ## Synchronisation git
@@ -145,8 +147,8 @@ gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
 - Un envoi part quelques secondes après chaque changement, une récupération a lieu au démarrage,
   et une dernière synchronisation est tentée à la fermeture. Le bouton **Synchroniser** force
   un aller-retour.
-- Le dépôt contient `todo.json` (instantané lisible) et `images/`. La base SQLite n'est jamais
-  commitée : il n'y a donc pas de conflit binaire.
+- Le dépôt contient `todo.json` (instantané lisible) et `images/` (toutes les pièces jointes).
+  La base SQLite n'est jamais commitée : il n'y a donc pas de conflit binaire.
 - La fusion se fait entité par entité (`updated_at`, dernier écrivain gagnant). Les sous-tâches
   et les images fusionnent indépendamment de leur tâche. Une modification plus récente qu'une
   suppression ressuscite l'élément ; les pierres tombales sont conservées 180 jours.
@@ -168,17 +170,26 @@ gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
   release et son tag sont recréés sur le dernier commit, les liens de téléchargement changent donc
   à chaque fois.
 - Un tag `v*` crée automatiquement une **GitHub Release** avec les deux archives.
+- Les notes de chaque release viennent de [`CHANGELOG.md`](CHANGELOG.md) : ajoute une section
+  `## [X.Y.Z] - AAAA-MM-JJ` avant de créer le tag. La CI refuse un tag sans notes, puis utilise
+  cette section comme corps de la release. `scripts/release-notes.sh X.Y.Z` affiche les notes
+  localement, telles qu’elles seront publiées.
 
 ```bash
-git tag v1.2.3
-git push origin v1.2.3
+# 1. écrire les notes dans CHANGELOG.md
+# 2. les relire
+scripts/release-notes.sh 1.2.4
+# 3. publier
+git tag v1.2.4
+git push origin v1.2.4
 ```
 
 ## Mises à jour
 
 Réglages → Mises à jour affiche la version courante et permet de vérifier les nouveautés à la
-demande. Par défaut, l'application vérifie aussi la dernière release stable au démarrage puis
-toutes les six heures :
+demande. Quand une release est disponible, ses notes s’affichent dans un bloc **Nouveautés**.
+Par défaut, l’application vérifie aussi la dernière release stable au démarrage puis toutes les
+six heures :
 
 1. l'archive de la plateforme (`Todo-macos-universal.zip` ou `Todo-windows-x64.zip`) est
    téléchargée dans `updates/` du dossier de données ;
@@ -209,6 +220,9 @@ et télécharger l'archive avec tes droits. Sans `gh`, il faut un dépôt public
 │   ├── claude*.go          # Détection Claude Code, prompts, parsing
 │   └── types.go            # Structures partagées avec le frontend
 ├── build/appicon.png       # Icône de l'application
+├── CHANGELOG.md            # Notes de chaque release (source du corps GitHub)
+├── scripts/
+│   └── release-notes.sh    # Extrait les notes d'une version
 ├── frontend/
 │   └── src/app/
 │       ├── app.component.*       # Shell, navigation, tiroir

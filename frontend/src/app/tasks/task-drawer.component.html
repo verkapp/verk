@@ -239,35 +239,63 @@
 
     <section class="block images-block">
       <div class="block-head">
-        <h3>Images</h3>
+        <h3>Pièces jointes</h3>
         @if (images().length > 0) {
           <span class="block-count">{{ images().length }}</span>
         }
       </div>
 
+      <p class="attachment-hint">Colle un fichier avec Ctrl+V, ou ajoute-le depuis ton disque.</p>
+
       <div class="image-grid">
-        @for (image of images(); track image.id) {
-          <div
-            class="image-tile"
-            role="button"
-            tabindex="0"
-            (click)="lightbox.set(image.dataUrl)"
-            (keydown.enter)="lightbox.set(image.dataUrl)"
-            [attr.aria-label]="'Agrandir ' + image.name"
-          >
-            <img [src]="image.dataUrl" [alt]="image.name" />
-            <button
-              class="image-remove"
-              type="button"
-              (click)="deleteImage(image, $event)"
-              aria-label="Supprimer l’image"
+        @for (attachment of images(); track attachment.id) {
+          @if (isImageAttachment(attachment)) {
+            <div
+              class="image-tile"
+              role="button"
+              tabindex="0"
+              (click)="openAttachment(attachment)"
+              (keydown.enter)="openAttachment(attachment)"
+              [attr.aria-label]="'Agrandir ' + attachment.name"
             >
-              <app-icon name="close" [size]="11" [strokeWidth]="2.4" />
-            </button>
-          </div>
+              <img [src]="attachment.dataUrl" [alt]="attachment.name" />
+              <button
+                class="image-remove"
+                type="button"
+                (click)="deleteAttachment(attachment, $event)"
+                aria-label="Supprimer la pièce jointe"
+              >
+                <app-icon name="close" [size]="11" [strokeWidth]="2.4" />
+              </button>
+            </div>
+          } @else {
+            <div
+              class="image-tile file-tile"
+              role="button"
+              tabindex="0"
+              (click)="openAttachment(attachment)"
+              (keydown.enter)="openAttachment(attachment)"
+              [attr.aria-label]="'Ouvrir ' + attachment.name"
+              [attr.title]="attachment.name"
+            >
+              <span class="file-ext">{{ attachmentExtension(attachment) }}</span>
+              <span class="file-name">{{ attachment.name }}</span>
+              @if (formatAttachmentSize(attachment.size); as size) {
+                <span class="file-size">{{ size }}</span>
+              }
+              <button
+                class="image-remove"
+                type="button"
+                (click)="deleteAttachment(attachment, $event)"
+                aria-label="Supprimer la pièce jointe"
+              >
+                <app-icon name="close" [size]="11" [strokeWidth]="2.4" />
+              </button>
+            </div>
+          }
         }
-        <button class="image-add" type="button" (click)="addImage()">
-          <app-icon name="image" [size]="19" />
+        <button class="image-add" type="button" (click)="addAttachment()">
+          <app-icon name="paperclip" [size]="19" />
           <span>Ajouter</span>
         </button>
       </div>

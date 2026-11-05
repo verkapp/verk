@@ -65,10 +65,17 @@ func (s *store) listTasks() ([]Task, error) {
 			return nil, err
 		}
 		if i, ok := index[taskID]; ok {
+			mimeType, size := s.attachmentMeta(name, file)
+			dataURL := ""
+			if strings.HasPrefix(mimeType, "image/") {
+				dataURL = s.imageDataURL(file)
+			}
 			tasks[i].Images = append(tasks[i].Images, TaskImage{
 				ID:        id,
 				Name:      name,
-				DataURL:   s.imageDataURL(file),
+				Mime:      mimeType,
+				Size:      size,
+				DataURL:   dataURL,
 				CreatedAt: createdAt,
 			})
 		}
@@ -286,7 +293,7 @@ func (s *store) setStarted(id string, started bool) (Task, error) {
 }
 
 func (s *store) deleteTask(id string) error {
-	files, err := s.imageFiles(id)
+	files, err := s.attachmentFiles(id)
 	if err != nil {
 		return err
 	}

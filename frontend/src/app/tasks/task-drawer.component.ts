@@ -25,6 +25,15 @@ interface TimePreset {
   value: string;
 }
 
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(reader.error ?? new Error('Lecture du fichier impossible.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 const TIME_PRESETS: TimePreset[] = [
   { id: 'day', label: 'Fin de journée', value: '' },
   { id: 'morning', label: 'Matin · 9h', value: '09:00' },
@@ -141,6 +150,67 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     void this.close();
   }
 
+  @HostListener('document:paste', ['$event'])
+  onPaste(event: ClipboardEvent): void {
+    const files = this.clipboardFiles(event);
+    const paths = files.length === 0 ? this.clipboardFilePaths(event) : [];
+    if (files.length === 0 && paths.length === 0) {
+      return;
+    }
+    event.preventDefault();
+    if (files.length > 0) {
+      void this.attachFiles(files);
+    } else {
+      void this.attachPaths(paths);
+    }
+  }
+
+  private clipboardFiles(event: ClipboardEvent): File[] {
+    const data = event.clipboardData;
+    if (!data) {
+      return [];
+    }
+    const files = Array.from(data.files ?? []);
+    if (files.length > 0) {
+      return files;
+    }
+    return Array.from(data.items ?? [])
+      .filter((item) => item.kind === 'file')
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => file !== null);
+  }
+
+  /** Some WebViews expose Finder files as file:// URIs rather than blobs. */
+  private clipboardFilePaths(event: ClipboardEvent): string[] {
+    const data = event.clipboardData;
+    if (!data) {
+      return [];
+    }
+    const uriList = data.getData('text/uri-list');
+    if (!uriList) {
+      return [];
+    }
+    const paths: string[] = [];
+    for (const line of uriList.split(/\r?\n/)) {
+      const value = line.trim();
+      if (!value.startsWith('file://')) {
+        continue;
+      }
+      try {
+        let path = decodeURIComponent(new URL(value).pathname);
+        if (/^\/[A-Za-z]:/.test(path)) {
+          path = path.slice(1);
+        }
+        if (path) {
+          paths.push(path);
+        }
+      } catch {
+        // Ignore malformed clipboard URIs.
+      }
+    }
+    return paths;
+  }
+
   private hydrate(task: Task): void {
     this.taskId.set(task.id);
     this.createdAt.set(task.createdAt);
@@ -157,6 +227,7 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
   }
 
   private applyTask(task: Task): void {
+    this.isDone.set(task.done);
     this.subtasks.set(task.subtasks);
     this.images.set(task.images);
     if (!this.taskId()) {
@@ -503,31 +574,111 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     this.subtaskDrop.set(null);
   }
 
-  /* -------------------------------- images ----------------------------- */
+  /* ------------------------------ pièces jointes ----------------------- */
 
-  async addImage(): Promise<void> {
+  async addAttachment(): Promise<void> {
     const id = await this.ensureSaved();
     if (!id) {
       return;
     }
     try {
-      const task = await this.store.addImage(id);
+      const task = await this.store.addAttachment(id);
       this.applyTask(task);
     } catch {
       // handled by the store
     }
   }
 
-  async deleteImage(image: TaskImage, event: Event): Promise<void> {
+  async deleteAttachment(attachment: TaskImage, event: Event): Promise<void> {
     event.stopPropagation();
     try {
-      const task = await this.store.deleteImage(image.id);
+      const task = await this.store.deleteAttachment(attachment.id);
       this.applyTask(task);
       if (this.lightbox()) {
         this.lightbox.set(null);
       }
     } catch {
       // handled by the store
+    }
+  }
+
+  async openAttachment(attachment: TaskImage): Promise<void> {
+    if (this.isImageAttachment(attachment)) {
+      this.lightbox.set(attachment.dataUrl);
+      return;
+    }
+    try {
+      await this.store.openAttachment(attachment.id);
+    } catch {
+      // handled by the store
+    }
+  }
+
+  isImageAttachment(attachment: TaskImage): boolean {
+    return (
+      attachment.dataUrl.length > 0 &&
+      (attachment.mime.startsWith('image/') || attachment.dataUrl.startsWith('data:image/'))
+    );
+  }
+
+  attachmentExtension(attachment: TaskImage): string {
+    const dot = attachment.name.lastIndexOf('.');
+    if (dot < 0 || dot === attachment.name.length - 1) {
+      return 'FICHIER';
+    }
+    return attachment.name.slice(dot + 1).toUpperCase().slice(0, 4);
+  }
+
+  formatAttachmentSize(bytes: number): string {
+    if (bytes <= 0) {
+      return '';
+    }
+    if (bytes < 1024) {
+      return `${bytes} o`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${Math.round(bytes / 1024)} Ko`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+  }
+
+  private async attachFiles(files: File[]): Promise<void> {
+    const id = await this.ensureSaved();
+    if (!id) {
+      return;
+    }
+    try {
+      const payload = await Promise.all(
+        files.map(async (file) => ({
+          name: file.name || `pièce-jointe-${Date.now()}`,
+          data: await readFileAsDataURL(file),
+        })),
+      );
+      const task = await this.store.addAttachments(id, payload);
+      this.applyTask(task);
+      this.store.notify(
+        `${payload.length} pièce${payload.length > 1 ? 's jointes ajoutées' : ' jointe ajoutée'}.`,
+        'accent',
+      );
+    } catch (error) {
+      this.store.notify(errorMessage(error), 'error');
+    }
+  }
+
+  private async attachPaths(paths: string[]): Promise<void> {
+    const id = await this.ensureSaved();
+    if (!id) {
+      return;
+    }
+    try {
+      const task = await this.store.addAttachmentPaths(id, paths);
+      this.applyTask(task);
+      this.store.notify(
+        `${paths.length} pièce${paths.length > 1 ? 's jointes ajoutées' : ' jointe ajoutée'}.`,
+        'accent',
+      );
+    } catch (error) {
+      this.store.notify(errorMessage(error), 'error');
     }
   }
 

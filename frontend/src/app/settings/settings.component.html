@@ -520,6 +520,16 @@
             }
           </div>
         }
+
+        @if (update.notes && (update.available || update.ready)) {
+          <details class="release-notes">
+            <summary>
+              <app-icon name="chevron-right" [size]="13" />
+              Nouveautés de Todo {{ update.latestVersion }}
+            </summary>
+            <p class="release-notes-body">{{ releaseNotes() }}</p>
+          </details>
+        }
       }
 
       <p class="hint">

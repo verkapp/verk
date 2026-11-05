@@ -12,6 +12,7 @@ export type IconName =
   | 'clock'
   | 'subtasks'
   | 'image'
+  | 'paperclip'
   | 'trash'
   | 'close'
   | 'check'
@@ -99,6 +100,9 @@ export type IconName =
           <rect x="3" y="4" width="18" height="16" rx="3" />
           <circle cx="9" cy="10" r="1.6" />
           <path d="M4 18l5-4 4 3 2.5-2L20 19" />
+        }
+        @case ('paperclip') {
+          <path d="M21 11.5l-8.7 8.7a5 5 0 0 1-7.1-7.1l9-9a3.4 3.4 0 0 1 4.8 4.8l-9 9a1.8 1.8 0 0 1-2.5-2.5l8.3-8.3" />
         }
         @case ('trash') {
           <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />

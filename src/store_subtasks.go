@@ -59,7 +59,27 @@ func (s *store) setSubtaskDone(id string, done bool) (Task, error) {
 	if _, err := s.db.Exec(`UPDATE subtasks SET done = ?, updated_at = ? WHERE id = ?`, boolInt(done), now, id); err != nil {
 		return Task{}, err
 	}
+	// Finishing the last open subtask finishes the task too, keeping the two
+	// consistent in both directions.
+	if done {
+		complete, err := s.allSubtasksDone(taskID)
+		if err != nil {
+			return Task{}, err
+		}
+		if complete {
+			return s.setDone(taskID, true)
+		}
+	}
 	return s.getTask(taskID)
+}
+
+// allSubtasksDone reports whether a task has subtasks and all of them are done.
+func (s *store) allSubtasksDone(taskID string) (bool, error) {
+	var total, done int
+	if err := s.db.QueryRow(`SELECT COUNT(*), COALESCE(SUM(done), 0) FROM subtasks WHERE task_id = ?`, taskID).Scan(&total, &done); err != nil {
+		return false, err
+	}
+	return total > 0 && total == done, nil
 }
 
 func (s *store) deleteSubtask(id string) (Task, error) {

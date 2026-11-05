@@ -16,8 +16,15 @@ export interface Profile {
 export interface TaskImage {
   id: string;
   name: string;
+  mime: string;
+  size: number;
   dataUrl: string;
   createdAt: number;
+}
+
+export interface AttachmentInput {
+  name: string;
+  data: string;
 }
 
 export interface Task {

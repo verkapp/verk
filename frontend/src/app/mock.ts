@@ -1,4 +1,17 @@
-import { AppInfo, ClaudeStatus, NotificationStatus, Profile, Settings, Subtask, SyncStatus, Task, TaskImage, TaskInput, UpdateInfo } from './models';
+import {
+  AppInfo,
+  AttachmentInput,
+  ClaudeStatus,
+  NotificationStatus,
+  Profile,
+  Settings,
+  Subtask,
+  SyncStatus,
+  Task,
+  TaskImage,
+  TaskInput,
+  UpdateInfo,
+} from './models';
 
 /**
  * In-memory fallback used when the Angular app runs in a plain browser
@@ -40,7 +53,15 @@ function sub(title: string, done = false, position = 0): Subtask {
 }
 
 function image(name: string, from: string, to: string): TaskImage {
-  return { id: id(), name, dataUrl: placeholder(name, from, to), createdAt: Date.now() - 2 * DAY };
+  const dataUrl = placeholder(name, from, to);
+  return {
+    id: id(),
+    name,
+    mime: 'image/svg+xml',
+    size: dataUrl.length,
+    dataUrl,
+    createdAt: Date.now() - 2 * DAY,
+  };
 }
 
 const profileColors = ['#7b6cf0', '#4aa985', '#559fe0', '#ea8a62', '#dd7ba2', '#d3a640'];
@@ -336,6 +357,11 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
     case 'SetSubtaskDone': {
       const { task, subtask } = findSubtask(args[0] as string);
       subtask.done = args[1] as boolean;
+      if (subtask.done && task.subtasks.every((candidate) => candidate.done)) {
+        task.done = true;
+        task.completedAt = Date.now();
+        bank(task);
+      }
       return clone(task) as T;
     }
     case 'DeleteSubtask': {
@@ -362,6 +388,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       });
       return clone(task) as T;
     }
+    case 'AddAttachment':
     case 'AddImage': {
       const task = findTask(args[0] as string);
       const palettes = [
@@ -373,6 +400,51 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       task.images.push(image(`Image ${task.images.length + 1}`, colors[0], colors[1]));
       return clone(task) as T;
     }
+    case 'AddAttachments': {
+      const task = findTask(args[0] as string);
+      for (const file of args[1] as AttachmentInput[]) {
+        const data = file.data;
+        const comma = data.indexOf(',');
+        const header = comma >= 0 ? data.slice(5, comma) : '';
+        const mime = header.split(';')[0] || 'application/octet-stream';
+        const base64 = comma >= 0 ? data.slice(comma + 1) : data;
+        task.images.push({
+          id: id(),
+          name: file.name || `pièce-jointe-${Date.now()}`,
+          mime,
+          size: Math.floor((base64.length * 3) / 4),
+          dataUrl: mime.startsWith('image/') ? data : '',
+          createdAt: Date.now(),
+        });
+      }
+      return clone(task) as T;
+    }
+    case 'AddAttachmentPaths': {
+      const task = findTask(args[0] as string);
+      for (const path of args[1] as string[]) {
+        const name = path.split(/[\\/]/).pop() || `pièce-jointe-${Date.now()}`;
+        const dot = name.lastIndexOf('.');
+        const extension = dot >= 0 ? name.slice(dot + 1).toLowerCase() : '';
+        const mime =
+          extension === 'pdf'
+            ? 'application/pdf'
+            : extension === 'txt'
+              ? 'text/plain'
+              : 'application/octet-stream';
+        task.images.push({
+          id: id(),
+          name,
+          mime,
+          size: 0,
+          dataUrl: '',
+          createdAt: Date.now(),
+        });
+      }
+      return clone(task) as T;
+    }
+    case 'OpenAttachment':
+      return undefined as T;
+    case 'DeleteAttachment':
     case 'DeleteImage': {
       let owner: Task | undefined;
       for (const task of tasks) {
