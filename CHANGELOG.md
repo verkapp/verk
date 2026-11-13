@@ -13,6 +13,10 @@ Format :
 
 ## [Non publié]
 
+### Modifié
+
+- Les notes de version sont rendues avec un vrai moteur Markdown.
+
 ## [1.3.0] - 2026-11-05
 
 ### Ajouté

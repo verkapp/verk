@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { marked } from 'marked';
 
 import { formatCreatedAt } from '../dates';
 import { ACCENTS, AccentName, Profile } from '../models';
@@ -23,13 +24,12 @@ export class SettingsComponent implements OnInit {
   readonly newProfileName = signal('');
   readonly profileColors = ['#7b6cf0', '#4aa985', '#559fe0', '#ea8a62', '#dd7ba2', '#d3a640'];
 
-  /** Release notes are Markdown; the settings card shows a light plain-text version. */
   readonly releaseNotes = computed(() =>
-    (this.store.update()?.notes ?? '')
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/^- /gm, '• ')
-      .trim(),
+    marked.parse(this.store.update()?.notes?.trim() ?? '', {
+      async: false,
+      gfm: true,
+      breaks: true,
+    }),
   );
 
   ngOnInit(): void {

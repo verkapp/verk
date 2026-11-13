@@ -11,6 +11,16 @@
       <p class="page-sub">{{ subtitle() }}</p>
     </div>
     <div class="head-actions">
+      <button
+        class="icon-btn"
+        type="button"
+        (click)="store.refreshNow()"
+        [disabled]="store.refreshing()"
+        [attr.title]="store.sync()?.configured && store.sync()?.enabled ? 'Actualiser et synchroniser' : 'Actualiser'"
+        [attr.aria-label]="store.sync()?.configured && store.sync()?.enabled ? 'Actualiser et synchroniser' : 'Actualiser'"
+      >
+        <app-icon name="refresh" [size]="16" [class.spin]="store.refreshing() || store.sync()?.syncing" />
+      </button>
       <button class="btn btn-primary" type="button" (click)="newTask.emit()">
         <app-icon name="plus" [size]="16" [strokeWidth]="2.2" />
         Nouvelle tâche
