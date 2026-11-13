@@ -527,7 +527,7 @@
               <app-icon name="chevron-right" [size]="13" />
               Nouveautés de Todo {{ update.latestVersion }}
             </summary>
-            <p class="release-notes-body">{{ releaseNotes() }}</p>
+            <div class="release-notes-body" [innerHTML]="releaseNotes()"></div>
           </details>
         }
       }

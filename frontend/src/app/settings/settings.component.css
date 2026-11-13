@@ -333,7 +333,55 @@
   font-size: 11.8px;
   line-height: 1.55;
   color: var(--muted);
-  white-space: pre-line;
+}
+
+.release-notes-body :first-child {
+  margin-top: 0;
+}
+
+.release-notes-body :last-child {
+  margin-bottom: 0;
+}
+
+.release-notes-body p {
+  margin: 0 0 7px;
+}
+
+.release-notes-body h1,
+.release-notes-body h2,
+.release-notes-body h3,
+.release-notes-body h4,
+.release-notes-body h5,
+.release-notes-body h6 {
+  margin: 11px 0 5px;
+  color: var(--text-soft);
+  font-size: 11.8px;
+  font-weight: 650;
+}
+
+.release-notes-body ul,
+.release-notes-body ol {
+  margin: 0 0 7px;
+  padding-left: 18px;
+}
+
+.release-notes-body li {
+  margin: 2px 0;
+}
+
+.release-notes-body a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.release-notes-body code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--surface-muted);
+  color: var(--text-soft);
+  font-family: 'SF Mono', 'Cascadia Code', 'Roboto Mono', ui-monospace, monospace;
+  font-size: 10.2px;
 }
 
 .hint code {

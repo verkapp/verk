@@ -127,6 +127,8 @@ export class Store {
   readonly coachNudge = computed(() => this.nudge());
 
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  /** True while a manual refresh (reload + git sync) is running. */
+  readonly refreshing = signal(false);
   private syncGeneration = -1;
   private syncPolling = false;
   private focusRefreshing = false;
@@ -328,6 +330,35 @@ export class Store {
       // A background refresh must never disrupt the current view.
     } finally {
       this.focusRefreshing = false;
+    }
+  }
+
+  /** Manual refresh: reloads tasks and runs a git sync when it is configured. */
+  async refreshNow(): Promise<void> {
+    if (this.refreshing()) {
+      return;
+    }
+    this.refreshing.set(true);
+    this.now.set(Date.now());
+    try {
+      await this.reload();
+      const status = await this.refreshSync();
+      if (status?.configured && status.enabled && !status.syncing) {
+        try {
+          await api.syncNow();
+        } catch (error) {
+          this.notify(errorMessage(error), 'error');
+        }
+        const after = await this.refreshSync();
+        if (after?.lastError) {
+          this.notify(after.lastError, 'error');
+        }
+        await this.reload();
+      }
+    } catch (error) {
+      this.fail(error);
+    } finally {
+      this.refreshing.set(false);
     }
   }
 
