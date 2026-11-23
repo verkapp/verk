@@ -9,7 +9,7 @@ import { TaskDrawerComponent } from './tasks/task-drawer.component';
 import { TaskListComponent } from './tasks/task-list.component';
 import { Task, ViewName } from './models';
 import { Store } from './store';
-import { onRuntimeEvent } from './api';
+import { isMacDesktop, onRuntimeEvent } from './api';
 import { IconComponent } from './ui/icon.component';
 import { ToastComponent } from './ui/toast.component';
 
@@ -49,6 +49,9 @@ export class AppComponent implements OnInit {
       this.collapsed.set(localStorage.getItem('todo.sidebar') === 'collapsed');
     } catch {
       // ignore storage restrictions
+    }
+    if (isMacDesktop()) {
+      document.documentElement.classList.add('mac-titlebar');
     }
     void this.store.init();
     onRuntimeEvent<string>('menu:action', (action) => this.onMenuAction(action));

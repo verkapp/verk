@@ -5,6 +5,8 @@
 :root {
   color-scheme: light;
 
+  /* Height of the merged macOS title bar; 0 elsewhere (see app.component). */
+  --titlebar-h: 0px;
   --bg: #fbfaf8;
   --sidebar: #f5f3ef;
   --surface: #ffffff;
@@ -392,4 +394,8 @@ p {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+html.mac-titlebar {
+  --titlebar-h: 30px;
 }
