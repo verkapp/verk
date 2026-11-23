@@ -47,6 +47,9 @@ type snapshotProfile struct {
 	Position  int    `json:"position"`
 	CreatedAt int64  `json:"createdAt"`
 	UpdatedAt int64  `json:"updatedAt"`
+	// AutoDeferAt is omitted when empty so snapshots written before this
+	// setting existed stay byte-identical.
+	AutoDeferAt string `json:"autoDeferAt,omitempty"`
 }
 
 type snapshotTask struct {
@@ -156,13 +159,13 @@ func (s *store) snapshot() (snapshot, error) {
 	out := emptySnapshot()
 	out.GeneratedAt = time.Now().UnixMilli()
 
-	profileRows, err := s.db.Query(`SELECT id, name, color, position, created_at, updated_at FROM profiles ORDER BY position, created_at, id`)
+	profileRows, err := s.db.Query(`SELECT id, name, color, position, created_at, updated_at, auto_defer_at FROM profiles ORDER BY position, created_at, id`)
 	if err != nil {
 		return snapshot{}, err
 	}
 	for profileRows.Next() {
 		var p snapshotProfile
-		if err := profileRows.Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := profileRows.Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt, &p.UpdatedAt, &p.AutoDeferAt); err != nil {
 			_ = profileRows.Close()
 			return snapshot{}, err
 		}
@@ -603,8 +606,8 @@ func (s *store) replaceSnapshot(snap snapshot) error {
 		}
 	}
 	for _, p := range snap.Profiles {
-		if _, err := tx.Exec(`INSERT INTO profiles (id, name, color, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-			p.ID, p.Name, p.Color, p.Position, p.CreatedAt, p.UpdatedAt); err != nil {
+		if _, err := tx.Exec(`INSERT INTO profiles (id, name, color, position, created_at, updated_at, auto_defer_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			p.ID, p.Name, p.Color, p.Position, p.CreatedAt, p.UpdatedAt, p.AutoDeferAt); err != nil {
 			return err
 		}
 	}

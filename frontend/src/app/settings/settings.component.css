@@ -213,6 +213,22 @@
   transform: translateX(17px);
 }
 
+.switch-sm {
+  width: 30px;
+  height: 18px;
+}
+
+.switch-sm span {
+  top: 2.5px;
+  left: 2.5px;
+  width: 13px;
+  height: 13px;
+}
+
+.switch-sm.on span {
+  transform: translateX(12px);
+}
+
 /* ------------------------------ Claude & git ------------------------------ */
 .claude-status,
 .sync-status {
@@ -419,6 +435,7 @@
 
 .profile-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 9px;
   padding: 7px 8px;
@@ -495,4 +512,26 @@
   .accent-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* Second line of a profile row: the auto-defer switch and time. */
+.profile-defer {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0 1px 22px;
+  color: var(--text-soft);
+  font-size: 12.5px;
+}
+
+.profile-defer app-icon {
+  color: var(--muted);
+}
+
+.input-time {
+  width: auto;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12.5px;
 }

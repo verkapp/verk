@@ -1,6 +1,11 @@
 package src
 
-import "strings"
+import (
+	"database/sql"
+	"errors"
+	"strconv"
+	"strings"
+)
 
 func (s *store) getSettings() (Settings, error) {
 	out := Settings{Accent: "lavande", CoachEnabled: true, TimeTracking: true, ShowMomentum: true, Notifications: true, AutoUpdate: true, ClaudeEnabled: true}
@@ -69,4 +74,21 @@ func (s *store) saveSettings(in Settings) error {
 		}
 	}
 	return tx.Commit()
+}
+
+// settingInt reads an integer stored in the local settings table.
+func (s *store) settingInt(key string) (int64, bool, error) {
+	var value string
+	err := s.db.QueryRow(`SELECT value FROM settings WHERE key = ?`, key).Scan(&value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	parsed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, false, nil
+	}
+	return parsed, true, nil
 }

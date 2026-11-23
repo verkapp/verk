@@ -339,3 +339,21 @@ func (s *store) deleteTask(id string) error {
 	}
 	return nil
 }
+
+// deferTasks moves tasks to new due dates in one transaction. Like the
+// manual "Reprendre" button, it pauses a running timer and banks its time.
+func (s *store) deferTasks(moves map[string]int64, now int64) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	for id, due := range moves {
+		if _, err := tx.Exec(`UPDATE tasks SET due_at = ?,
+			time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
+			started_at = NULL, updated_at = ? WHERE id = ? AND done = 0`, due, now, now, id); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}

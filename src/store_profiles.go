@@ -3,6 +3,7 @@ package src
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -12,7 +13,7 @@ var profileColors = []string{"#7b6cf0", "#4aa985", "#559fe0", "#ea8a62", "#dd7ba
 const maxProfileName = 40
 
 func (s *store) listProfiles() ([]Profile, error) {
-	rows, err := s.db.Query(`SELECT id, name, color, position, created_at FROM profiles ORDER BY position ASC, created_at ASC, id ASC`)
+	rows, err := s.db.Query(`SELECT id, name, color, position, created_at, auto_defer_at FROM profiles ORDER BY position ASC, created_at ASC, id ASC`)
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +21,7 @@ func (s *store) listProfiles() ([]Profile, error) {
 	profiles := []Profile{}
 	for rows.Next() {
 		var p Profile
-		if err := rows.Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt, &p.AutoDeferAt); err != nil {
 			return nil, err
 		}
 		profiles = append(profiles, p)
@@ -30,8 +31,8 @@ func (s *store) listProfiles() ([]Profile, error) {
 
 func (s *store) getProfile(id string) (Profile, error) {
 	var p Profile
-	err := s.db.QueryRow(`SELECT id, name, color, position, created_at FROM profiles WHERE id = ?`, id).
-		Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt)
+	err := s.db.QueryRow(`SELECT id, name, color, position, created_at, auto_defer_at FROM profiles WHERE id = ?`, id).
+		Scan(&p.ID, &p.Name, &p.Color, &p.Position, &p.CreatedAt, &p.AutoDeferAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Profile{}, errNotFound
 	}
@@ -75,6 +76,31 @@ func (s *store) updateProfile(id, name, color string) (Profile, error) {
 	}
 	if _, err := s.db.Exec(`UPDATE profiles SET name = ?, color = ?, updated_at = ? WHERE id = ?`,
 		name, color, time.Now().UnixMilli(), id); err != nil {
+		return Profile{}, err
+	}
+	return s.getProfile(id)
+}
+
+// setProfileAutoDefer sets (or clears with "") the auto-defer time. The local
+// last-run stamp is reset to now, so the new time only applies from its next
+// occurrence: changing the setting never moves tasks on the spot.
+func (s *store) setProfileAutoDefer(id, at string) (Profile, error) {
+	if _, err := s.getProfile(id); err != nil {
+		return Profile{}, err
+	}
+	normalised := ""
+	if strings.TrimSpace(at) != "" {
+		_, _, clock, err := parseClock(at)
+		if err != nil {
+			return Profile{}, err
+		}
+		normalised = clock
+	}
+	now := time.Now().UnixMilli()
+	if _, err := s.db.Exec(`UPDATE profiles SET auto_defer_at = ?, updated_at = ? WHERE id = ?`, normalised, now, id); err != nil {
+		return Profile{}, err
+	}
+	if err := s.saveSettingValues(map[string]string{autoDeferKey(id): strconv.FormatInt(now, 10)}); err != nil {
 		return Profile{}, err
 	}
 	return s.getProfile(id)

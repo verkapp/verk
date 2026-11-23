@@ -65,6 +65,7 @@ export const api = {
   listProfiles: () => call<Profile[]>('ListProfiles'),
   createProfile: (name: string) => call<Profile>('CreateProfile', name),
   updateProfile: (id: string, name: string, color: string) => call<Profile>('UpdateProfile', id, name, color),
+  setProfileAutoDefer: (id: string, at: string) => call<Profile>('SetProfileAutoDefer', id, at),
   deleteProfile: (id: string) => call<void>('DeleteProfile', id),
 
   addAttachment: (taskId: string) => call<Task>('AddAttachment', taskId),

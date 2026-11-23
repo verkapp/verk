@@ -11,6 +11,8 @@ export interface Profile {
   color: string;
   position: number;
   createdAt: number;
+  /** "HH:MM" after which unfinished tasks of the day move to the next working day; "" = off. */
+  autoDeferAt: string;
 }
 
 export interface TaskImage {
