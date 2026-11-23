@@ -17,6 +17,8 @@ Format :
 
 - Un réglage pour désactiver entièrement l’intégration Claude : plus aucun appel à Claude Code, le coach et le
   découpage de tâches disparaissent de l’interface.
+- La liste se rafraîchit dès qu’une synchronisation git se termine, y compris celle du démarrage, sans attendre
+  le prochain sondage.
 
 ### Modifié
 
