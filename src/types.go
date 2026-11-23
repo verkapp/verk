@@ -3,11 +3,14 @@ package src
 // Task is the shape sent to the Angular frontend. Timestamps are Unix
 // milliseconds; nil dates are serialised as null.
 type Task struct {
-	ID          string      `json:"id"`
-	ProfileID   string      `json:"profileId"`
-	Title       string      `json:"title"`
-	Description string      `json:"description"`
-	Done        bool        `json:"done"`
+	ID          string `json:"id"`
+	ProfileID   string `json:"profileId"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Done        bool   `json:"done"`
+	// WontDo marks a closed task (Done is true) that was dropped rather than
+	// completed: it leaves the open lists but does not count as finished.
+	WontDo      bool        `json:"wontDo"`
 	Position    int64       `json:"position"`
 	CreatedAt   int64       `json:"createdAt"`
 	DueAt       *int64      `json:"dueAt"`

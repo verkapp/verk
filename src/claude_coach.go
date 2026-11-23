@@ -25,7 +25,7 @@ func (a *App) coachNudge() (string, error) {
 	var overdue int
 	for _, t := range tasks {
 		if t.Done {
-			if t.CompletedAt != nil && sameLocalDay(time.UnixMilli(*t.CompletedAt), now) {
+			if !t.WontDo && t.CompletedAt != nil && sameLocalDay(time.UnixMilli(*t.CompletedAt), now) {
 				doneToday++
 			}
 			continue

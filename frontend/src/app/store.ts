@@ -92,13 +92,15 @@ export class Store {
       .filter((task) => task.done)
       .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0)),
   );
+  /** Closed tasks that were actually done (not dropped as "won't do"). */
+  readonly completedTasks = computed(() => this.doneTasks().filter((task) => !task.wontDo));
   readonly history = computed<HistoryGroup[]>(() => groupHistory(this.scopedTasks()));
 
   readonly stats = computed<Stats>(() => {
     const now = Date.now();
     const open = this.scopedTasks().filter((task) => !task.done);
     const doneToday = this.scopedTasks().filter(
-      (task) => task.done && task.completedAt !== null && isSameDay(task.completedAt, now),
+      (task) => task.done && !task.wontDo && task.completedAt !== null && isSameDay(task.completedAt, now),
     ).length;
     const dueToday = open.filter((task) => isDueToday(task) && !isOverdue(task, now)).length;
     const overdue = open.filter((task) => isOverdue(task, now)).length;
@@ -577,6 +579,18 @@ export class Store {
     try {
       const task = await this.mutate(api.setTaskDone(id, done));
       this.notify(done ? 'Tâche terminée. Bien joué.' : 'Tâche rouverte.', done ? 'accent' : 'default');
+      return task;
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
+  }
+
+  /** Closes a task without doing it. Reopening goes through setTaskDone(id, false). */
+  async setTaskWontDo(id: string): Promise<Task> {
+    try {
+      const task = await this.mutate(api.setTaskWontDo(id));
+      this.notify('Tâche classée comme pas à faire.', 'default');
       return task;
     } catch (error) {
       this.fail(error);

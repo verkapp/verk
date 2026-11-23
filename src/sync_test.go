@@ -152,13 +152,29 @@ func TestStoreSnapshotAndReplaceRoundTrip(t *testing.T) {
 	if _, err := st.addSubtask(task.ID, "Prendre de la monnaie"); err != nil {
 		t.Fatalf("addSubtask: %v", err)
 	}
+	dropped, err := st.createTask(TaskInput{Title: "Réparer le vélo"})
+	if err != nil {
+		t.Fatalf("createTask: %v", err)
+	}
+	if _, err := st.setWontDo(dropped.ID); err != nil {
+		t.Fatalf("setWontDo: %v", err)
+	}
 
 	snap, err := st.snapshot()
 	if err != nil {
 		t.Fatalf("snapshot: %v", err)
 	}
-	if len(snap.Tasks) != 1 || len(snap.Subtasks) != 1 {
+	if len(snap.Tasks) != 2 || len(snap.Subtasks) != 1 {
 		t.Fatalf("unexpected snapshot: %+v", snap)
+	}
+	wontDo := 0
+	for _, task := range snap.Tasks {
+		if task.WontDo {
+			wontDo++
+		}
+	}
+	if wontDo != 1 {
+		t.Fatalf("won't do flag missing from snapshot: %+v", snap.Tasks)
 	}
 	if snap.Tasks[0].UpdatedAt == 0 || snap.Subtasks[0].UpdatedAt == 0 {
 		t.Fatalf("updated_at should be set, got %+v", snap)

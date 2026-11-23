@@ -8,6 +8,9 @@
         @if (thisWeek() > 0 && thisWeek() < total()) {
           · <strong>{{ thisWeek() }}</strong> ces 7 derniers jours
         }
+        @if (dropped() > 0) {
+          · {{ dropped() }} pas à faire
+        }
       </p>
     </div>
   </header>
@@ -52,6 +55,7 @@
             @for (task of group.tasks; track task.id) {
               <article
                 class="done-row"
+                [class.wont-do]="task.wontDo"
                 tabindex="0"
                 (click)="openTask.emit(task.id)"
                 (keydown.enter)="onKeydown($event, task)"
@@ -64,10 +68,15 @@
                   aria-label="Rouvrir la tâche"
                   title="Rouvrir la tâche"
                 >
-                  <app-icon name="check" [size]="11" [strokeWidth]="2.9" />
+                  <app-icon [name]="task.wontDo ? 'close' : 'check'" [size]="11" [strokeWidth]="2.9" />
                 </button>
                 <div class="row-main">
-                  <p class="row-title">{{ task.title }}</p>
+                  <p class="row-title">
+                    {{ task.title }}
+                    @if (task.wontDo) {
+                      <span class="wont-do-pill">Pas à faire</span>
+                    }
+                  </p>
                   <div class="row-meta">
                     @if (task.subtasks.length > 0) {
                       <span><app-icon name="subtasks" [size]="12" /> {{ task.subtasks.length }}</span>

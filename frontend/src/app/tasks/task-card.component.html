@@ -1,6 +1,7 @@
 <article
   class="task-card"
   [class.done]="task().done"
+  [class.wont-do]="task().wontDo"
   [class.started]="task().startedAt !== null && !task().done"
   [class.overdue]="due()?.tone === 'danger'"
   [class.dragging]="dragging()"
@@ -28,12 +29,15 @@
     [attr.aria-label]="task().done ? 'Rouvrir la tâche' : 'Terminer la tâche'"
     (click)="onToggle($event)"
   >
-    <app-icon name="check" [size]="12" [strokeWidth]="2.9" />
+    <app-icon [name]="task().wontDo ? 'close' : 'check'" [size]="12" [strokeWidth]="2.9" />
   </button>
 
   <div class="content">
     <div class="title-row">
       <h3 [class.struck]="task().done">{{ task().title }}</h3>
+      @if (task().wontDo) {
+        <span class="due tone-muted">Pas à faire</span>
+      }
       @if (due() && !task().done) {
         <span class="due" [class]="'tone-' + due()!.tone" [title]="due()!.full">{{ due()!.label }}</span>
       }
@@ -77,6 +81,16 @@
   </div>
 
   @if (!task().done) {
+    <button
+      class="start-btn"
+      type="button"
+      title="Ne pas faire"
+      aria-label="Ne pas faire cette tâche"
+      (click)="onDrop($event)"
+    >
+      <app-icon name="ban" [size]="14" [strokeWidth]="2" />
+    </button>
+
     <button
       class="start-btn defer-btn"
       type="button"

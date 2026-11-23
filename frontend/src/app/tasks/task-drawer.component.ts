@@ -396,6 +396,19 @@ export class TaskDrawerComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async dropTask(): Promise<void> {
+    const id = await this.ensureSaved();
+    if (!id) {
+      return;
+    }
+    try {
+      await this.store.setTaskWontDo(id);
+      this.closed.emit();
+    } catch {
+      // The store already surfaced the error.
+    }
+  }
+
   async defer(): Promise<void> {
     const id = await this.ensureSaved();
     if (!id) {

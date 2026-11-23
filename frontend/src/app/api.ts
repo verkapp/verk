@@ -50,6 +50,7 @@ export const api = {
   createTask: (input: TaskInput) => call<Task>('CreateTask', input),
   updateTask: (id: string, input: TaskInput) => call<Task>('UpdateTask', id, input),
   setTaskDone: (id: string, done: boolean) => call<Task>('SetTaskDone', id, done),
+  setTaskWontDo: (id: string) => call<Task>('SetTaskWontDo', id),
   setTaskStarted: (id: string, started: boolean) => call<Task>('SetTaskStarted', id, started),
   deleteTask: (id: string) => call<void>('DeleteTask', id),
   reorderTasks: (ids: string[]) => call<void>('ReorderTasks', ids),
