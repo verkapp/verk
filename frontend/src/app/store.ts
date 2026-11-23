@@ -37,7 +37,7 @@ export class Store {
   readonly tasks = signal<Task[]>([]);
   readonly profiles = signal<Profile[]>([]);
   readonly activeProfileId = signal<string>('');
-  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '' });
+  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '', closeToTray: false });
   readonly claude = signal<ClaudeStatus | null>(null);
   /** The coach needs both its own switch and the global Claude integration. */
   readonly coachActive = computed(() => this.settings().claudeEnabled && this.settings().coachEnabled);

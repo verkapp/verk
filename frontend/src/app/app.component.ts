@@ -9,6 +9,7 @@ import { TaskDrawerComponent } from './tasks/task-drawer.component';
 import { TaskListComponent } from './tasks/task-list.component';
 import { Task, ViewName } from './models';
 import { Store } from './store';
+import { onRuntimeEvent } from './api';
 import { IconComponent } from './ui/icon.component';
 import { ToastComponent } from './ui/toast.component';
 
@@ -50,6 +51,33 @@ export class AppComponent implements OnInit {
       // ignore storage restrictions
     }
     void this.store.init();
+    onRuntimeEvent<string>('menu:action', (action) => this.onMenuAction(action));
+  }
+
+  /** Actions sent by the native menu bar and the tray icon. */
+  private onMenuAction(action: string): void {
+    if (action === 'new-task') {
+      if (!this.drawer()) {
+        this.newTask();
+      }
+      return;
+    }
+    if (action === 'refresh') {
+      void this.store.refreshNow();
+      return;
+    }
+    const views: Record<string, ViewName> = {
+      'view:today': 'today',
+      'view:all': 'all',
+      'view:coach': 'coach',
+      'view:history': 'history',
+      'view:settings': 'settings',
+    };
+    const view = views[action];
+    if (view) {
+      this.drawer.set(null);
+      this.navigate(view);
+    }
   }
 
   @HostListener('document:keydown', ['$event'])

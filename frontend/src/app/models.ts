@@ -60,6 +60,7 @@ export interface Settings {
   autoUpdate: boolean;
   claudeEnabled: boolean;
   claudePath: string;
+  closeToTray: boolean;
 }
 
 export interface NotificationStatus {

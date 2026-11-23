@@ -19,6 +19,11 @@ Format :
   découpage de tâches disparaissent de l’interface.
 - La liste se rafraîchit dès qu’une synchronisation git se termine, y compris celle du démarrage, sans attendre
   le prochain sondage.
+- Une barre de menus native (Fichier, Édition, Affichage) avec raccourcis : nouvelle tâche, rafraîchir, vues et
+  réglages. Sur macOS, les menus Todo et Fenêtre habituels sont aussi présents.
+- Une icône dans la barre des menus (macOS) ou la zone de notification (Windows, Linux) : ouvrir Todo, créer une
+  tâche, réduire la fenêtre dans la barre ou quitter. Sur macOS, un clic sur l’icône du Dock rouvre la fenêtre.
+- Un réglage « Fermer dans la barre » : fermer la fenêtre la range au lieu de quitter l’application.
 
 ### Modifié
 
