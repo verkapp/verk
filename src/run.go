@@ -26,8 +26,10 @@ func Run(assets embed.FS) {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup:  app.startup,
-		OnShutdown: app.shutdown,
+		Menu:              app.applicationMenu(),
+		HideWindowOnClose: app.closeToTray(),
+		OnStartup:         app.startup,
+		OnShutdown:        app.shutdown,
 		Bind: []interface{}{
 			app,
 		},

@@ -63,10 +63,12 @@ func (a *App) startup(ctx context.Context) {
 	go a.autoSync()
 	go a.autoUpdateLoop()
 	a.startNotifications()
+	a.startTray()
 }
 
 func (a *App) shutdown(ctx context.Context) {
 	close(a.updateStop)
+	a.stopTray()
 	a.stopNotifications()
 	a.stopSyncTimer()
 	if a.store != nil {
@@ -85,6 +87,16 @@ func (a *App) shutdown(ctx context.Context) {
 		}
 		_ = a.store.close()
 	}
+}
+
+// closeToTray is read once before the window exists: Wails only takes the
+// hide-on-close behaviour at launch.
+func (a *App) closeToTray() bool {
+	if a.store == nil {
+		return false
+	}
+	settings, err := a.store.getSettings()
+	return err == nil && settings.CloseToTray
 }
 
 func (a *App) ready() error {

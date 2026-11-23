@@ -69,6 +69,7 @@ type Settings struct {
 	AutoUpdate    bool   `json:"autoUpdate"`
 	ClaudeEnabled bool   `json:"claudeEnabled"`
 	ClaudePath    string `json:"claudePath"`
+	CloseToTray   bool   `json:"closeToTray"`
 }
 
 // UpdateInfo is the state of the automatic update, shown in the settings and

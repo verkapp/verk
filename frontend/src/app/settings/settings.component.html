@@ -208,6 +208,36 @@
       </p>
     </section>
 
+    <section class="card">
+      <div class="card-head">
+        <span class="card-icon"><app-icon name="sidebar" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Fenêtre</h2>
+          <p>L’icône dans la barre des menus (ou la zone de notification) rouvre l’application à tout moment.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-copy">
+          <p class="row-title">Fermer dans la barre</p>
+          <p class="row-sub">
+            Fermer la fenêtre la range dans la barre au lieu de quitter l’application. Pris en compte au prochain lancement.
+          </p>
+        </div>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.on]="store.settings().closeToTray"
+          [attr.aria-checked]="store.settings().closeToTray"
+          (click)="toggleCloseToTray()"
+          aria-label="Fermer dans la barre"
+        >
+          <span></span>
+        </button>
+      </div>
+    </section>
+
     @if (store.settings().claudeEnabled) {
       <section class="card">
         <div class="card-head">

@@ -115,6 +115,10 @@ export class SettingsComponent implements OnInit {
     void this.store.deleteProfile(profile.id);
   }
 
+  toggleCloseToTray(): void {
+    void this.store.saveSettings({ closeToTray: !this.store.settings().closeToTray });
+  }
+
   toggleClaude(): void {
     void this.store.saveSettings({ claudeEnabled: !this.store.settings().claudeEnabled });
   }
