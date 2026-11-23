@@ -282,6 +282,9 @@ export class Store {
 
   private listenForUpdates(): void {
     onRuntimeEvent<UpdateInfo>('update:status', (info) => this.applyUpdate(info));
+    // Sent after every git sync (including the one at startup), so pulled
+    // changes show up without waiting for the 15 s poll.
+    onRuntimeEvent<SyncStatus>('sync:status', () => void this.refreshSync());
   }
 
   /** Refreshes from the local database when the window regains focus. */
