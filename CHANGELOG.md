@@ -23,6 +23,8 @@ Format :
   réglages. Sur macOS, les menus Todo et Fenêtre habituels sont aussi présents.
 - Une icône dans la barre des menus (macOS) ou la zone de notification (Windows, Linux) : ouvrir Todo, créer une
   tâche, réduire la fenêtre dans la barre ou quitter. Sur macOS, un clic sur l’icône du Dock rouvre la fenêtre.
+- Une barre de titre intégrée : sur macOS, les boutons de fenêtre se posent sur la barre latérale ; sur
+  Windows, la barre de titre et les menus prennent les couleurs de l’application.
 - Un réglage « Fermer dans la barre » : fermer la fenêtre la range au lieu de quitter l’application. Il
   s’applique immédiatement.
 
