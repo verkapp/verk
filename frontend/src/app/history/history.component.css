@@ -271,3 +271,25 @@
   line-height: 1.5;
   color: var(--muted);
 }
+
+/* "Won't do" rows: grey check and a small label, so they do not read as wins. */
+.done-row.wont-do .check {
+  background: var(--surface-muted);
+  border-color: var(--line-strong);
+  color: var(--muted);
+}
+
+.wont-do-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 560;
+  text-decoration: none;
+  vertical-align: 1px;
+}

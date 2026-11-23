@@ -15,6 +15,9 @@ Format :
 
 ### Ajouté
 
+- Marquer une tâche comme « pas à faire » (bouton ⊘ sur la carte ou « Ne pas faire » dans le panneau) :
+  elle sort des listes, des retards et des rappels sans compter comme terminée. Elle reste visible dans
+  l’historique, en gris, et se rouvre comme une tâche terminée.
 - Un réglage pour désactiver entièrement l’intégration Claude : plus aucun appel à Claude Code, le coach et le
   découpage de tâches disparaissent de l’interface.
 - La liste se rafraîchit dès qu’une synchronisation git se termine, y compris celle du démarrage, sans attendre

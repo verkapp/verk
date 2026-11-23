@@ -190,6 +190,10 @@ export class TaskListComponent {
     void this.store.deferTask(task).catch(() => undefined);
   }
 
+  drop(task: Task): void {
+    void this.store.setTaskWontDo(task.id).catch(() => undefined);
+  }
+
   setFilter(filter: TaskFilter): void {
     this.filter.set(filter);
   }

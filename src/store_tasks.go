@@ -11,7 +11,7 @@ import (
 )
 
 func (s *store) listTasks() ([]Task, error) {
-	rows, err := s.db.Query(`SELECT id, profile_id, title, description, done, position, created_at, due_at, completed_at, started_at, time_spent FROM tasks`)
+	rows, err := s.db.Query(`SELECT id, profile_id, title, description, done, wont_do, position, created_at, due_at, completed_at, started_at, time_spent FROM tasks`)
 	if err != nil {
 		return nil, err
 	}
@@ -21,11 +21,12 @@ func (s *store) listTasks() ([]Task, error) {
 	index := map[string]int{}
 	for rows.Next() {
 		var t Task
-		var done int
-		if err := rows.Scan(&t.ID, &t.ProfileID, &t.Title, &t.Description, &done, &t.Position, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent); err != nil {
+		var done, wontDo int
+		if err := rows.Scan(&t.ID, &t.ProfileID, &t.Title, &t.Description, &done, &wontDo, &t.Position, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent); err != nil {
 			return nil, err
 		}
 		t.Done = done == 1
+		t.WontDo = t.Done && wontDo == 1
 		t.Subtasks = []Subtask{}
 		t.Images = []TaskImage{}
 		index[t.ID] = len(tasks)
@@ -249,7 +250,7 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 	}
 	defer tx.Rollback()
 
-	res, err := tx.Exec(`UPDATE tasks SET done = ?, completed_at = ?,
+	res, err := tx.Exec(`UPDATE tasks SET done = ?, wont_do = 0, completed_at = ?,
 		time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
 		started_at = NULL, position = COALESCE(?, position), updated_at = ? WHERE id = ?`,
 		boolInt(done), completedAt, now, top, now, id)
@@ -266,6 +267,24 @@ func (s *store) setDone(id string, done bool) (Task, error) {
 	}
 	if err := tx.Commit(); err != nil {
 		return Task{}, err
+	}
+	return s.getTask(id)
+}
+
+// setWontDo closes a task without completing it. Like setDone it stops a
+// running timer, but it leaves the subtasks as they are: nothing was done.
+// Reopening goes through setDone(id, false), which clears the flag.
+func (s *store) setWontDo(id string) (Task, error) {
+	now := time.Now().UnixMilli()
+	res, err := s.db.Exec(`UPDATE tasks SET done = 1, wont_do = 1, completed_at = ?,
+		time_spent = time_spent + CASE WHEN started_at IS NULL THEN 0 ELSE MAX(0, ? - started_at) END,
+		started_at = NULL, updated_at = ? WHERE id = ?`,
+		now, now, now, id)
+	if err != nil {
+		return Task{}, err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return Task{}, errNotFound
 	}
 	return s.getTask(id)
 }

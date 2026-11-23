@@ -33,6 +33,8 @@ export interface Task {
   title: string;
   description: string;
   done: boolean;
+  /** Closed without being done (done is true too). */
+  wontDo: boolean;
   position: number;
   createdAt: number;
   dueAt: number | null;

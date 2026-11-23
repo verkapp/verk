@@ -29,6 +29,18 @@ func (a *App) UpdateTask(id string, input TaskInput) (Task, error) {
 	return task, err
 }
 
+// SetTaskWontDo closes a task as "won't do"; SetTaskDone(id, false) reopens it.
+func (a *App) SetTaskWontDo(id string) (Task, error) {
+	if err := a.ready(); err != nil {
+		return Task{}, err
+	}
+	task, err := a.store.setWontDo(id)
+	if err == nil {
+		a.requestSync()
+	}
+	return task, err
+}
+
 func (a *App) SetTaskDone(id string, done bool) (Task, error) {
 	if err := a.ready(); err != nil {
 		return Task{}, err
