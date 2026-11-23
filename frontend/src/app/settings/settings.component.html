@@ -186,6 +186,31 @@
             >
               Supprimer
             </button>
+            <div class="profile-defer">
+              <button
+                class="switch switch-sm"
+                type="button"
+                role="switch"
+                [class.on]="!!profile.autoDeferAt"
+                [attr.aria-checked]="!!profile.autoDeferAt"
+                (click)="toggleAutoDefer(profile)"
+                [attr.aria-label]="'Report automatique pour ' + profile.name"
+              >
+                <span></span>
+              </button>
+              <app-icon name="sunrise" [size]="14" />
+              <span>Reporter les tâches du jour non terminées</span>
+              @if (profile.autoDeferAt) {
+                <span>à</span>
+                <input
+                  class="input input-time"
+                  type="time"
+                  [value]="profile.autoDeferAt"
+                  (change)="setAutoDeferTime(profile, $event)"
+                  [attr.aria-label]="'Heure du report automatique pour ' + profile.name"
+                />
+              }
+            </div>
           </div>
         }
       </div>
@@ -204,7 +229,8 @@
       </form>
       <p class="hint">
         Les tâches restent dans leur profil : les vues, les statistiques et l’historique suivent le profil actif.
-        Supprimer un profil déplace ses tâches vers un autre profil.
+        Supprimer un profil déplace ses tâches vers un autre profil. Le report automatique déplace à demain
+        (ou lundi) les tâches en retard ou prévues ce jour-là ; une tâche planifiée après l’heure choisie reste en place.
       </p>
     </section>
 

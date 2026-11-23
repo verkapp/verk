@@ -39,3 +39,16 @@ func (a *App) DeleteProfile(id string) error {
 	a.requestSync()
 	return nil
 }
+
+// SetProfileAutoDefer sets the "HH:MM" after which the profile's unfinished
+// tasks of the day move to the next working day ("" disables it).
+func (a *App) SetProfileAutoDefer(id, at string) (Profile, error) {
+	if err := a.ready(); err != nil {
+		return Profile{}, err
+	}
+	profile, err := a.store.setProfileAutoDefer(id, at)
+	if err == nil {
+		a.requestSync()
+	}
+	return profile, err
+}

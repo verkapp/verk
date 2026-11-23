@@ -29,6 +29,9 @@ type Profile struct {
 	Color     string `json:"color"`
 	Position  int    `json:"position"`
 	CreatedAt int64  `json:"createdAt"`
+	// AutoDeferAt is the "HH:MM" after which the profile's unfinished tasks
+	// of the day move to the next working day; empty disables it.
+	AutoDeferAt string `json:"autoDeferAt"`
 }
 
 type Subtask struct {

@@ -90,6 +90,9 @@ func migrate(db *sql.DB) error {
 		"subtasks": {
 			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
 		},
+		"profiles": {
+			{"auto_defer_at", "TEXT NOT NULL DEFAULT ''"},
+		},
 		"images": {
 			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
 		},

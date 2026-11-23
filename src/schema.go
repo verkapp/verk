@@ -10,7 +10,8 @@ const schema = `
 		color TEXT NOT NULL DEFAULT '#7b6cf0',
 		position INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,
-		updated_at INTEGER NOT NULL DEFAULT 0
+		updated_at INTEGER NOT NULL DEFAULT 0,
+		auto_defer_at TEXT NOT NULL DEFAULT ''
 	);
 	CREATE TABLE IF NOT EXISTS tasks (
 		id TEXT PRIMARY KEY,

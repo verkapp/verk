@@ -100,6 +100,26 @@ export class SettingsComponent implements OnInit {
     (event.target as HTMLInputElement).blur();
   }
 
+  /** Default time proposed when auto-defer is switched on. */
+  readonly defaultAutoDefer = '18:00';
+
+  toggleAutoDefer(profile: Profile): void {
+    void this.store.setProfileAutoDefer(profile.id, profile.autoDeferAt ? '' : this.defaultAutoDefer);
+  }
+
+  setAutoDeferTime(profile: Profile, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    if (!value) {
+      // Clearing the field would disable the feature by accident: keep the time.
+      input.value = profile.autoDeferAt;
+      return;
+    }
+    if (value !== profile.autoDeferAt) {
+      void this.store.setProfileAutoDefer(profile.id, value);
+    }
+  }
+
   setProfileColor(profile: Profile, color: string): void {
     if (profile.color === color) {
       return;

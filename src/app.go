@@ -42,11 +42,13 @@ type App struct {
 
 	updates    updater
 	updateStop chan struct{}
+
+	autoDeferStop chan struct{}
 }
 
 // NewApp opens the local database before the Wails window is created.
 func NewApp() *App {
-	app := &App{gitAvailable: gitInstalled(), updateStop: make(chan struct{})}
+	app := &App{gitAvailable: gitInstalled(), updateStop: make(chan struct{}), autoDeferStop: make(chan struct{})}
 	if st, err := openStore(); err != nil {
 		app.initErr = err
 	} else {
@@ -73,6 +75,7 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 	// local state first, then refreshes when the sync generation changes.
 	go a.autoSync()
 	go a.autoUpdateLoop()
+	go a.autoDeferLoop()
 	a.startNotifications(ctx)
 	return nil
 }
@@ -81,6 +84,9 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 func (a *App) ServiceShutdown() error {
 	a.quitting.Store(true)
 	close(a.updateStop)
+	if a.store != nil {
+		close(a.autoDeferStop)
+	}
 	a.stopNotifications()
 	a.stopSyncTimer()
 	if a.store != nil {

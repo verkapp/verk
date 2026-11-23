@@ -241,6 +241,18 @@ export class Store {
     }
   }
 
+  /** Sets (or clears with "") the time after which a profile's unfinished tasks move on. */
+  async setProfileAutoDefer(id: string, at: string): Promise<Profile | null> {
+    try {
+      const profile = await api.setProfileAutoDefer(id, at);
+      this.profiles.update((profiles) => profiles.map((item) => (item.id === id ? profile : item)));
+      return profile;
+    } catch (error) {
+      this.fail(error);
+      return null;
+    }
+  }
+
   async deleteProfile(id: string): Promise<void> {
     try {
       await api.deleteProfile(id);
@@ -287,6 +299,15 @@ export class Store {
     // Sent after every git sync (including the one at startup), so pulled
     // changes show up without waiting for the 15 s poll.
     onRuntimeEvent<SyncStatus>('sync:status', () => void this.refreshSync());
+    // The backend moved unfinished tasks past a profile's auto-defer time.
+    onRuntimeEvent<{ count: number; label: string }>('tasks:deferred', (event) => {
+      void this.reload().catch(() => undefined);
+      const plural = event.count > 1;
+      this.notify(
+        `${event.count} tâche${plural ? 's non terminées reportées' : ' non terminée reportée'} à ${event.label}.`,
+        'default',
+      );
+    });
   }
 
   /** Refreshes from the local database when the window regains focus. */
