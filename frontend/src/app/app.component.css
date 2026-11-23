@@ -21,12 +21,32 @@
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--bg);
+  /* A border, unlike padding, does not scroll: content never slides under
+     the merged macOS title bar. */
+  border-top: var(--titlebar-h) solid var(--bg);
 }
 
 .main-inner {
   max-width: 960px;
   margin: 0 auto;
-  padding: 38px 46px 84px;
+  padding: calc(38px - var(--titlebar-h) / 2) 46px 84px;
+}
+
+/* ------------------------------- title bar ------------------------------- */
+.titlebar {
+  display: none;
+}
+
+:host-context(html.mac-titlebar) .titlebar {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--titlebar-h);
+  /* Below the drawer (40/50) and the lightbox (100). */
+  z-index: 30;
+  --wails-draggable: drag;
 }
 
 /* -------------------------------- loading -------------------------------- */

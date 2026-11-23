@@ -29,6 +29,15 @@ function inDesktopHost(): boolean {
   return Boolean(w.chrome?.webview?.postMessage || w.webkit?.messageHandlers?.external?.postMessage);
 }
 
+/**
+ * True in the macOS desktop app, where the title bar is merged with the page.
+ * Checked synchronously from the WebView user agent: the runtime's
+ * System.IsMac() is only filled in after startup, too late for the layout.
+ */
+export function isMacDesktop(): boolean {
+  return inDesktopHost() && /Macintosh/.test(navigator.userAgent);
+}
+
 async function call<T>(method: string, ...args: unknown[]): Promise<T> {
   if (!inDesktopHost()) {
     return mockCall<T>(method, args);
