@@ -33,6 +33,8 @@ func (s *store) getSettings() (Settings, error) {
 			out.AutoUpdate = v == "1"
 		case "claude_enabled":
 			out.ClaudeEnabled = v == "1"
+		case "close_to_tray":
+			out.CloseToTray = v == "1"
 		case "claude_path":
 			out.ClaudePath = v
 		}
@@ -59,6 +61,7 @@ func (s *store) saveSettings(in Settings) error {
 		"auto_update":    boolIntString(in.AutoUpdate),
 		"claude_enabled": boolIntString(in.ClaudeEnabled),
 		"claude_path":    strings.TrimSpace(in.ClaudePath),
+		"close_to_tray":  boolIntString(in.CloseToTray),
 	}
 	for k, v := range values {
 		if _, err := tx.Exec(`INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, k, v); err != nil {

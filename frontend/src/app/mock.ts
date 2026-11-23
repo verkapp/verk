@@ -218,7 +218,7 @@ let syncStatus: SyncStatus = {
 };
 
 function loadSettings(): Settings {
-  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '' };
+  const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '', closeToTray: false };
   try {
     const raw = localStorage.getItem('todo.settings');
     return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<Settings>) } : fallback;

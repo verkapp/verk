@@ -12,7 +12,7 @@ func TestSettings(t *testing.T) {
 		t.Fatalf("unexpected defaults: %+v", defaults)
 	}
 
-	want := Settings{Accent: "menthe", CoachEnabled: false, CoachOnStart: true, TimeTracking: false, ShowMomentum: false, ClaudePath: "/opt/claude"}
+	want := Settings{Accent: "menthe", CoachEnabled: false, CoachOnStart: true, TimeTracking: false, ShowMomentum: false, ClaudePath: "/opt/claude", CloseToTray: true}
 	if err := st.saveSettings(want); err != nil {
 		t.Fatalf("saveSettings: %v", err)
 	}
