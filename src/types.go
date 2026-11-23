@@ -67,6 +67,7 @@ type Settings struct {
 	ShowMomentum  bool   `json:"showMomentum"`
 	Notifications bool   `json:"notifications"`
 	AutoUpdate    bool   `json:"autoUpdate"`
+	ClaudeEnabled bool   `json:"claudeEnabled"`
 	ClaudePath    string `json:"claudePath"`
 }
 

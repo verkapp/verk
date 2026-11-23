@@ -37,8 +37,10 @@ export class Store {
   readonly tasks = signal<Task[]>([]);
   readonly profiles = signal<Profile[]>([]);
   readonly activeProfileId = signal<string>('');
-  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudePath: '' });
+  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '' });
   readonly claude = signal<ClaudeStatus | null>(null);
+  /** The coach needs both its own switch and the global Claude integration. */
+  readonly coachActive = computed(() => this.settings().claudeEnabled && this.settings().coachEnabled);
   readonly notifications = signal<NotificationStatus | null>(null);
   readonly sync = signal<SyncStatus | null>(null);
   readonly update = signal<UpdateInfo | null>(null);
@@ -158,7 +160,7 @@ export class Store {
       void this.refreshNotifications();
       void this.pollSync();
       void this.refreshUpdateStatus();
-      if (settings.coachEnabled && settings.coachOnStart) {
+      if (settings.claudeEnabled && settings.coachEnabled && settings.coachOnStart) {
         setTimeout(() => void this.requestNudge(true), 1200);
       }
     } catch (error) {
@@ -441,13 +443,16 @@ export class Store {
 
   async saveSettings(patch: Partial<Settings>): Promise<void> {
     const next: Settings = { ...this.settings(), ...patch };
-    if (patch.coachEnabled === false) {
+    if (patch.coachEnabled === false || patch.claudeEnabled === false) {
       this.nudge.set(null);
       this.nudgeError.set(null);
     }
     this.applySettings(next);
     try {
       await api.saveSettings(next);
+      if (patch.claudeEnabled !== undefined || patch.claudePath !== undefined) {
+        void this.refreshClaude();
+      }
     } catch (error) {
       this.notify(errorMessage(error), 'error');
     }
@@ -513,6 +518,10 @@ export class Store {
   }
 
   async refreshClaude(): Promise<ClaudeStatus | null> {
+    if (!this.settings().claudeEnabled) {
+      this.claude.set(null);
+      return null;
+    }
     try {
       const status = await api.claudeStatus();
       this.claude.set(status);
@@ -744,14 +753,14 @@ export class Store {
   }
 
   async requestNudge(silent = false): Promise<void> {
-    if (!this.settings().coachEnabled || this.nudgeLoading()) {
+    if (!this.coachActive() || this.nudgeLoading()) {
       return;
     }
     this.nudgeLoading.set(true);
     this.nudgeError.set(null);
     try {
       const text = await api.coachNudge();
-      if (!this.settings().coachEnabled) {
+      if (!this.coachActive()) {
         return;
       }
       this.nudge.set({ text, at: Date.now() });

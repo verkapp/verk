@@ -107,67 +107,69 @@
       ></textarea>
     </div>
 
-    <section class="ai-card">
-      <div class="ai-top">
-        <span class="ai-icon"><app-icon name="sparkles" [size]="18" /></span>
-        <div class="ai-copy">
-          <h3>Découper avec Claude</h3>
-          <p>Trois à six sous-tâches concrètes, proposées par haiku.</p>
+    @if (store.settings().claudeEnabled) {
+      <section class="ai-card">
+        <div class="ai-top">
+          <span class="ai-icon"><app-icon name="sparkles" [size]="18" /></span>
+          <div class="ai-copy">
+            <h3>Découper avec Claude</h3>
+            <p>Trois à six sous-tâches concrètes, proposées par haiku.</p>
+          </div>
+          <button class="btn btn-soft btn-sm" type="button" [disabled]="breakingDown()" (click)="breakdown()">
+            @if (breakingDown()) {
+              <span class="spinner" aria-hidden="true"></span>
+              Réflexion…
+            } @else {
+              <app-icon name="wand" [size]="14" />
+              Proposer
+            }
+          </button>
         </div>
-        <button class="btn btn-soft btn-sm" type="button" [disabled]="breakingDown()" (click)="breakdown()">
-          @if (breakingDown()) {
-            <span class="spinner" aria-hidden="true"></span>
-            Réflexion…
-          } @else {
-            <app-icon name="wand" [size]="14" />
-            Proposer
-          }
-        </button>
-      </div>
 
-      @if (aiError()) {
-        <p class="ai-error">
-          <app-icon name="alert" [size]="14" />
-          {{ aiError() }}
-        </p>
-      }
+        @if (aiError()) {
+          <p class="ai-error">
+            <app-icon name="alert" [size]="14" />
+            {{ aiError() }}
+          </p>
+        }
 
-      @if (suggestions().length > 0) {
-        <div class="suggestions">
-          <p class="sugg-label">Suggestions</p>
-          @for (suggestion of suggestions(); track $index) {
-            <div class="suggestion">
-              <input
-                class="sugg-input"
-                type="text"
-                maxlength="240"
-                [value]="suggestion"
-                (input)="editSuggestion($index, $any($event.target).value)"
-                (keydown.enter)="addSuggestion($index)"
-                aria-label="Modifier la suggestion"
-              />
-              <button
-                class="sugg-add"
-                type="button"
-                (click)="addSuggestion($index)"
-                [attr.aria-label]="'Ajouter ' + suggestion"
-              >
+        @if (suggestions().length > 0) {
+          <div class="suggestions">
+            <p class="sugg-label">Suggestions</p>
+            @for (suggestion of suggestions(); track $index) {
+              <div class="suggestion">
+                <input
+                  class="sugg-input"
+                  type="text"
+                  maxlength="240"
+                  [value]="suggestion"
+                  (input)="editSuggestion($index, $any($event.target).value)"
+                  (keydown.enter)="addSuggestion($index)"
+                  aria-label="Modifier la suggestion"
+                />
+                <button
+                  class="sugg-add"
+                  type="button"
+                  (click)="addSuggestion($index)"
+                  [attr.aria-label]="'Ajouter ' + suggestion"
+                >
+                  <app-icon name="plus" [size]="14" />
+                </button>
+              </div>
+            }
+            <div class="sugg-actions">
+              <button class="btn btn-ghost btn-sm" type="button" (click)="dismissSuggestions()">Ignorer</button>
+              <button class="btn btn-soft btn-sm" type="button" (click)="addAllSuggestions()">
                 <app-icon name="plus" [size]="14" />
+                Tout ajouter
               </button>
             </div>
-          }
-          <div class="sugg-actions">
-            <button class="btn btn-ghost btn-sm" type="button" (click)="dismissSuggestions()">Ignorer</button>
-            <button class="btn btn-soft btn-sm" type="button" (click)="addAllSuggestions()">
-              <app-icon name="plus" [size]="14" />
-              Tout ajouter
-            </button>
           </div>
-        </div>
-      } @else if (!breakingDown()) {
-        <p class="ai-foot">Claude Code lit le titre et la description, puis propose des étapes.</p>
-      }
-    </section>
+        } @else if (!breakingDown()) {
+          <p class="ai-foot">Claude Code lit le titre et la description, puis propose des étapes.</p>
+        }
+      </section>
+    }
 
     <section class="block">
       <div class="block-head">

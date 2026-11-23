@@ -49,7 +49,7 @@
         <span class="count">{{ store.stats().open }}</span>
       }
     </button>
-    @if (store.settings().coachEnabled) {
+    @if (store.coachActive()) {
       <button
         class="nav-item"
         type="button"

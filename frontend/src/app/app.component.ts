@@ -62,7 +62,7 @@ export class AppComponent implements OnInit {
   }
 
   navigate(view: ViewName): void {
-    if (view === 'coach' && !this.store.settings().coachEnabled) {
+    if (view === 'coach' && !this.store.coachActive()) {
       return;
     }
     this.view.set(view);
