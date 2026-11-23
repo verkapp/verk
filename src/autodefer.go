@@ -63,7 +63,7 @@ func resumeDay(from time.Time) time.Time {
 
 // hasSpecificTime mirrors the frontend: 23:59 means "some time that day".
 func hasSpecificTime(t time.Time) bool {
-	return !(t.Hour() == 23 && t.Minute() == 59)
+	return t.Hour() != 23 || t.Minute() != 59
 }
 
 // resumeDueAt keeps a specific time of day, otherwise ends the day at 23:59,
