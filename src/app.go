@@ -5,21 +5,29 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
-	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
+	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
-// App is the object bound to the Angular frontend.
+// App is the service bound to the Angular frontend.
 type App struct {
 	ctx     context.Context
 	store   *store
 	initErr error
 
+	wapp     *application.App
+	window   *application.WebviewWindow
+	quitting atomic.Bool
+
 	// Git synchronisation runtime state. The configuration itself lives in
 	// the local settings table so each machine keeps its own remote.
 	gitAvailable bool
 
+	notifier        *notifications.NotificationService
 	notificationErr error
 	reminder        *reminderState
 
@@ -47,28 +55,32 @@ func NewApp() *App {
 	return app
 }
 
-func (a *App) startup(ctx context.Context) {
+// ServiceStartup is called by Wails v3 before the window is shown.
+func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) error {
 	a.ctx = ctx
 	if a.initErr != nil {
 		log.Printf("initialisation: %v", a.initErr)
-		_, _ = wruntime.MessageDialog(ctx, wruntime.MessageDialogOptions{
-			Type:    wruntime.ErrorDialog,
-			Title:   "Todo",
-			Message: "Impossible d'ouvrir la base de données.\n\n" + a.initErr.Error(),
+		// Dialogs need the main loop: show it once the app has started.
+		a.wapp.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
+			a.wapp.Dialog.Error().
+				SetTitle("Todo").
+				SetMessage("Impossible d'ouvrir la base de données.\n\n" + a.initErr.Error()).
+				Show()
 		})
-		return
+		return nil
 	}
 	// Pull remote changes without delaying the window: the frontend loads the
 	// local state first, then refreshes when the sync generation changes.
 	go a.autoSync()
 	go a.autoUpdateLoop()
-	a.startNotifications()
-	a.startTray()
+	a.startNotifications(ctx)
+	return nil
 }
 
-func (a *App) shutdown(ctx context.Context) {
+// ServiceShutdown runs when the application quits.
+func (a *App) ServiceShutdown() error {
+	a.quitting.Store(true)
 	close(a.updateStop)
-	a.stopTray()
 	a.stopNotifications()
 	a.stopSyncTimer()
 	if a.store != nil {
@@ -87,16 +99,7 @@ func (a *App) shutdown(ctx context.Context) {
 		}
 		_ = a.store.close()
 	}
-}
-
-// closeToTray is read once before the window exists: Wails only takes the
-// hide-on-close behaviour at launch.
-func (a *App) closeToTray() bool {
-	if a.store == nil {
-		return false
-	}
-	settings, err := a.store.getSettings()
-	return err == nil && settings.CloseToTray
+	return nil
 }
 
 func (a *App) ready() error {

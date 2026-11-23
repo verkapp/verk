@@ -35,7 +35,7 @@ coach propulsé par **Claude Code (haiku)**.
 - **Six accents pastel** : lavande, menthe, ciel, pêche, rose, beurre.
 - **Local-first** : SQLite et images stockés sur la machine. L'app n'envoie des données qu'à
   Claude Code lorsque tu le sollicites, et à ton dépôt git si tu actives la synchronisation.
-- **Windows et macOS** via Wails, avec CI GitHub Actions.
+- **Windows et macOS** via Wails (Linux compilable), avec CI GitHub Actions.
 
 <img src="docs/screenshot-claude.png" alt="Découpage d'une tâche avec Claude" width="100%" />
 
@@ -43,7 +43,7 @@ coach propulsé par **Claude Code (haiku)**.
 
 | Couche | Technologie |
 | --- | --- |
-| Fenêtre desktop | [Wails v2](https://wails.io) |
+| Fenêtre desktop | [Wails v3](https://v3.wails.io) (fenêtre, menus natifs, icône de tray) |
 | Backend | Go, SQLite (`modernc.org/sqlite`, sans CGO) |
 | Frontend | Angular 20, composants standalone, signals |
 | Coach | CLI locale `claude` (`--model haiku`) |
@@ -55,11 +55,11 @@ coach propulsé par **Claude Code (haiku)**.
 - Node.js **22+** et npm
 - [git](https://git-scm.com) **2.28+** pour la synchronisation optionnelle, avec tes identifiants
   déjà configurés (SSH ou gestionnaire d'identifiants). Le reste de l'application fonctionne sans git.
-- Wails CLI v2.17 :
+- Wails CLI v3.1 :
 
 ```bash
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
-wails doctor
+go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
+wails3 doctor
 ```
 
 - Pour le coach : [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installé et connecté
@@ -70,7 +70,7 @@ wails doctor
 
 ```bash
 # Application complète (Go + Angular avec hot reload)
-wails dev
+wails3 dev
 
 # Frontend seul, avec le backend mock en mémoire
 cd frontend
@@ -78,7 +78,8 @@ npm install
 npm start        # http://127.0.0.1:34115
 ```
 
-Le frontend détecte l'absence du pont Wails et bascule sur un jeu de données de démonstration
+Le frontend appelle les méthodes Go par leur nom via `@wailsio/runtime` (`todo/src.App.<Méthode>`),
+sans bindings générés. Hors de l'application, il détecte l'absence du pont Wails et bascule sur un jeu de données de démonstration
 (`frontend/src/app/mock.ts`). Pratique pour travailler le design sans lancer Go.
 
 Tests et vérifications :
@@ -96,17 +97,25 @@ Un fichier `.gitkeep` permet toutefois au projet fraîchement cloné de compiler
 ## Build
 
 ```bash
-# macOS (binaire de la machine courante)
-wails build
+# macOS : bundle Todo.app pour la machine courante
+wails3 task darwin:package
 
 # macOS universel (Intel + Apple Silicon)
-wails build -platform darwin/universal
+wails3 task darwin:package:universal
 
-# Windows (à lancer sur Windows, Wails v2 ne cross-compile pas vers Windows)
-wails build -platform windows/amd64
+# Windows (à lancer sur Windows)
+wails3 task windows:build
+
+# Linux (à lancer sur Linux, avec GTK et WebKitGTK installés)
+wails3 task linux:build
+
+# Version embarquée (utilisée par la mise à jour automatique)
+wails3 task darwin:package VERSION=1.4.0
 ```
 
-Les applications sont produites dans `build/bin/`.
+Les applications sont produites dans `build/bin/`. Les Taskfiles (`Taskfile.yml`, `build/*/Taskfile.yml`)
+et `build/config.yml` décrivent le build ; après une modification de `build/config.yml`, lance
+`wails3 task common:update:build-assets`.
 Le build macOS n'est pas signé/notarisé par défaut. Pour distribuer sans avertissement
 Gatekeeper, ajoute tes secrets de signature Apple dans le workflow, ou ouvre l'app avec
 clic droit → Ouvrir.
@@ -211,15 +220,17 @@ et télécharger l'archive avec tes droits. Sans `gh`, il faut un dépôt public
 ```text
 .
 ├── main.go                 # Amorçage Wails + assets Angular embarqués
+├── Taskfile.yml            # Tâches wails3 (build, package, dev)
 ├── src/                    # Tout le code Go de l'application
-│   ├── run.go              # Fenêtre, thème clair, options Wails
+│   ├── run.go              # Application Wails v3, fenêtre, thème clair
+│   ├── menu.go, tray.go    # Barre de menus native, icône de tray, fermeture dans la barre
 │   ├── app.go              # Cycle de vie et état de l'application
 │   ├── api_*.go            # API exposée à Angular (tâches, images, réglages, sync…)
 │   ├── store*.go           # SQLite : schéma, tâches, sous-tâches, images, instantané
 │   ├── sync*.go            # Synchronisation git : fusion, worker, commandes git
 │   ├── claude*.go          # Détection Claude Code, prompts, parsing
 │   └── types.go            # Structures partagées avec le frontend
-├── build/appicon.png       # Icône de l'application
+├── build/                  # Config et ressources de build Wails v3 (icônes, plist, Taskfiles)
 ├── CHANGELOG.md            # Notes de chaque release (source du corps GitHub)
 ├── scripts/
 │   └── release-notes.sh    # Extrait les notes d'une version

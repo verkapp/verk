@@ -18,8 +18,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const (
@@ -81,10 +79,7 @@ func (a *App) updateStatus() UpdateInfo {
 }
 
 func (a *App) emitUpdate() {
-	if a.ctx == nil {
-		return
-	}
-	wruntime.EventsEmit(a.ctx, "update:status", a.updateStatus())
+	a.emit("update:status", a.updateStatus())
 }
 
 // CheckForUpdates asks GitHub for the latest stable release.
@@ -570,9 +565,7 @@ func (a *App) InstallUpdate() error {
 	if err := a.launchInstaller(stage, true); err != nil {
 		return err
 	}
-	if a.ctx != nil {
-		wruntime.Quit(a.ctx)
-	}
+	a.quitApp()
 	return nil
 }
 
@@ -582,8 +575,8 @@ func (a *App) OpenUpdatePage() {
 	if target == "" {
 		target = releasesPageURL
 	}
-	if a.ctx != nil {
-		wruntime.BrowserOpenURL(a.ctx, target)
+	if a.wapp != nil {
+		_ = a.wapp.Browser.OpenURL(target)
 	}
 }
 

@@ -1,0 +1,17 @@
+{
+	"fixed": {
+		"file_version": "1.3.0",
+		"product_version": "1.3.0"
+	},
+	"info": {
+		"0409": {
+			"FileVersion": "1.3.0",
+			"ProductVersion": "1.3.0",
+			"CompanyName": "Todo",
+			"FileDescription": "Une liste de tâches douce, avec un coach Claude Code.",
+			"LegalCopyright": "",
+			"ProductName": "Todo",
+			"Comments": "Une liste de tâches douce, avec un coach Claude Code."
+		}
+	}
+}

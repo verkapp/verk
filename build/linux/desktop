@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Todo
+Comment=Une liste de tâches douce, avec un coach Claude Code.
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/Todo %u
+Terminal=false
+Type=Application
+Icon=Todo
+Categories=Utility;
+StartupWMClass=Todo
+
+ 
