@@ -18,6 +18,7 @@ const schema = `
 		title TEXT NOT NULL,
 		description TEXT NOT NULL DEFAULT '',
 		done INTEGER NOT NULL DEFAULT 0,
+		wont_do INTEGER NOT NULL DEFAULT 0,
 		position INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,
 		due_at INTEGER,

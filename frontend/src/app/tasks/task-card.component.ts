@@ -23,6 +23,7 @@ export class TaskCardComponent {
   readonly toggled = output<void>();
   readonly started = output<void>();
   readonly deferred = output<void>();
+  readonly dropped = output<void>();
 
   private suppressClick = false;
 
@@ -72,6 +73,11 @@ export class TaskCardComponent {
   onDefer(event: Event): void {
     event.stopPropagation();
     this.deferred.emit();
+  }
+
+  onDrop(event: Event): void {
+    event.stopPropagation();
+    this.dropped.emit();
   }
 
   onKeydown(event: Event): void {

@@ -127,6 +127,57 @@ func TestCompletingTaskCompletesSubtasks(t *testing.T) {
 	}
 }
 
+func TestWontDoClosesTaskWithoutCompletingIt(t *testing.T) {
+	st := newTestStore(t)
+	task, err := st.createTask(TaskInput{Title: "Repeindre le garage"})
+	if err != nil {
+		t.Fatalf("createTask: %v", err)
+	}
+	if _, err := st.addSubtask(task.ID, "Acheter la peinture"); err != nil {
+		t.Fatalf("addSubtask: %v", err)
+	}
+	if _, err := st.setStarted(task.ID, true); err != nil {
+		t.Fatalf("setStarted: %v", err)
+	}
+
+	dropped, err := st.setWontDo(task.ID)
+	if err != nil {
+		t.Fatalf("setWontDo: %v", err)
+	}
+	if !dropped.Done || !dropped.WontDo || dropped.CompletedAt == nil {
+		t.Fatalf("task should be closed as won't do: %+v", dropped)
+	}
+	if dropped.StartedAt != nil {
+		t.Fatal("won't do should stop the timer")
+	}
+	if dropped.Subtasks[0].Done {
+		t.Fatal("won't do must not complete the subtasks")
+	}
+
+	reopened, err := st.setDone(task.ID, false)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	if reopened.Done || reopened.WontDo || reopened.CompletedAt != nil {
+		t.Fatalf("reopening should clear won't do: %+v", reopened)
+	}
+
+	if _, err := st.setWontDo(task.ID); err != nil {
+		t.Fatalf("setWontDo again: %v", err)
+	}
+	completed, err := st.setDone(task.ID, true)
+	if err != nil {
+		t.Fatalf("setDone: %v", err)
+	}
+	if !completed.Done || completed.WontDo {
+		t.Fatalf("completing should clear won't do: %+v", completed)
+	}
+
+	if _, err := st.setWontDo("missing"); err != errNotFound {
+		t.Fatalf("missing task: got %v, want errNotFound", err)
+	}
+}
+
 func TestCompletingAllSubtasksCompletesTask(t *testing.T) {
 	st := newTestStore(t)
 	task, err := st.createTask(TaskInput{Title: "Préparer le lancement"})

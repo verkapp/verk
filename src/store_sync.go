@@ -55,6 +55,7 @@ type snapshotTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
+	WontDo      bool   `json:"wontDo,omitempty"`
 	Position    int64  `json:"position"`
 	CreatedAt   int64  `json:"createdAt"`
 	DueAt       *int64 `json:"dueAt"`
@@ -174,18 +175,19 @@ func (s *store) snapshot() (snapshot, error) {
 		return snapshot{}, err
 	}
 
-	rows, err := s.db.Query(`SELECT id, profile_id, title, description, done, position, created_at, due_at, completed_at, started_at, time_spent, updated_at FROM tasks ORDER BY id`)
+	rows, err := s.db.Query(`SELECT id, profile_id, title, description, done, wont_do, position, created_at, due_at, completed_at, started_at, time_spent, updated_at FROM tasks ORDER BY id`)
 	if err != nil {
 		return snapshot{}, err
 	}
 	for rows.Next() {
 		var t snapshotTask
-		var done int
-		if err := rows.Scan(&t.ID, &t.ProfileID, &t.Title, &t.Description, &done, &t.Position, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent, &t.UpdatedAt); err != nil {
+		var done, wontDo int
+		if err := rows.Scan(&t.ID, &t.ProfileID, &t.Title, &t.Description, &done, &wontDo, &t.Position, &t.CreatedAt, &t.DueAt, &t.CompletedAt, &t.StartedAt, &t.TimeSpent, &t.UpdatedAt); err != nil {
 			_ = rows.Close()
 			return snapshot{}, err
 		}
 		t.Done = done == 1
+		t.WontDo = t.Done && wontDo == 1
 		out.Tasks = append(out.Tasks, t)
 	}
 	if err := rows.Close(); err != nil {
@@ -607,9 +609,9 @@ func (s *store) replaceSnapshot(snap snapshot) error {
 		}
 	}
 	for _, t := range snap.Tasks {
-		if _, err := tx.Exec(`INSERT INTO tasks (id, profile_id, title, description, done, position, created_at, due_at, completed_at, started_at, time_spent, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			t.ID, t.ProfileID, t.Title, t.Description, boolInt(t.Done), t.Position, t.CreatedAt, t.DueAt, t.CompletedAt, t.StartedAt, t.TimeSpent, t.UpdatedAt); err != nil {
+		if _, err := tx.Exec(`INSERT INTO tasks (id, profile_id, title, description, done, wont_do, position, created_at, due_at, completed_at, started_at, time_spent, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			t.ID, t.ProfileID, t.Title, t.Description, boolInt(t.Done), boolInt(t.Done && t.WontDo), t.Position, t.CreatedAt, t.DueAt, t.CompletedAt, t.StartedAt, t.TimeSpent, t.UpdatedAt); err != nil {
 			return err
 		}
 	}

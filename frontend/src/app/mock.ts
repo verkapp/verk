@@ -81,6 +81,7 @@ function seed(): Task[] {
       title: 'Préparer la démo de vendredi',
       description: 'Relire le scénario, vérifier les chiffres et tenir en 10 minutes. Garder trois slides maximum.',
       done: false,
+      wontDo: false,
       position: 0,
       createdAt: now - 2 * DAY,
       dueAt: at(0, 23, 30),
@@ -101,6 +102,7 @@ function seed(): Task[] {
       title: 'Relire les maquettes du nouvel onboarding',
       description: 'Se concentrer sur le premier écran et le moment où on demande le nom de l’équipe.',
       done: false,
+      wontDo: false,
       position: 1,
       createdAt: now - 4 * DAY,
       dueAt: at(1, 11, 30),
@@ -116,6 +118,7 @@ function seed(): Task[] {
       title: 'Écrire le compte-rendu de la réunion produit',
       description: 'Décisions, questions ouvertes et prochaines étapes. Cinq lignes suffisent.',
       done: false,
+      wontDo: false,
       position: 0,
       createdAt: now - 6 * DAY,
       dueAt: at(-1, 18, 0),
@@ -131,6 +134,7 @@ function seed(): Task[] {
       title: 'Choisir un cadeau pour Léa',
       description: 'Quelque chose de simple, utile, et qui ne prend pas de place.',
       done: false,
+      wontDo: false,
       position: 1,
       createdAt: now - 5 * DAY,
       dueAt: null,
@@ -146,6 +150,7 @@ function seed(): Task[] {
       title: 'Répondre aux e-mails en attente',
       description: '',
       done: true,
+      wontDo: false,
       position: 2,
       createdAt: now - 1 * DAY,
       dueAt: null,
@@ -161,6 +166,7 @@ function seed(): Task[] {
       title: 'Mettre à jour le board de l’équipe',
       description: '',
       done: true,
+      wontDo: false,
       position: 2,
       createdAt: now - 2 * DAY,
       dueAt: null,
@@ -176,6 +182,7 @@ function seed(): Task[] {
       title: 'Envoyer les factures de septembre',
       description: '',
       done: true,
+      wontDo: false,
       position: 3,
       createdAt: now - 4 * DAY,
       dueAt: null,
@@ -191,6 +198,7 @@ function seed(): Task[] {
       title: 'Nettoyer les notes de la semaine',
       description: '',
       done: true,
+      wontDo: true,
       position: 3,
       createdAt: now - 7 * DAY,
       dueAt: null,
@@ -267,6 +275,7 @@ function createTask(input: TaskInput): Task {
     title: input.title.trim(),
     description: input.description,
     done: false,
+    wontDo: false,
     position: nextTopPosition(profileId),
     createdAt: Date.now(),
     dueAt: input.dueAt,
@@ -300,9 +309,18 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       task.dueAt = input.dueAt;
       return clone(task) as T;
     }
+    case 'SetTaskWontDo': {
+      const task = findTask(args[0] as string);
+      task.done = true;
+      task.wontDo = true;
+      task.completedAt = Date.now();
+      bank(task);
+      return clone(task) as T;
+    }
     case 'SetTaskDone': {
       const task = findTask(args[0] as string);
       task.done = args[1] as boolean;
+      task.wontDo = false;
       if (task.done) {
         task.completedAt = Date.now();
         task.subtasks.forEach((subtask) => {

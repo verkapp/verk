@@ -295,3 +295,22 @@ h3.struck {
 .meta-item.running {
   color: var(--accent-strong);
 }
+
+/* Closed without being done: grey instead of the accent, so it does not read
+   as a win. */
+.task-card.wont-do .checkbox.checked {
+  background: var(--surface-muted);
+  border-color: var(--line-strong);
+  color: var(--muted);
+}
+
+.task-card.wont-do .checkbox.checked:hover {
+  background: var(--line);
+  border-color: var(--line-strong);
+  color: var(--text-soft);
+}
+
+.due.tone-muted {
+  background: var(--surface-muted);
+  color: var(--muted);
+}

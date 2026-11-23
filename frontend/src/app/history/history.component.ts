@@ -20,10 +20,11 @@ export class HistoryComponent {
   readonly openTask = output<string>();
 
   readonly groups = this.store.history;
-  readonly total = computed(() => this.store.doneTasks().length);
+  readonly total = computed(() => this.store.completedTasks().length);
+  readonly dropped = computed(() => this.store.doneTasks().length - this.total());
   readonly thisWeek = computed(() => {
     const weekAgo = Date.now() - 7 * 86_400_000;
-    return this.store.doneTasks().filter((task) => (task.completedAt ?? 0) >= weekAgo).length;
+    return this.store.completedTasks().filter((task) => (task.completedAt ?? 0) >= weekAgo).length;
   });
 
   formatTime = formatTime;

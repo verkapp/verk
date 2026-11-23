@@ -85,6 +85,7 @@ func migrate(db *sql.DB) error {
 			{"started_at", "INTEGER"},
 			{"time_spent", "INTEGER NOT NULL DEFAULT 0"},
 			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},
+			{"wont_do", "INTEGER NOT NULL DEFAULT 0"},
 		},
 		"subtasks": {
 			{"updated_at", "INTEGER NOT NULL DEFAULT 0"},

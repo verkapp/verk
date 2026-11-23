@@ -15,6 +15,7 @@ export type IconName =
   | 'paperclip'
   | 'trash'
   | 'close'
+  | 'ban'
   | 'check'
   | 'chevron-left'
   | 'chevron-right'
@@ -110,6 +111,10 @@ export type IconName =
         }
         @case ('close') {
           <path d="M6 6l12 12M18 6L6 18" />
+        }
+        @case ('ban') {
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M6 6l12 12" />
         }
         @case ('check') {
           <path d="M5 12.5l4.5 4.5L19 7.5" />
