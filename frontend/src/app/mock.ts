@@ -68,8 +68,8 @@ const profileColors = ['#7b6cf0', '#4aa985', '#559fe0', '#ea8a62', '#dd7ba2', '#
 const persoProfile = 'mock-profile-perso';
 const travailProfile = 'mock-profile-travail';
 let profiles: Profile[] = [
-  { id: persoProfile, name: 'Perso', color: profileColors[0], position: 0, createdAt: Date.now() - 30 * DAY },
-  { id: travailProfile, name: 'Travail', color: profileColors[1], position: 1, createdAt: Date.now() - 30 * DAY },
+  { id: persoProfile, name: 'Perso', color: profileColors[0], position: 0, createdAt: Date.now() - 30 * DAY, autoDeferAt: '' },
+  { id: travailProfile, name: 'Travail', color: profileColors[1], position: 1, createdAt: Date.now() - 30 * DAY, autoDeferAt: '18:00' },
 ];
 
 function seed(): Task[] {
@@ -489,8 +489,21 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
         color: profileColors[profiles.length % profileColors.length],
         position: profiles.length,
         createdAt: Date.now(),
+        autoDeferAt: '',
       };
       profiles = [...profiles, profile];
+      return clone(profile) as T;
+    }
+    case 'SetProfileAutoDefer': {
+      const profile = profiles.find((candidate) => candidate.id === args[0]);
+      if (!profile) {
+        throw new Error('Profil introuvable');
+      }
+      const at = String(args[1] ?? '').trim();
+      if (at && !/^([01]\d|2[0-3]):[0-5]\d$/.test(at)) {
+        throw new Error(`Heure invalide : "${at}"`);
+      }
+      profile.autoDeferAt = at;
       return clone(profile) as T;
     }
     case 'UpdateProfile': {

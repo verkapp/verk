@@ -15,6 +15,9 @@ Format :
 
 ### Ajouté
 
+- Report automatique, réglable par profil (Réglages → Profils) : à l’heure choisie, les tâches du jour
+  non terminées et les tâches en retard passent à demain (ou lundi), comme avec « Reprendre ». Une tâche
+  planifiée plus tard dans la soirée reste en place ; si l’app était fermée, le report se fait au lancement.
 - Un installeur Windows (`Todo-windows-x64-setup.exe`) : installation pour l’utilisateur, sans droits
   administrateur, avec raccourcis dans le menu Démarrer et sur le bureau.
 - Marquer une tâche comme « pas à faire » (bouton ⊘ sur la carte ou « Ne pas faire » dans le panneau) :

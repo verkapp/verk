@@ -159,6 +159,9 @@ func TestStoreSnapshotAndReplaceRoundTrip(t *testing.T) {
 	if _, err := st.setWontDo(dropped.ID); err != nil {
 		t.Fatalf("setWontDo: %v", err)
 	}
+	if _, err := st.setProfileAutoDefer(task.ProfileID, "18:30"); err != nil {
+		t.Fatalf("setProfileAutoDefer: %v", err)
+	}
 
 	snap, err := st.snapshot()
 	if err != nil {
@@ -175,6 +178,9 @@ func TestStoreSnapshotAndReplaceRoundTrip(t *testing.T) {
 	}
 	if wontDo != 1 {
 		t.Fatalf("won't do flag missing from snapshot: %+v", snap.Tasks)
+	}
+	if len(snap.Profiles) == 0 || snap.Profiles[0].AutoDeferAt != "18:30" {
+		t.Fatalf("auto-defer time missing from snapshot: %+v", snap.Profiles)
 	}
 	if snap.Tasks[0].UpdatedAt == 0 || snap.Subtasks[0].UpdatedAt == 0 {
 		t.Fatalf("updated_at should be set, got %+v", snap)
