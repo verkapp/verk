@@ -58,6 +58,7 @@ export interface Settings {
   showMomentum: boolean;
   notifications: boolean;
   autoUpdate: boolean;
+  claudeEnabled: boolean;
   claudePath: string;
 }
 

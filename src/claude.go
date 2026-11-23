@@ -62,8 +62,15 @@ func isExecutableFile(path string) bool {
 	return info.Mode()&0o111 != 0
 }
 
+// errClaudeDisabled is returned when the user turned the Claude integration
+// off: no binary lookup and no process is ever started.
+var errClaudeDisabled = errors.New("l’intégration Claude est désactivée dans les réglages")
+
 func (a *App) resolveClaude() (string, error) {
 	settings, _ := a.store.getSettings()
+	if !settings.ClaudeEnabled {
+		return "", errClaudeDisabled
+	}
 	if custom := expandHome(settings.ClaudePath); custom != "" {
 		if isExecutableFile(custom) {
 			return custom, nil

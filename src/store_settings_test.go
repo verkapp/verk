@@ -8,7 +8,7 @@ func TestSettings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getSettings: %v", err)
 	}
-	if defaults.Accent != "lavande" || !defaults.CoachEnabled || defaults.CoachOnStart || !defaults.TimeTracking || !defaults.ShowMomentum || defaults.ClaudePath != "" {
+	if defaults.Accent != "lavande" || !defaults.CoachEnabled || defaults.CoachOnStart || !defaults.TimeTracking || !defaults.ShowMomentum || !defaults.ClaudeEnabled || defaults.ClaudePath != "" {
 		t.Fatalf("unexpected defaults: %+v", defaults)
 	}
 

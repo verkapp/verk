@@ -92,7 +92,7 @@ export class TaskListComponent {
   readonly showBanner = computed(
     () =>
       this.mode() === 'today' &&
-      this.store.settings().coachEnabled &&
+      this.store.coachActive() &&
       !this.bannerDismissed() &&
       this.store.attentionTasks().length > 0,
   );

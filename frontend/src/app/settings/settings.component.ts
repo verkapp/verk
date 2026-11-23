@@ -115,6 +115,10 @@ export class SettingsComponent implements OnInit {
     void this.store.deleteProfile(profile.id);
   }
 
+  toggleClaude(): void {
+    void this.store.saveSettings({ claudeEnabled: !this.store.settings().claudeEnabled });
+  }
+
   toggleCoachEnabled(): void {
     void this.store.saveSettings({ coachEnabled: !this.store.settings().coachEnabled });
   }

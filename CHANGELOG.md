@@ -13,6 +13,11 @@ Format :
 
 ## [Non publié]
 
+### Ajouté
+
+- Un réglage pour désactiver entièrement l’intégration Claude : plus aucun appel à Claude Code, le coach et le
+  découpage de tâches disparaissent de l’interface.
+
 ### Modifié
 
 - Les notes de version sont rendues avec un vrai moteur Markdown.
