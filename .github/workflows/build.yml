@@ -69,10 +69,10 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            platform: darwin/universal
+            task: darwin:package:universal
             artifact: Todo-macos-universal
           - os: windows-latest
-            platform: windows/amd64
+            task: windows:build
             artifact: Todo-windows-x64
     runs-on: ${{ matrix.os }}
     steps:
@@ -99,7 +99,7 @@ jobs:
         run: echo "$(go env GOPATH)\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Install Wails
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -112,7 +112,7 @@ jobs:
 
       - name: Build
         shell: bash
-        run: wails build -clean -trimpath -platform ${{ matrix.platform }} -ldflags "-X todo/src.Version=${{ steps.version.outputs.value }}"
+        run: wails3 task ${{ matrix.task }} VERSION=${{ steps.version.outputs.value }}
 
       - name: Package macOS app
         if: runner.os == 'macOS'

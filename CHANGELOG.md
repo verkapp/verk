@@ -23,10 +23,13 @@ Format :
   réglages. Sur macOS, les menus Todo et Fenêtre habituels sont aussi présents.
 - Une icône dans la barre des menus (macOS) ou la zone de notification (Windows, Linux) : ouvrir Todo, créer une
   tâche, réduire la fenêtre dans la barre ou quitter. Sur macOS, un clic sur l’icône du Dock rouvre la fenêtre.
-- Un réglage « Fermer dans la barre » : fermer la fenêtre la range au lieu de quitter l’application.
+- Un réglage « Fermer dans la barre » : fermer la fenêtre la range au lieu de quitter l’application. Il
+  s’applique immédiatement.
 
 ### Modifié
 
+- L’application passe à Wails v3 : l’icône de tray et les menus utilisent désormais le support natif
+  du framework.
 - Les notes de version sont rendues avec un vrai moteur Markdown.
 
 ## [1.3.0] - 2026-11-05

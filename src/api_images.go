@@ -7,8 +7,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-
-	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // AddAttachment opens the native picker, copies the chosen files into the
@@ -21,12 +19,14 @@ func (a *App) AddAttachment(taskID string) (Task, error) {
 	if _, err := a.store.getTask(taskID); err != nil {
 		return Task{}, err
 	}
-	paths, err := wruntime.OpenMultipleFilesDialog(a.ctx, wruntime.OpenDialogOptions{
-		Title: "Choisir des pièces jointes",
-		Filters: []wruntime.FileFilter{
-			{DisplayName: "Tous les fichiers", Pattern: "*.*"},
-		},
-	})
+	if a.wapp == nil {
+		return Task{}, errors.New("la fenêtre n'est pas prête")
+	}
+	paths, err := a.wapp.Dialog.OpenFile().
+		CanChooseFiles(true).
+		SetTitle("Choisir des pièces jointes").
+		AttachToWindow(a.window).
+		PromptForMultipleSelection()
 	if err != nil {
 		return Task{}, err
 	}

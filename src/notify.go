@@ -1,10 +1,12 @@
 package src
 
 import (
+	"context"
 	"sync"
 	"time"
 
-	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
 const (
@@ -21,19 +23,23 @@ type reminderState struct {
 // startNotifications initialises the native notification service and starts
 // the reminder loop. Only tasks that reach their due time while Todo is
 // running are announced, once per due date.
-func (a *App) startNotifications() {
-	if a.ctx == nil {
-		return
-	}
+//
+// The notification service is started by hand rather than registered with
+// Wails: a failing service would abort the whole application (for example
+// a macOS build without a bundle identifier), while Todo only needs to
+// report that reminders are unavailable.
+func (a *App) startNotifications(ctx context.Context) {
 	a.reminder = &reminderState{notified: map[string]int64{}, stop: make(chan struct{})}
-	if err := wruntime.InitializeNotifications(a.ctx); err != nil {
+	notifier := notifications.New()
+	if err := notifier.ServiceStartup(ctx, application.ServiceOptions{}); err != nil {
 		a.notificationErr = err
 		return
 	}
+	a.notifier = notifier
 	if settings, err := a.store.getSettings(); err == nil && settings.Notifications {
 		// Ask once at startup: on macOS the first call shows the system
 		// permission prompt, later calls simply return the stored answer.
-		_, _ = wruntime.RequestNotificationAuthorization(a.ctx)
+		_, _ = notifier.RequestNotificationAuthorization()
 	}
 	go a.reminderLoop()
 }
@@ -46,8 +52,8 @@ func (a *App) stopNotifications() {
 			close(a.reminder.stop)
 		}
 	}
-	if a.ctx != nil {
-		wruntime.CleanupNotifications(a.ctx)
+	if a.notifier != nil {
+		_ = a.notifier.ServiceShutdown()
 	}
 }
 
@@ -66,17 +72,14 @@ func (a *App) reminderLoop() {
 }
 
 func (a *App) checkReminders() {
-	if a.store == nil || a.ctx == nil || a.reminder == nil {
+	if a.store == nil || a.notifier == nil || a.reminder == nil {
 		return
 	}
 	settings, err := a.store.getSettings()
 	if err != nil || !settings.Notifications {
 		return
 	}
-	if !wruntime.IsNotificationAvailable(a.ctx) {
-		return
-	}
-	if allowed, err := wruntime.CheckNotificationAuthorization(a.ctx); err != nil || !allowed {
+	if allowed, err := a.notifier.CheckNotificationAuthorization(); err != nil || !allowed {
 		return
 	}
 	tasks, err := a.store.listTasks()
@@ -100,7 +103,7 @@ func (a *App) checkReminders() {
 		if profile == "" {
 			profile = "Todo"
 		}
-		err := wruntime.SendNotification(a.ctx, wruntime.NotificationOptions{
+		err := a.notifier.SendNotification(notifications.NotificationOptions{
 			ID:       "task-" + task.ID,
 			Title:    task.Title,
 			Subtitle: "Rappel · " + profile,

@@ -1,3 +1,5 @@
+import { Call, Events } from '@wailsio/runtime';
+
 import { mockCall } from './mock';
 import {
   AppInfo,
@@ -12,27 +14,26 @@ import {
   UpdateInfo,
 } from './models';
 
-type Bridge = Record<string, (...args: unknown[]) => Promise<unknown>>;
+/** Fully qualified Go type that the Wails v3 service binds (package.Type). */
+const SERVICE = 'todo/src.App';
 
-interface RuntimeBridge {
-  EventsOn?: (event: string, callback: (...data: unknown[]) => void) => () => void;
-}
-
-function bridge(): Bridge | null {
-  const wails = (window as unknown as { go?: { src?: { App?: Bridge }; main?: { App?: Bridge } } }).go;
-  return wails?.src?.App ?? wails?.main?.App ?? null;
+/**
+ * True inside the desktop app. The plain `ng serve` preview has no native
+ * host, so calls fall back to the in-memory mock.
+ */
+function inDesktopHost(): boolean {
+  const w = window as unknown as {
+    chrome?: { webview?: { postMessage?: unknown } };
+    webkit?: { messageHandlers?: { external?: { postMessage?: unknown } } };
+  };
+  return Boolean(w.chrome?.webview?.postMessage || w.webkit?.messageHandlers?.external?.postMessage);
 }
 
 async function call<T>(method: string, ...args: unknown[]): Promise<T> {
-  const app = bridge();
-  if (!app) {
+  if (!inDesktopHost()) {
     return mockCall<T>(method, args);
   }
-  const fn = app[method];
-  if (typeof fn !== 'function') {
-    throw new Error(`La méthode « ${method} » n'existe pas dans le backend.`);
-  }
-  return (await fn(...args)) as T;
+  return (await Call.ByName(`${SERVICE}.${method}`, ...args)) as T;
 }
 
 export const api = {
@@ -92,11 +93,10 @@ export const api = {
 
 /** Subscribes to a Wails event. Returns a no-op in the browser preview. */
 export function onRuntimeEvent<T>(event: string, callback: (payload: T) => void): () => void {
-  const runtime = (window as unknown as { runtime?: RuntimeBridge }).runtime;
-  if (!runtime?.EventsOn) {
+  if (!inDesktopHost()) {
     return () => undefined;
   }
-  return runtime.EventsOn(event, (...data) => callback(data[0] as T));
+  return Events.On(event, (ev) => callback(ev.data as T));
 }
 
 export function errorMessage(error: unknown): string {
