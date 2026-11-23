@@ -15,6 +15,8 @@ Format :
 
 ### Ajouté
 
+- Un installeur Windows (`Todo-windows-x64-setup.exe`) : installation pour l’utilisateur, sans droits
+  administrateur, avec raccourcis dans le menu Démarrer et sur le bureau.
 - Marquer une tâche comme « pas à faire » (bouton ⊘ sur la carte ou « Ne pas faire » dans le panneau) :
   elle sort des listes, des retards et des rappels sans compter comme terminée. Elle reste visible dans
   l’historique, en gris, et se rouvre comme une tâche terminée.
