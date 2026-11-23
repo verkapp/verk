@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const (
@@ -258,10 +256,7 @@ func (a *App) setSyncing(value bool) {
 // emitSyncStatus pushes the sync status to the frontend, which reloads the
 // tasks right away when a pull changed them instead of waiting for its poll.
 func (a *App) emitSyncStatus() {
-	if a.ctx == nil {
-		return
-	}
-	wruntime.EventsEmit(a.ctx, "sync:status", a.currentSyncStatus())
+	a.emit("sync:status", a.currentSyncStatus())
 }
 
 func (a *App) currentSyncStatus() SyncStatus {
