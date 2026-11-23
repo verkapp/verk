@@ -103,8 +103,13 @@ wails3 task darwin:package
 # macOS universel (Intel + Apple Silicon)
 wails3 task darwin:package:universal
 
-# Windows (à lancer sur Windows)
+# Windows : Todo.exe seul
 wails3 task windows:build
+
+# Windows : Todo.exe + installeur NSIS (build/bin/Todo-amd64-installer.exe).
+# Nécessite makensis (NSIS 3) ; fonctionne aussi depuis macOS :
+#   brew install makensis && GOOS=windows wails3 task windows:package
+wails3 task windows:package
 
 # Linux (à lancer sur Linux, avec GTK et WebKitGTK installés)
 wails3 task linux:build
@@ -113,7 +118,11 @@ wails3 task linux:build
 wails3 task darwin:package VERSION=1.4.0
 ```
 
-Les applications sont produites dans `build/bin/`. Les Taskfiles (`Taskfile.yml`, `build/*/Taskfile.yml`)
+Les applications sont produites dans `build/bin/`.
+
+L'installeur Windows installe Todo pour l'utilisateur courant, dans `%LOCALAPPDATA%\Programs\Todo`, sans
+droits administrateur : la mise à jour automatique peut ainsi remplacer `Todo.exe` sur place. La
+désinstallation retire l'application et ses raccourcis mais conserve la liste de tâches (`%AppData%\todo`). Les Taskfiles (`Taskfile.yml`, `build/*/Taskfile.yml`)
 et `build/config.yml` décrivent le build ; après une modification de `build/config.yml`, lance
 `wails3 task common:update:build-assets`.
 Le build macOS n'est pas signé/notarisé par défaut. Pour distribuer sans avertissement
