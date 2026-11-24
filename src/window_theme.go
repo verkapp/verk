@@ -33,13 +33,6 @@ var (
 	}
 )
 
-func chromeFor(dark bool) chromePalette {
-	if dark {
-		return darkChrome
-	}
-	return lightChrome
-}
-
 // startupTheme reads the appearance setting before the window is created.
 func (a *App) startupTheme() string {
 	if a.store == nil {
