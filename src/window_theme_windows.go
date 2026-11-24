@@ -111,3 +111,10 @@ func reportMenuBarThemeMiss() bool {
 	log.Printf("thème: la barre de menus Wails n'a pas pu être mise à jour, elle suivra au prochain lancement")
 	return false
 }
+
+func chromeFor(dark bool) chromePalette {
+	if dark {
+		return darkChrome
+	}
+	return lightChrome
+}
