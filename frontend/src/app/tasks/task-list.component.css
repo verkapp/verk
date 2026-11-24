@@ -290,7 +290,7 @@
   height: 44px;
   right: 4px;
   bottom: 2px;
-  background: color-mix(in srgb, var(--accent-soft) 55%, #fdf1e3);
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--warm));
 }
 
 .empty-check {

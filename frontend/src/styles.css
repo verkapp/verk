@@ -1,6 +1,7 @@
 /* ---------------------------------------------------------------
    Verk — design tokens
-   Light theme only. Six pastel accents, switchable in Settings.
+   Light and dark themes (data-theme on <html>, resolved from the
+   setting before first paint). Six pastel accents, switchable in Settings.
 ---------------------------------------------------------------- */
 :root {
   color-scheme: light;
@@ -22,6 +23,24 @@
   --danger-soft: #fbeaee;
   --success: #3d9873;
   --success-soft: #e7f5ee;
+
+  /* Secondary tones, kept as tokens so the dark theme can redefine them. */
+  --on-accent: #ffffff;
+  --control-border: #d5d0c9;
+  --strike: #cbc6bf;
+  --hover-glass: rgba(255, 255, 255, 0.66);
+  --surface-glass: rgba(255, 255, 255, 0.86);
+  --skeleton: #f0ede8;
+  --skeleton-hi: #f7f5f2;
+  --backdrop: rgba(37, 33, 40, 0.22);
+  --danger-line: #f2d8de;
+  --danger-hover: #f7dce2;
+  --warm: #fdf1e3;
+  --warn-soft: #fffaf7;
+  --warn-line: #f1e4da;
+  --ghost-hover-border: #d2cdc5;
+  --scroll-thumb: #d9d5ce;
+  --scroll-thumb-hover: #c7c2ba;
 
   --shadow-sm: 0 1px 1px rgba(44, 39, 33, 0.02);
   --shadow-md: 0 6px 16px -12px rgba(44, 39, 33, 0.14);
@@ -84,6 +103,58 @@
   --accent-soft: #f9f1da;
   --accent-tint: #fdfaf0;
   --accent-ring: rgba(211, 166, 64, 0.24);
+}
+
+/* ---------------------------------------------------------------
+   Dark theme: warm greys that keep the pastel accents readable.
+---------------------------------------------------------------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #18171b;
+  --sidebar: #1e1d22;
+  --surface: #232227;
+  --surface-soft: #28272d;
+  --surface-muted: #2f2e35;
+  --line: #34323a;
+  --line-strong: #413f48;
+  --text: #ecebef;
+  --text-soft: #c5c2ca;
+  --muted: #918e98;
+  --muted-2: #67646e;
+  --danger: #ee8499;
+  --danger-soft: #3a2329;
+  --success: #62c49a;
+  --success-soft: #1f3229;
+
+  --control-border: #55525c;
+  --strike: #5d5a64;
+  --hover-glass: rgba(255, 255, 255, 0.06);
+  --surface-glass: rgba(35, 34, 39, 0.88);
+  --skeleton: #29282e;
+  --skeleton-hi: #333238;
+  --backdrop: rgba(0, 0, 0, 0.45);
+  --danger-line: #57303a;
+  --danger-hover: #462a31;
+  --warm: #3a2f25;
+  --warn-soft: #2b2522;
+  --warn-line: #4a3a30;
+  --ghost-hover-border: #4e4b55;
+  --scroll-thumb: #3b3940;
+  --scroll-thumb-hover: #4a4850;
+
+  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 16px -10px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 14px 34px -18px rgba(0, 0, 0, 0.6);
+}
+
+/* Every accent derives its soft shades from the surface in dark mode, and
+   its strong variant gets lighter so text on soft backgrounds stays legible. */
+:root[data-theme='dark'][data-accent] {
+  --accent-strong: color-mix(in srgb, var(--accent) 72%, #ffffff);
+  --accent-soft: color-mix(in srgb, var(--accent) 24%, var(--surface));
+  --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  --accent-ring: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 * {
@@ -154,13 +225,13 @@ p {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d9d5ce;
+  background: var(--scroll-thumb);
   border-radius: 999px;
   border: 3px solid var(--bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #c7c2ba;
+  background: var(--scroll-thumb-hover);
 }
 
 /* ---------------------------------------------------------------
@@ -198,7 +269,7 @@ p {
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow:
     0 1px 2px rgba(50, 40, 30, 0.08),
     0 8px 18px -12px var(--accent);
@@ -217,7 +288,7 @@ p {
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface-soft);
-  border-color: #d2cdc5;
+  border-color: var(--ghost-hover-border);
   color: var(--text);
 }
 
@@ -236,7 +307,7 @@ p {
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #f7dce2;
+  background: var(--danger-hover);
 }
 
 .btn-sm {

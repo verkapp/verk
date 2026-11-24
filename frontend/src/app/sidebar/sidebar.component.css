@@ -37,7 +37,7 @@
   height: 30px;
   border-radius: 9px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: none;
 }
 
@@ -70,7 +70,7 @@
 }
 
 .expand:hover {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--hover-glass);
   color: var(--text);
 }
 
@@ -121,7 +121,7 @@
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--hover-glass);
   color: var(--text);
 }
 
@@ -297,7 +297,7 @@
   height: 4px;
   margin: 9px 0 7px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 13%, #fff);
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface));
   overflow: hidden;
 }
 

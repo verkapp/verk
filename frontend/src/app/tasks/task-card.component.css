@@ -91,7 +91,7 @@
   width: 21px;
   height: 21px;
   margin-top: 1px;
-  border: 1.5px solid #d5d0c9;
+  border: 1.5px solid var(--control-border);
   border-radius: 7px;
   color: transparent;
   background: var(--surface);
@@ -111,13 +111,13 @@
 .checkbox.checked {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .checkbox.checked:hover {
   background: var(--accent-strong);
   border-color: var(--accent-strong);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .checkbox:active {
@@ -148,7 +148,7 @@ h3 {
 h3.struck {
   color: var(--muted);
   text-decoration: line-through;
-  text-decoration-color: #cbc6bf;
+  text-decoration-color: var(--strike);
   text-decoration-thickness: 1px;
 }
 
@@ -216,7 +216,7 @@ h3.struck {
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background: #d4cfc7;
+  background: var(--strike);
 }
 
 .mini-progress {

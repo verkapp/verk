@@ -14,7 +14,7 @@
   margin-bottom: 16px;
   border-radius: 13px;
   background: var(--danger-soft);
-  border: 1px solid #f2d8de;
+  border: 1px solid var(--danger-line);
 }
 
 .missing-icon {
@@ -25,7 +25,7 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--surface-glass);
   color: var(--danger);
 }
 
@@ -95,7 +95,7 @@
 
 .stat.danger {
   background: var(--danger-soft);
-  border-color: #f3dbe1;
+  border-color: var(--danger-line);
 }
 
 .stat.danger .stat-number {
@@ -233,7 +233,7 @@
   height: 12px;
   width: 76%;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--accent-soft), #fff, var(--accent-soft));
+  background: linear-gradient(90deg, var(--accent-soft), var(--surface), var(--accent-soft));
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -410,7 +410,7 @@
 .spinner {
   width: 13px;
   height: 13px;
-  border: 1.6px solid color-mix(in srgb, var(--accent) 30%, #fff);
+  border: 1.6px solid color-mix(in srgb, var(--accent) 30%, var(--surface));
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -465,7 +465,7 @@
 
 .sugg-add:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .sugg-actions {
