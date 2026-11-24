@@ -67,6 +67,7 @@ type TaskInput struct {
 
 type Settings struct {
 	Accent        string `json:"accent"`
+	Theme         string `json:"theme"`
 	CoachEnabled  bool   `json:"coachEnabled"`
 	CoachOnStart  bool   `json:"coachOnStart"`
 	TimeTracking  bool   `json:"timeTracking"`

@@ -8,7 +8,7 @@ import (
 )
 
 func (s *store) getSettings() (Settings, error) {
-	out := Settings{Accent: "lavande", CoachEnabled: true, TimeTracking: true, ShowMomentum: true, Notifications: true, AutoUpdate: true, ClaudeEnabled: true}
+	out := Settings{Accent: "lavande", Theme: themeSystem, CoachEnabled: true, TimeTracking: true, ShowMomentum: true, Notifications: true, AutoUpdate: true, ClaudeEnabled: true}
 	rows, err := s.db.Query(`SELECT key, value FROM settings`)
 	if err != nil {
 		return out, err
@@ -24,6 +24,8 @@ func (s *store) getSettings() (Settings, error) {
 			if v != "" {
 				out.Accent = v
 			}
+		case "theme":
+			out.Theme = normalizeTheme(v)
 		case "coach_enabled":
 			out.CoachEnabled = v == "1"
 		case "coach_on_start":
@@ -58,6 +60,7 @@ func (s *store) saveSettings(in Settings) error {
 	defer tx.Rollback()
 	values := map[string]string{
 		"accent":         in.Accent,
+		"theme":          normalizeTheme(in.Theme),
 		"coach_enabled":  boolIntString(in.CoachEnabled),
 		"coach_on_start": boolIntString(in.CoachOnStart),
 		"time_tracking":  boolIntString(in.TimeTracking),
@@ -91,4 +94,21 @@ func (s *store) settingInt(key string) (int64, bool, error) {
 		return 0, false, nil
 	}
 	return parsed, true, nil
+}
+
+// Appearance preferences: follow the operating system, or force a theme.
+const (
+	themeSystem = "system"
+	themeLight  = "light"
+	themeDark   = "dark"
+)
+
+// normalizeTheme maps unknown or empty values to themeSystem.
+func normalizeTheme(value string) string {
+	switch value {
+	case themeLight, themeDark:
+		return value
+	default:
+		return themeSystem
+	}
 }
