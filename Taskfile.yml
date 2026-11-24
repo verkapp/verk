@@ -7,7 +7,7 @@ vars:
   PACKAGE_MANAGER: "npm"
   # Angular dev server port used by `wails3 dev`.
   VITE_PORT: '{{.WAILS_VITE_PORT | default 34115}}'
-  # Version embedded with -X todo/src.Version (set by CI from the tag).
+  # Version embedded with -X verk/src.Version (set by CI from the tag).
   VERSION: '{{.VERSION | default ""}}'
   GOOS: '{{.GOOS | default OS}}'
 

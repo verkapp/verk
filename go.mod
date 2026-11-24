@@ -1,4 +1,4 @@
-module todo
+module verk
 
 go 1.26.0
 

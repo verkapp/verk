@@ -3,7 +3,7 @@ package main
 import (
 	"embed"
 
-	"todo/src"
+	"verk/src"
 )
 
 //go:embed all:frontend/dist

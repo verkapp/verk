@@ -69,7 +69,7 @@ type updater struct {
 }
 
 // Version is overridden at build time with
-// -ldflags "-X todo/src.Version=<tag>".
+// -ldflags "-X verk/src.Version=<tag>".
 var Version = "1.4.0"
 
 func (a *App) updateStatus() UpdateInfo {

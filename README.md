@@ -78,7 +78,7 @@ npm install
 npm start        # http://127.0.0.1:34115
 ```
 
-Le frontend appelle les méthodes Go par leur nom via `@wailsio/runtime` (`todo/src.App.<Méthode>`),
+Le frontend appelle les méthodes Go par leur nom via `@wailsio/runtime` (`verk/src.App.<Méthode>`),
 sans bindings générés. Hors de l'application, il détecte l'absence du pont Wails et bascule sur un jeu de données de démonstration
 (`frontend/src/app/mock.ts`). Pratique pour travailler le design sans lancer Go.
 
@@ -183,7 +183,7 @@ gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
 - **Tests** sur macOS : ESLint (angular-eslint), build Angular, `go test`, `go vet`, golangci-lint.
 - **Build** en matrice : `darwin/universal` (`.app` zippée) et `windows/amd64` (`.exe` zippé),
   artefacts téléchargeables depuis chaque run. La CI injecte la version dans le binaire
-  (`-ldflags "-X todo/src.Version=…"`) et publie une empreinte `*.sha256` à côté de chaque archive.
+  (`-ldflags "-X verk/src.Version=…"`) et publie une empreinte `*.sha256` à côté de chaque archive.
 - Chaque push sur `main` met à jour la pré-release **`dev`** avec les deux archives : la
   release et son tag sont recréés sur le dernier commit, les liens de téléchargement changent donc
   à chaque fois.

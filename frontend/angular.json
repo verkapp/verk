@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "todo": {
+    "verk": {
       "projectType": "application",
       "root": "",
       "sourceRoot": "src",
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "todo:build:production"
+              "buildTarget": "verk:build:production"
             },
             "development": {
-              "buildTarget": "todo:build:development"
+              "buildTarget": "verk:build:development"
             }
           },
           "defaultConfiguration": "development"

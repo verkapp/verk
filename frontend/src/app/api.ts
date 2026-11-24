@@ -15,7 +15,7 @@ import {
 } from './models';
 
 /** Fully qualified Go type that the Wails v3 service binds (package.Type). */
-const SERVICE = 'todo/src.App';
+const SERVICE = 'verk/src.App';
 
 /**
  * True inside the desktop app. The plain `ng serve` preview has no native
