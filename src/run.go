@@ -34,10 +34,11 @@ func Run(assets embed.FS) {
 	})
 	app.wapp = wapp
 
-	// Wails only applies a window theme at creation: a theme change in the
-	// settings reaches the native chrome on the next launch, while the web
-	// content switches immediately.
+	// The theme is resolved to light or dark here, never left to Wails'
+	// « system » mode: the app repaints the native chrome itself when the
+	// setting or the OS appearance changes (see window_theme.go).
 	theme := app.startupTheme()
+	dark := resolveDark(theme)
 	// Wails v3 attaches the application menu to a window only when the menu
 	// exists before the window and the window opts in (UseApplicationMenu).
 	wapp.Menu.Set(app.applicationMenu())
@@ -49,7 +50,7 @@ func Run(assets embed.FS) {
 		Height:             840,
 		MinWidth:           980,
 		MinHeight:          680,
-		BackgroundColour:   windowBackground(theme),
+		BackgroundColour:   windowBackground(dark),
 		URL:                "/",
 		// macOS: the title bar is transparent and the content runs under it,
 		// so the traffic lights sit on top of the sidebar. The frontend keeps
@@ -61,91 +62,16 @@ func Run(assets embed.FS) {
 		// Windows: the native title bar and menu bar take the app's colours
 		// instead of the system grey.
 		Windows: application.WindowsWindow{
-			Theme:       windowsTheme(theme),
+			Theme:       windowsTheme(dark),
 			CustomTheme: windowsChrome(),
 		},
 	})
 
 	app.setupWindow()
 	app.setupTray()
+	app.watchSystemTheme()
 
 	if err := wapp.Run(); err != nil {
 		log.Fatal(err)
-	}
-}
-
-// startupTheme reads the appearance setting before the window is created.
-func (a *App) startupTheme() string {
-	if a.store == nil {
-		return themeSystem
-	}
-	settings, err := a.store.getSettings()
-	if err != nil {
-		return themeSystem
-	}
-	return settings.Theme
-}
-
-func windowsTheme(theme string) application.Theme {
-	switch theme {
-	case themeLight:
-		return application.Light
-	case themeDark:
-		return application.Dark
-	default:
-		return application.SystemDefault
-	}
-}
-
-func macAppearance(theme string) application.MacAppearanceType {
-	switch theme {
-	case themeLight:
-		return application.NSAppearanceNameAqua
-	case themeDark:
-		return application.NSAppearanceNameDarkAqua
-	default:
-		return application.DefaultAppearance
-	}
-}
-
-// windowBackground matches --bg so the window does not flash before the
-// webview paints. With the system theme the light colour is the safe guess.
-func windowBackground(theme string) application.RGBA {
-	if theme == themeDark {
-		return application.NewRGB(0x18, 0x17, 0x1b)
-	}
-	return application.NewRGB(250, 249, 248)
-}
-
-// windowsChrome mirrors the frontend tokens in styles.css, for both themes:
-// --bg for the title and menu bars, --text and --muted for labels, --line for
-// the border and --accent-soft (lavender) for the hovered menu entry.
-func windowsChrome() application.ThemeSettings {
-	bg := application.NewRGBPtr(0xfb, 0xfa, 0xf8)
-	line := application.NewRGBPtr(0xea, 0xe7, 0xe1)
-	text := application.NewRGBPtr(0x26, 0x24, 0x2a)
-	muted := application.NewRGBPtr(0x8f, 0x8b, 0x92)
-	hover := application.NewRGBPtr(0xec, 0xe8, 0xff)
-
-	darkBg := application.NewRGBPtr(0x18, 0x17, 0x1b)
-	darkLine := application.NewRGBPtr(0x34, 0x32, 0x3a)
-	darkText := application.NewRGBPtr(0xec, 0xeb, 0xef)
-	darkMuted := application.NewRGBPtr(0x91, 0x8e, 0x98)
-	darkHover := application.NewRGBPtr(0x3a, 0x35, 0x58)
-	return application.ThemeSettings{
-		LightModeActive:   &application.WindowTheme{BorderColour: line, TitleBarColour: bg, TitleTextColour: text},
-		LightModeInactive: &application.WindowTheme{BorderColour: line, TitleBarColour: bg, TitleTextColour: muted},
-		LightModeMenuBar: &application.MenuBarTheme{
-			Default:  &application.TextTheme{Text: text, Background: bg},
-			Hover:    &application.TextTheme{Text: text, Background: hover},
-			Selected: &application.TextTheme{Text: text, Background: hover},
-		},
-		DarkModeActive:   &application.WindowTheme{BorderColour: darkLine, TitleBarColour: darkBg, TitleTextColour: darkText},
-		DarkModeInactive: &application.WindowTheme{BorderColour: darkLine, TitleBarColour: darkBg, TitleTextColour: darkMuted},
-		DarkModeMenuBar: &application.MenuBarTheme{
-			Default:  &application.TextTheme{Text: darkText, Background: darkBg},
-			Hover:    &application.TextTheme{Text: darkText, Background: darkHover},
-			Selected: &application.TextTheme{Text: darkText, Background: darkHover},
-		},
 	}
 }

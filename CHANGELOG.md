@@ -15,8 +15,9 @@ Format :
 
 ### Ajouté
 
-- Un thème sombre (Réglages → Thème) : clair, sombre, ou celui du système, qui change avec lui. La barre de
-  titre de la fenêtre suit le nouveau thème au prochain lancement.
+- Un thème sombre (Réglages → Apparence) : clair, sombre, ou celui du système, qui change avec lui. Sous
+  Windows, la barre de titre, la bordure et la barre de menus suivent immédiatement ; sur macOS, les menus
+  système suivent au prochain lancement.
 
 ### Modifié
 
@@ -27,6 +28,11 @@ Format :
   de Todo sont repris automatiquement (dossier `todo` → `verk`, `todo.db` → `verk.db`). La synchronisation
   git reste compatible avec les appareils encore sous Todo. Sur macOS, l’autorisation des notifications
   peut être redemandée.
+
+### Corrigé
+
+- Sous Windows, la barre de menus (Fichier, Édition, Affichage) et ses raccourcis clavier manquaient depuis
+  le passage à Wails v3. Le menu Édition est aussi traduit.
 
 ## [1.4.0] - 2026-11-24
 

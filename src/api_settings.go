@@ -17,7 +17,17 @@ func (a *App) SaveSettings(settings Settings) error {
 	if err := a.ready(); err != nil {
 		return err
 	}
-	return a.store.saveSettings(settings)
+	previous, err := a.store.getSettings()
+	if err != nil {
+		return err
+	}
+	if err := a.store.saveSettings(settings); err != nil {
+		return err
+	}
+	if normalizeTheme(settings.Theme) != previous.Theme {
+		a.refreshNativeTheme()
+	}
+	return nil
 }
 
 // OpenDataFolder reveals the SQLite database and images in the file manager.
