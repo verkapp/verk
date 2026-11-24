@@ -16,7 +16,7 @@ import { IconComponent } from '../ui/icon.component';
 })
 export class HistoryComponent {
   readonly store = inject(Store);
-  readonly sections = new CollapsedSections('todo.sections.history');
+  readonly sections = new CollapsedSections('verk.sections.history');
   readonly openTask = output<string>();
 
   readonly groups = this.store.history;

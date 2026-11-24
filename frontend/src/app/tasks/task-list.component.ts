@@ -23,7 +23,7 @@ interface TaskGroup {
 })
 export class TaskListComponent {
   readonly store = inject(Store);
-  readonly sections = new CollapsedSections('todo.sections.tasks');
+  readonly sections = new CollapsedSections('verk.sections.tasks');
   readonly mode = input<'today' | 'all'>('today');
   readonly openTask = output<string>();
   readonly newTask = output<void>();

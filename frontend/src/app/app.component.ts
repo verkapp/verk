@@ -46,7 +46,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     try {
-      this.collapsed.set(localStorage.getItem('todo.sidebar') === 'collapsed');
+      this.collapsed.set(localStorage.getItem('verk.sidebar') === 'collapsed');
     } catch {
       // ignore storage restrictions
     }
@@ -107,7 +107,7 @@ export class AppComponent implements OnInit {
     const next = !this.collapsed();
     this.collapsed.set(next);
     try {
-      localStorage.setItem('todo.sidebar', next ? 'collapsed' : 'open');
+      localStorage.setItem('verk.sidebar', next ? 'collapsed' : 'open');
     } catch {
       // ignore storage restrictions
     }

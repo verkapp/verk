@@ -176,7 +176,7 @@ export class Store {
     this.settings.set(settings);
     this.applyAccent(settings.accent);
     try {
-      localStorage.setItem('todo.settings', JSON.stringify(settings));
+      localStorage.setItem('verk.settings', JSON.stringify(settings));
     } catch {
       // localStorage can be unavailable in some webview contexts; harmless.
     }
@@ -189,7 +189,7 @@ export class Store {
   private restoreProfile(profiles: Profile[]): void {
     let stored = '';
     try {
-      stored = localStorage.getItem('todo.profile') ?? '';
+      stored = localStorage.getItem('verk.profile') ?? '';
     } catch {
       // storage can be unavailable in some webview contexts
     }
@@ -210,7 +210,7 @@ export class Store {
     }
     this.activeProfileId.set(id);
     try {
-      localStorage.setItem('todo.profile', id);
+      localStorage.setItem('verk.profile', id);
     } catch {
       // ignore storage restrictions
     }
