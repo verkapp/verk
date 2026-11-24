@@ -23,7 +23,7 @@ Format :
 - Les réglages sont rangés en onglets : Général, Apparence, Profils, Claude, Synchronisation et
   Application. Le dernier onglet ouvert est retenu, et une pastille signale une section à vérifier
   (synchronisation en erreur, mise à jour prête, Claude Code introuvable).
-- L’application s’appelle désormais **Verk**. Au premier lancement, les tâches, pièces jointes et réglages
+- L’application s’appelle désormais **Verk**, avec une nouvelle icône : le monogramme « v. ». Au premier lancement, les tâches, pièces jointes et réglages
   de Todo sont repris automatiquement (dossier `todo` → `verk`, `todo.db` → `verk.db`). La synchronisation
   git reste compatible avec les appareils encore sous Todo. Sur macOS, l’autorisation des notifications
   peut être redemandée.

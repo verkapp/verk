@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Tray icon for Windows and Linux (src/trayicons/color.png). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8f80f6"/>
+      <stop offset="1" stop-color="#5f4ad9"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#bg)"/>
+  <g transform="translate(4 4) scale(0.875)">
+    <path d="M17 21.5 L27 42.5 L37 21.5" fill="none" stroke="#ffffff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="46" cy="40.5" r="5.6" fill="#ffffff" fill-opacity="0.7"/>
+  </g>
+</svg>
