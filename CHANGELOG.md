@@ -11,23 +11,28 @@ Format :
 - **Corrigé** pour les corrections ;
 - **Retiré** pour ce qui disparaît.
 
-## [Non publié]
+## [2.0.0] - 2026-11-24
+
+Todo devient **Verk**. Les tâches, pièces jointes et réglages sont repris automatiquement au premier
+lancement.
+
+### Modifié
+
+- L’application s’appelle désormais **Verk**, avec une nouvelle icône : le monogramme « v. ». Au premier
+  lancement, les données de Todo sont reprises (dossier `todo` → `verk`, `todo.db` → `verk.db`). La
+  synchronisation git reste compatible avec les appareils encore sous Todo. Sur macOS, l’autorisation des
+  notifications peut être redemandée.
+- Les réglages sont rangés en onglets : Général, Apparence, Profils, Claude, Synchronisation et
+  Application. Le dernier onglet ouvert est retenu, et une pastille signale une section à vérifier
+  (synchronisation en erreur, mise à jour prête, Claude Code introuvable).
+- Les boutons et textes d’accent sont plus contrastés : le texte des boutons atteint au moins 4,5:1 avec
+  chacun des six accents, en clair comme en sombre.
 
 ### Ajouté
 
 - Un thème sombre (Réglages → Apparence) : clair, sombre, ou celui du système, qui change avec lui. Sous
   Windows, la barre de titre, la bordure et la barre de menus suivent immédiatement ; sur macOS, les menus
   système suivent au prochain lancement.
-
-### Modifié
-
-- Les réglages sont rangés en onglets : Général, Apparence, Profils, Claude, Synchronisation et
-  Application. Le dernier onglet ouvert est retenu, et une pastille signale une section à vérifier
-  (synchronisation en erreur, mise à jour prête, Claude Code introuvable).
-- L’application s’appelle désormais **Verk**, avec une nouvelle icône : le monogramme « v. ». Au premier lancement, les tâches, pièces jointes et réglages
-  de Todo sont repris automatiquement (dossier `todo` → `verk`, `todo.db` → `verk.db`). La synchronisation
-  git reste compatible avec les appareils encore sous Todo. Sur macOS, l’autorisation des notifications
-  peut être redemandée.
 
 ### Corrigé
 
