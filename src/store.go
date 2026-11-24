@@ -15,6 +15,16 @@ var errNotFound = errors.New("élément introuvable")
 
 const maxAttachmentBytes = 25 << 20 // 25 MiB
 
+const (
+	// dataDirName and databaseName name the per-user storage since the
+	// application became Verk.
+	dataDirName  = "verk"
+	databaseName = "verk.db"
+	// Names used before the rename, migrated on first launch.
+	legacyDataDirName  = "todo"
+	legacyDatabaseName = "todo.db"
+)
+
 type store struct {
 	db       *sql.DB
 	dataDir  string
@@ -27,11 +37,49 @@ func dataDirectory() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(base, "todo")
+	dir := filepath.Join(base, dataDirName)
+	if err := migrateLegacyDataDir(filepath.Join(base, legacyDataDirName), dir); err != nil {
+		return "", fmt.Errorf("reprise des données de Todo: %w", err)
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
 	return dir, nil
+}
+
+// migrateLegacyDataDir moves the directory used before the rename to its new
+// place. It only acts when the new directory does not exist yet and the old
+// one really holds a Todo database, so an unrelated "todo" folder is left
+// untouched.
+func migrateLegacyDataDir(legacy, dir string) error {
+	if _, err := os.Stat(dir); !errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if _, err := os.Stat(filepath.Join(legacy, legacyDatabaseName)); err != nil {
+		return nil
+	}
+	return os.Rename(legacy, dir)
+}
+
+// migrateLegacyDatabase renames todo.db (and its WAL companions) to verk.db
+// when the directory still holds a database from before the rename.
+func migrateLegacyDatabase(dir string) error {
+	current := filepath.Join(dir, databaseName)
+	if _, err := os.Stat(current); !errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	legacy := filepath.Join(dir, legacyDatabaseName)
+	if _, err := os.Stat(legacy); err != nil {
+		return nil
+	}
+	for _, suffix := range []string{"-wal", "-shm"} {
+		if _, err := os.Stat(legacy + suffix); err == nil {
+			if err := os.Rename(legacy+suffix, current+suffix); err != nil {
+				return err
+			}
+		}
+	}
+	return os.Rename(legacy, current)
 }
 
 func openStore() (*store, error) {
@@ -52,7 +100,10 @@ func openStoreAt(dir string) (*store, error) {
 	if err := os.MkdirAll(imageDir, 0o755); err != nil {
 		return nil, fmt.Errorf("dossier images: %w", err)
 	}
-	dbPath := filepath.Join(dir, "todo.db")
+	if err := migrateLegacyDatabase(dir); err != nil {
+		return nil, fmt.Errorf("reprise de la base de Todo: %w", err)
+	}
+	dbPath := filepath.Join(dir, databaseName)
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("ouverture de la base: %w", err)

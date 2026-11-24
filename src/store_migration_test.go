@@ -55,7 +55,7 @@ const legacySchema = `
 
 func TestOpenStoreMigratesLegacyDatabase(t *testing.T) {
 	dir := t.TempDir()
-	dbPath := filepath.Join(dir, "todo.db")
+	dbPath := filepath.Join(dir, databaseName)
 
 	old, err := sql.Open("sqlite", dbPath)
 	if err != nil {
