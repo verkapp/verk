@@ -65,7 +65,7 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 		// Dialogs need the main loop: show it once the app has started.
 		a.wapp.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 			a.wapp.Dialog.Error().
-				SetTitle("Todo").
+				SetTitle("Verk").
 				SetMessage("Impossible d'ouvrir la base de données.\n\n" + a.initErr.Error()).
 				Show()
 		})

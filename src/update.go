@@ -187,7 +187,7 @@ func fetchPublicRelease(ctx context.Context) (*githubRelease, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "Todo/"+Version)
+	req.Header.Set("User-Agent", "Verk/"+Version)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("impossible de joindre GitHub : %w", err)
@@ -389,7 +389,7 @@ func downloadFile(ctx context.Context, url, destination string, limit int64) err
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "Todo/"+Version)
+	req.Header.Set("User-Agent", "Verk/"+Version)
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("téléchargement de la mise à jour : %w", err)
@@ -463,7 +463,7 @@ func extractUpdate(zipPath, staging string) (string, error) {
 	case "darwin":
 		target = firstAppBundle(reader.File)
 		if target == "" {
-			return "", errors.New("l'archive ne contient pas d'application Todo")
+			return "", errors.New("l'archive ne contient pas d'application Verk")
 		}
 	case "windows":
 		target = "Todo.exe"
@@ -629,7 +629,7 @@ func launchMacInstaller(executable, stage string, relaunch bool) error {
 		return errors.New("l'application ne tourne pas depuis un bundle .app")
 	}
 	if strings.Contains(bundle, "/AppTranslocation/") {
-		return errors.New("déplace Todo dans le dossier Applications, puis relance la mise à jour")
+		return errors.New("déplace Verk dans le dossier Applications, puis relance la mise à jour")
 	}
 	if !canWriteDirectory(filepath.Dir(bundle)) {
 		return errors.New("le dossier Applications n'est pas accessible en écriture")
@@ -720,7 +720,7 @@ func batchPath(value string) string {
 }
 
 func canWriteDirectory(dir string) bool {
-	probe, err := os.CreateTemp(dir, ".todo-write-*")
+	probe, err := os.CreateTemp(dir, ".verk-write-*")
 	if err != nil {
 		return false
 	}

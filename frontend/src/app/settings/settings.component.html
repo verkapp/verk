@@ -127,7 +127,7 @@
         <div class="row-copy">
           <p class="row-title">Vérifier les permissions</p>
           <p class="row-sub">
-            Envoie une notification de test. Sur macOS, autorise Todo dans Réglages Système › Notifications si besoin.
+            Envoie une notification de test. Sur macOS, autorise Verk dans Réglages Système › Notifications si besoin.
           </p>
         </div>
         <button class="btn btn-ghost btn-sm" type="button" (click)="testNotification()">
@@ -429,7 +429,7 @@
             type="text"
             [value]="syncRemote()"
             (input)="onSyncRemoteInput($any($event.target).value)"
-            placeholder="git@github.com:toi/todo.git"
+            placeholder="git@github.com:toi/verk.git"
             spellcheck="false"
             [disabled]="syncBusy()"
           />
@@ -438,7 +438,7 @@
           </button>
         </div>
         <p class="hint">
-          Un dépôt privé, vide ou déjà utilisé par Todo. Git doit être installé et tes identifiants
+          Un dépôt privé, vide ou déjà utilisé par Verk. Git doit être installé et tes identifiants
           (SSH ou gestionnaire d’identifiants) déjà en place. Laisse vide pour désactiver.
         </p>
       </div>
@@ -502,7 +502,7 @@
         <span class="card-icon"><app-icon name="refresh" [size]="17" /></span>
         <div class="card-copy">
           <h2>Mises à jour</h2>
-          <p>Todo se met à jour depuis GitHub, sans repasser par le site.</p>
+          <p>Verk se met à jour depuis GitHub, sans repasser par le site.</p>
         </div>
         @if (store.update(); as update) {
           @if (update.downloading) {
@@ -517,7 +517,7 @@
             <span class="pill status-pill">Jamais vérifiée</span>
           }
         } @else {
-          <span class="pill status-pill">Todo {{ store.info()?.version }}</span>
+          <span class="pill status-pill">Verk {{ store.info()?.version }}</span>
         }
       </div>
 
@@ -565,13 +565,13 @@
             <div class="status-copy">
               <p class="row-title">
                 @if (update.ready) {
-                  Todo {{ update.latestVersion }} est prêt
+                  Verk {{ update.latestVersion }} est prêt
                 } @else if (update.error) {
                   La mise à jour n’a pas pu aboutir
                 } @else if (update.downloading) {
-                  Téléchargement de Todo {{ update.latestVersion }}…
+                  Téléchargement de Verk {{ update.latestVersion }}…
                 } @else {
-                  Todo {{ update.latestVersion }} est disponible
+                  Verk {{ update.latestVersion }} est disponible
                 }
               </p>
               <p class="row-sub">
@@ -607,7 +607,7 @@
           <details class="release-notes">
             <summary>
               <app-icon name="chevron-right" [size]="13" />
-              Nouveautés de Todo {{ update.latestVersion }}
+              Nouveautés de Verk {{ update.latestVersion }}
             </summary>
             <div class="release-notes-body" [innerHTML]="releaseNotes()"></div>
           </details>
@@ -641,7 +641,7 @@
       </div>
 
       <div class="about">
-        <span>Todo {{ store.info()?.version }}</span>
+        <span>Verk {{ store.info()?.version }}</span>
         <span class="about-dot"></span>
         <span>Thème clair uniquement</span>
         <span class="about-dot"></span>

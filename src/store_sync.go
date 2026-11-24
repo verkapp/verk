@@ -133,7 +133,7 @@ func decodeSnapshot(data []byte) (snapshot, error) {
 		return snapshot{}, fmt.Errorf("instantané de synchronisation illisible : %w", err)
 	}
 	if out.Version > snapshotVersion {
-		return snapshot{}, fmt.Errorf("instantané de synchronisation créé par une version plus récente de Todo (%d)", out.Version)
+		return snapshot{}, fmt.Errorf("instantané de synchronisation créé par une version plus récente de Verk (%d)", out.Version)
 	}
 	if out.Tasks == nil {
 		out.Tasks = []snapshotTask{}

@@ -15,7 +15,7 @@ func Run(assets embed.FS) {
 	app := NewApp()
 
 	wapp := application.New(application.Options{
-		Name:        "Todo",
+		Name:        "Verk",
 		Description: "Une liste de tâches douce, avec un coach Claude Code.",
 		Icon:        appIcon,
 		Services: []application.Service{
@@ -36,7 +36,7 @@ func Run(assets embed.FS) {
 
 	app.window = wapp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:             "main",
-		Title:            "Todo",
+		Title:            "Verk",
 		Width:            1240,
 		Height:           840,
 		MinWidth:         980,

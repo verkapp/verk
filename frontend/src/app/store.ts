@@ -394,7 +394,7 @@ export class Store {
     const previous = this.update();
     this.update.set(info);
     if (info.ready && !previous?.ready) {
-      this.notify(`Todo ${info.latestVersion} est prêt. Il s’installera à la fermeture.`, 'accent');
+      this.notify(`Verk ${info.latestVersion} est prêt. Il s’installera à la fermeture.`, 'accent');
     }
   }
 
@@ -424,7 +424,7 @@ export class Store {
           void this.downloadUpdate();
         }
       } else {
-        this.notify('Todo est à jour.', 'accent');
+        this.notify('Verk est à jour.', 'accent');
       }
       return info;
     } catch (error) {

@@ -24,15 +24,15 @@ func (a *App) setupTray() {
 	} else {
 		tray.SetIcon(trayColorIcon)
 	}
-	tray.SetTooltip("Todo")
+	tray.SetTooltip("Verk")
 
 	menu := application.NewMenu()
-	menu.Add("Ouvrir Todo").OnClick(func(*application.Context) { a.showWindow() })
+	menu.Add("Ouvrir Verk").OnClick(func(*application.Context) { a.showWindow() })
 	menu.Add("Nouvelle tâche").OnClick(func(*application.Context) { a.sendAction(actionNewTask) })
 	menu.AddSeparator()
 	menu.Add("Réduire dans la barre").OnClick(func(*application.Context) { a.hideToTray() })
 	menu.AddSeparator()
-	menu.Add("Quitter Todo").OnClick(func(*application.Context) { a.quitApp() })
+	menu.Add("Quitter Verk").OnClick(func(*application.Context) { a.quitApp() })
 	tray.SetMenu(menu)
 
 	if runtime.GOOS != "darwin" {

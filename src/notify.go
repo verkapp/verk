@@ -21,12 +21,12 @@ type reminderState struct {
 }
 
 // startNotifications initialises the native notification service and starts
-// the reminder loop. Only tasks that reach their due time while Todo is
+// the reminder loop. Only tasks that reach their due time while Verk is
 // running are announced, once per due date.
 //
 // The notification service is started by hand rather than registered with
 // Wails: a failing service would abort the whole application (for example
-// a macOS build without a bundle identifier), while Todo only needs to
+// a macOS build without a bundle identifier), while Verk only needs to
 // report that reminders are unavailable.
 func (a *App) startNotifications(ctx context.Context) {
 	a.reminder = &reminderState{notified: map[string]int64{}, stop: make(chan struct{})}
@@ -101,7 +101,7 @@ func (a *App) checkReminders() {
 	for _, task := range dueReminders(tasks, now, a.reminder.notified) {
 		profile := profileNames[task.ProfileID]
 		if profile == "" {
-			profile = "Todo"
+			profile = "Verk"
 		}
 		err := a.notifier.SendNotification(notifications.NotificationOptions{
 			ID:       "task-" + task.ID,

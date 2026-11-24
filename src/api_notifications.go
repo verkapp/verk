@@ -68,7 +68,7 @@ func (a *App) TestNotification() error {
 	}
 	return a.notifier.SendNotification(notifications.NotificationOptions{
 		ID:       "test",
-		Title:    "Todo",
+		Title:    "Verk",
 		Subtitle: "Les rappels sont prêts",
 		Body:     "Tu recevras une notification quand une tâche arrive à échéance.",
 	})
