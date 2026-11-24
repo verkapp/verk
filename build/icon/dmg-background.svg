@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="380" viewBox="0 0 540 380">
+  <!-- DMG window background (build/darwin/dmg-background.png). Wails puts the
+       app icon at (151, 164) and the Applications link at (389, 164), 96 px. -->
+  <defs>
+    <style>
+      @font-face {
+        font-family: 'Inter Variable';
+        src: url('../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+      text { font-family: 'Inter Variable', 'Inter', 'Segoe UI', -apple-system, sans-serif; }
+    </style>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfaf8"/>
+      <stop offset="1" stop-color="#f3f0ff"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7b6cf0" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#7b6cf0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8f80f6"/>
+      <stop offset="1" stop-color="#5f4ad9"/>
+    </linearGradient>
+  </defs>
+  <rect width="540" height="380" fill="url(#bg)"/>
+  <circle cx="151" cy="164" r="92" fill="url(#halo)"/>
+  <circle cx="389" cy="164" r="92" fill="url(#halo)"/>
+
+  <!-- Wordmark, top left. -->
+  <g transform="translate(28 26)">
+    <rect width="24" height="24" rx="6" fill="url(#mark)"/>
+    <g transform="scale(0.375)">
+      <path d="M17 21.5 L27 42.5 L37 21.5" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="46" cy="40.5" r="5.2" fill="#fff" fill-opacity="0.62"/>
+    </g>
+    <text x="32" y="18" font-size="17" font-weight="700" letter-spacing="-0.6" fill="#26242a">verk<tspan fill="#7b6cf0">.</tspan></text>
+  </g>
+
+  <!-- Drag hint between the two icons. -->
+  <path d="M222 164 C 250 146, 290 146, 316 160" fill="none" stroke="#7b6cf0" stroke-opacity="0.55" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 7"/>
+  <path d="M308 150 L318 161 L304 166" fill="none" stroke="#7b6cf0" stroke-opacity="0.7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="270" y="300" text-anchor="middle" font-size="14" font-weight="600" fill="#26242a">Glisse Verk dans Applications</text>
+  <text x="270" y="322" text-anchor="middle" font-size="11.5" font-weight="450" fill="#8f8b92">puis lance-le depuis le Launchpad ou Spotlight.</text>
+</svg>
