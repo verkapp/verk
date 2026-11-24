@@ -14,3 +14,7 @@ func (a *App) watchSystemTheme() {}
 // applyNativeTheme: on macOS the title bar is hidden and the web content
 // draws it; the appearance of native menus follows on the next launch.
 func (a *App) applyNativeTheme(bool) {}
+
+// hideMenuBar: macOS shows the menu in the system bar, and Linux keeps its
+// window menu.
+func (a *App) hideMenuBar() {}

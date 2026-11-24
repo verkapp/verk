@@ -20,6 +20,8 @@ Format :
   les tâches modifiées et l’historique d’une tâche se lit avec `git log`. Le dépôt est migré à la
   première synchronisation. Les appareils restés en 2.0 refusent ensuite de synchroniser et
   demandent une mise à jour : mets à jour tous tes appareils.
+- Sous Windows, la barre de menus Fichier, Édition, Affichage est masquée : la fenêtre commence
+  directement sous la barre de titre. Les raccourcis clavier (Ctrl+N, Ctrl+1 à 4, Ctrl+,) restent actifs.
 
 ## [2.0.0] - 2026-11-24
 
