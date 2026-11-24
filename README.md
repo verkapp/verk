@@ -1,10 +1,10 @@
-# Todo
+# Verk
 
 Une application de bureau de tâches, douce et épurée : **Go + Wails + Angular + SQLite**.
 Thème clair uniquement, six accents pastel, sous-tâches, images, historique par jour et un
 coach propulsé par **Claude Code (haiku)**.
 
-<img src="docs/screenshot.png" alt="Vue Aujourd'hui de Todo" width="100%" />
+<img src="docs/screenshot.png" alt="Vue Aujourd'hui de Verk" width="100%" />
 
 ## Fonctionnalités
 
@@ -97,16 +97,16 @@ Un fichier `.gitkeep` permet toutefois au projet fraîchement cloné de compiler
 ## Build
 
 ```bash
-# macOS : bundle Todo.app pour la machine courante
+# macOS : bundle Verk.app pour la machine courante
 wails3 task darwin:package
 
 # macOS universel (Intel + Apple Silicon)
 wails3 task darwin:package:universal
 
-# Windows : Todo.exe seul
+# Windows : Verk.exe seul
 wails3 task windows:build
 
-# Windows : Todo.exe + installeur NSIS (build/bin/Todo-amd64-installer.exe).
+# Windows : Verk.exe + installeur NSIS (build/bin/Verk-amd64-installer.exe).
 # Nécessite makensis (NSIS 3) ; fonctionne aussi depuis macOS :
 #   brew install makensis && GOOS=windows wails3 task windows:package
 wails3 task windows:package
@@ -120,9 +120,9 @@ wails3 task darwin:package VERSION=1.4.0
 
 Les applications sont produites dans `build/bin/`.
 
-L'installeur Windows installe Todo pour l'utilisateur courant, dans `%LOCALAPPDATA%\Programs\Todo`, sans
-droits administrateur : la mise à jour automatique peut ainsi remplacer `Todo.exe` sur place. La
-désinstallation retire l'application et ses raccourcis mais conserve la liste de tâches (`%AppData%\todo`). Les Taskfiles (`Taskfile.yml`, `build/*/Taskfile.yml`)
+L'installeur Windows installe Verk pour l'utilisateur courant, dans `%LOCALAPPDATA%\Programs\Verk`, sans
+droits administrateur : la mise à jour automatique peut ainsi remplacer `Verk.exe` sur place. La
+désinstallation retire l'application et ses raccourcis mais conserve la liste de tâches (`%AppData%\verk`). Les Taskfiles (`Taskfile.yml`, `build/*/Taskfile.yml`)
 et `build/config.yml` décrivent le build ; après une modification de `build/config.yml`, lance
 `wails3 task common:update:build-assets`.
 Le build macOS n'est pas signé/notarisé par défaut. Pour distribuer sans avertissement
@@ -149,23 +149,26 @@ L'intégration passe par la CLI locale, sans serveur intermédiaire :
 
 | OS | Dossier |
 | --- | --- |
-| macOS | `~/Library/Application Support/todo/` |
-| Windows | `%AppData%\todo\` |
+| macOS | `~/Library/Application Support/verk/` |
+| Windows | `%AppData%\verk\` |
 
-On y trouve `todo.db` (SQLite, WAL), le dossier `images/` (pièces jointes) et, si la
+On y trouve `verk.db` (SQLite, WAL), le dossier `images/` (pièces jointes) et, si la
 synchronisation est configurée, le clone `sync/` géré par l'application. Réglages → Données permet d'ouvrir ce
 dossier. Sans dépôt git configuré, tout reste strictement local.
 
+Au premier lancement, Verk reprend automatiquement le dossier `todo/` et la base `todo.db` laissés par
+les versions précédentes, quand l'application s'appelait encore Todo.
+
 ## Synchronisation git
 
-Réglages → Synchronisation accepte l'adresse d'un dépôt **privé** (vide ou dédié à Todo).
+Réglages → Synchronisation accepte l'adresse d'un dépôt **privé** (vide ou dédié à Verk).
 L'application utilise le client `git` de la machine, donc tes identifiants SSH ou ton
-gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Todo.
+gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Verk.
 
 - Un envoi part quelques secondes après chaque changement, une récupération a lieu au démarrage,
   et une dernière synchronisation est tentée à la fermeture. Le bouton **Synchroniser** force
   un aller-retour.
-- Le dépôt contient `todo.json` (instantané lisible) et `images/` (toutes les pièces jointes).
+- Le dépôt contient `todo.json` (instantané lisible, nom conservé depuis Todo pour la compatibilité) et `images/` (toutes les pièces jointes).
   La base SQLite n'est jamais commitée : il n'y a donc pas de conflit binaire.
 - La fusion se fait entité par entité (`updated_at`, dernier écrivain gagnant). Les sous-tâches
   et les images fusionnent indépendamment de leur tâche. Une modification plus récente qu'une
@@ -209,7 +212,7 @@ demande. Quand une release est disponible, ses notes s’affichent dans un bloc 
 Par défaut, l’application vérifie aussi la dernière release stable au démarrage puis toutes les
 six heures :
 
-1. l'archive de la plateforme (`Todo-macos-universal.zip` ou `Todo-windows-x64.zip`) est
+1. l'archive de la plateforme (`Verk-macos-universal.zip` ou `Verk-windows-x64.zip`) est
    téléchargée dans `updates/` du dossier de données ;
 2. son empreinte SHA-256 est comparée à l'asset `*.sha256` de la release quand il existe ;
 3. l'application est remplacée au moment de la fermeture, ou immédiatement avec
@@ -220,7 +223,7 @@ jamais une release stable plus récente. Sur macOS, l'application doit être lan
 bundle `.app` inscriptible (par exemple `~/Applications`) ; la translocation Gatekeeper et un
 dossier `/Applications` verrouillé sont détectés et signalés dans les réglages.
 
-Le dépôt peut rester privé : si l'API publique de GitHub ne voit pas la release, Todo se rabat
+Le dépôt peut rester privé : si l'API publique de GitHub ne voit pas la release, Verk se rabat
 sur la CLI `gh` (si elle est installée et connectée avec `gh auth login`) pour lire la release
 et télécharger l'archive avec tes droits. Sans `gh`, il faut un dépôt public.
 
@@ -264,6 +267,6 @@ et télécharger l'archive avec tes droits. Sans `gh`, il faut un dépôt public
 
 ## Licence
 
-Todo est un logiciel libre distribué sous licence
+Verk est un logiciel libre distribué sous licence
 [GNU GPL v3](LICENSE) (GPL-3.0-only). Tu peux l'utiliser, l'étudier, le modifier et le
 redistribuer, à condition de conserver la même licence et de fournir le code source.
