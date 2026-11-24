@@ -11,7 +11,7 @@ Format :
 - **Corrigé** pour les corrections ;
 - **Retiré** pour ce qui disparaît.
 
-## [Non publié]
+## [1.4.0] - 2026-11-24
 
 ### Ajouté
 
@@ -25,6 +25,7 @@ Format :
   l’historique, en gris, et se rouvre comme une tâche terminée.
 - Un réglage pour désactiver entièrement l’intégration Claude : plus aucun appel à Claude Code, le coach et le
   découpage de tâches disparaissent de l’interface.
+- Un bouton « Rafraîchir » à côté de « Nouvelle tâche » pour recharger la liste à la demande.
 - La liste se rafraîchit dès qu’une synchronisation git se termine, y compris celle du démarrage, sans attendre
   le prochain sondage.
 - Une barre de menus native (Fichier, Édition, Affichage) avec raccourcis : nouvelle tâche, rafraîchir, vues et

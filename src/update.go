@@ -70,7 +70,7 @@ type updater struct {
 
 // Version is overridden at build time with
 // -ldflags "-X todo/src.Version=<tag>".
-var Version = "1.3.0"
+var Version = "1.4.0"
 
 func (a *App) updateStatus() UpdateInfo {
 	a.updates.mu.Lock()
