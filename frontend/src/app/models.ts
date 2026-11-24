@@ -56,6 +56,7 @@ export interface TaskInput {
 
 export interface Settings {
   accent: AccentName;
+  theme: ThemeName;
   coachEnabled: boolean;
   coachOnStart: boolean;
   timeTracking: boolean;
@@ -112,6 +113,14 @@ export interface UpdateInfo {
 }
 
 export type ViewName = 'today' | 'all' | 'coach' | 'history' | 'settings';
+export type ThemeName = 'system' | 'light' | 'dark';
+
+export const THEMES: { id: ThemeName; label: string; icon: 'monitor' | 'today' | 'moon' }[] = [
+  { id: 'system', label: 'Système', icon: 'monitor' },
+  { id: 'light', label: 'Clair', icon: 'today' },
+  { id: 'dark', label: 'Sombre', icon: 'moon' },
+];
+
 export type AccentName = 'lavande' | 'menthe' | 'ciel' | 'peche' | 'rose' | 'beurre';
 export type TaskFilter = 'all' | 'overdue' | 'today' | 'undated';
 export type ToastTone = 'default' | 'error' | 'accent';

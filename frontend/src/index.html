@@ -5,7 +5,7 @@
     <title>Verk</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <script>
       // Carry over the per-view preferences saved before the app became Verk.
@@ -21,7 +21,8 @@
           }
         }
       } catch (e) {}
-      // Avoid an accent flash before the backend settings are loaded.
+      // Avoid an accent or theme flash before the backend settings are loaded.
+      let theme = 'system';
       try {
         const raw = localStorage.getItem('verk.settings');
         if (raw) {
@@ -29,8 +30,13 @@
           if (settings && settings.accent) {
             document.documentElement.dataset.accent = settings.accent;
           }
+          if (settings && settings.theme) {
+            theme = settings.theme;
+          }
         }
       } catch (e) {}
+      const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = theme === 'dark' || (theme === 'system' && systemDark) ? 'dark' : 'light';
     </script>
   </head>
   <body>

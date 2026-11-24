@@ -13,6 +13,11 @@ Format :
 
 ## [Non publié]
 
+### Ajouté
+
+- Un thème sombre (Réglages → Thème) : clair, sombre, ou celui du système, qui change avec lui. La barre de
+  titre de la fenêtre suit le nouveau thème au prochain lancement.
+
 ### Modifié
 
 - L’application s’appelle désormais **Verk**. Au premier lancement, les tâches, pièces jointes et réglages
