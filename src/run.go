@@ -38,15 +38,19 @@ func Run(assets embed.FS) {
 	// settings reaches the native chrome on the next launch, while the web
 	// content switches immediately.
 	theme := app.startupTheme()
+	// Wails v3 attaches the application menu to a window only when the menu
+	// exists before the window and the window opts in (UseApplicationMenu).
+	wapp.Menu.Set(app.applicationMenu())
 	app.window = wapp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Name:             "main",
-		Title:            "Verk",
-		Width:            1240,
-		Height:           840,
-		MinWidth:         980,
-		MinHeight:        680,
-		BackgroundColour: windowBackground(theme),
-		URL:              "/",
+		Name:               "main",
+		Title:              "Verk",
+		UseApplicationMenu: true,
+		Width:              1240,
+		Height:             840,
+		MinWidth:           980,
+		MinHeight:          680,
+		BackgroundColour:   windowBackground(theme),
+		URL:                "/",
 		// macOS: the title bar is transparent and the content runs under it,
 		// so the traffic lights sit on top of the sidebar. The frontend keeps
 		// that strip free and draggable (see .titlebar in app.component).
@@ -62,7 +66,6 @@ func Run(assets embed.FS) {
 		},
 	})
 
-	wapp.Menu.Set(app.applicationMenu())
 	app.setupWindow()
 	app.setupTray()
 
