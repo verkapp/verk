@@ -8,9 +8,22 @@
     <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <script>
+      // Carry over the per-view preferences saved before the app became Verk.
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('todo.')) {
+            const next = 'verk.' + key.slice(5);
+            if (localStorage.getItem(next) === null) {
+              localStorage.setItem(next, localStorage.getItem(key));
+            }
+            localStorage.removeItem(key);
+          }
+        }
+      } catch (e) {}
       // Avoid an accent flash before the backend settings are loaded.
       try {
-        const raw = localStorage.getItem('todo.settings');
+        const raw = localStorage.getItem('verk.settings');
         if (raw) {
           const settings = JSON.parse(raw);
           if (settings && settings.accent) {

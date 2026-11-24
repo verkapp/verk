@@ -228,7 +228,7 @@ let syncStatus: SyncStatus = {
 function loadSettings(): Settings {
   const fallback: Settings = { accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '', closeToTray: false };
   try {
-    const raw = localStorage.getItem('todo.settings');
+    const raw = localStorage.getItem('verk.settings');
     return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<Settings>) } : fallback;
   } catch {
     return fallback;
@@ -546,7 +546,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
       return clone(settings) as T;
     case 'SaveSettings': {
       settings = clone(args[0] as Settings);
-      localStorage.setItem('todo.settings', JSON.stringify(settings));
+      localStorage.setItem('verk.settings', JSON.stringify(settings));
       return undefined as T;
     }
     case 'ClaudeStatus': {
