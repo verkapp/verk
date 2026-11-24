@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=Todo
+Name=Verk
 Comment=Une liste de tâches douce, avec un coach Claude Code.
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/Todo %u
+Exec=/usr/local/bin/Verk %u
 Terminal=false
 Type=Application
-Icon=Todo
+Icon=Verk
 Categories=Utility;
-StartupWMClass=Todo
+StartupWMClass=Verk
 
  

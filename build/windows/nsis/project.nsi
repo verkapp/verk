@@ -19,9 +19,9 @@ Unicode true
 ####
 ## The following information is taken from the wails_tools.nsh file, but they can be overwritten here.
 ####
-## !define INFO_PROJECTNAME    "my-project" # Default "Todo"
+## !define INFO_PROJECTNAME    "my-project" # Default "Verk"
 ## !define INFO_COMPANYNAME    "My Company" # Default "My Company"
-## !define INFO_PRODUCTNAME    "My Product Name" # Default "Todo"
+## !define INFO_PRODUCTNAME    "My Product Name" # Default "Verk"
 ## !define INFO_PRODUCTVERSION "1.0.0"     # Default "0.1.0"
 ## !define INFO_COPYRIGHT      "(c) Now, My Company" # Default "© 2026, My Company"
 ###
@@ -61,9 +61,9 @@ ManifestDPIAware true
 # !insertmacro MUI_PAGE_LICENSE "resources\eula.txt" # Adds a EULA page to the installer
 !insertmacro MUI_PAGE_DIRECTORY # In which folder install page.
 !insertmacro MUI_PAGE_INSTFILES # Installing page.
-# Offer to start Todo once installed.
+# Offer to start Verk once installed.
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${PRODUCT_EXECUTABLE}"
-!define MUI_FINISHPAGE_RUN_TEXT "Lancer Todo"
+!define MUI_FINISHPAGE_RUN_TEXT "Lancer Verk"
 !insertmacro MUI_PAGE_FINISH # Finished installation page.
 
 !insertmacro MUI_UNPAGE_INSTFILES # Uninstalling page
@@ -75,7 +75,7 @@ ManifestDPIAware true
 #!finalize 'signtool --file "%1"'
 
 Name "${INFO_PRODUCTNAME}"
-# Written next to Todo.exe in build/bin (BIN_DIR in Taskfile.yml).
+# Written next to Verk.exe in build/bin (BIN_DIR in Taskfile.yml).
 OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
 !if "${WAILS_INSTALL_SCOPE}" == "user"
     InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}"
@@ -110,7 +110,7 @@ Section "uninstall"
     !insertmacro wails.setShellContext
 
     RMDir /r "$AppData\${PRODUCT_EXECUTABLE}" # Remove the WebView2 DataPath
-    # The tasks database (%AppData%\todo) is deliberately kept: uninstalling
+    # The tasks database (%AppData%\verk) is deliberately kept: uninstalling
     # or reinstalling must never delete the user's list.
 
     RMDir /r $INSTDIR

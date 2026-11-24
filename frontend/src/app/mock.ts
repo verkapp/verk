@@ -620,7 +620,7 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
         downloading: false,
         ready: false,
         notes: '',
-        releaseUrl: 'https://github.com/clementherve/todo/releases',
+        releaseUrl: 'https://github.com/verkapp/verk/releases',
         publishedAt: 0,
         error: '',
       };

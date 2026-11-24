@@ -39,19 +39,19 @@ func TestSelectUpdateAsset(t *testing.T) {
 		t.Skip("no automatic update asset on this platform")
 	}
 	assets := []githubAsset{
-		{Name: "Todo-macos-universal.zip", BrowserDownloadURL: "https://example.test/macos.zip"},
-		{Name: "Todo-macos-universal.zip.sha256", BrowserDownloadURL: "https://example.test/macos.zip.sha256"},
-		{Name: "Todo-windows-x64.zip", BrowserDownloadURL: "https://example.test/windows.zip"},
-		{Name: "Todo-windows-x64.zip.sha256", BrowserDownloadURL: "https://example.test/windows.zip.sha256"},
+		{Name: "Verk-macos-universal.zip", BrowserDownloadURL: "https://example.test/macos.zip"},
+		{Name: "Verk-macos-universal.zip.sha256", BrowserDownloadURL: "https://example.test/macos.zip.sha256"},
+		{Name: "Verk-windows-x64.zip", BrowserDownloadURL: "https://example.test/windows.zip"},
+		{Name: "Verk-windows-x64.zip.sha256", BrowserDownloadURL: "https://example.test/windows.zip.sha256"},
 	}
 	asset, checksum, ok := selectUpdateAsset(assets)
 	if !ok {
 		t.Fatal("expected an asset for this platform")
 	}
-	if runtime.GOOS == "darwin" && asset.Name != "Todo-macos-universal.zip" {
+	if runtime.GOOS == "darwin" && asset.Name != "Verk-macos-universal.zip" {
 		t.Fatalf("unexpected macOS asset: %q", asset.Name)
 	}
-	if runtime.GOOS == "windows" && asset.Name != "Todo-windows-x64.zip" {
+	if runtime.GOOS == "windows" && asset.Name != "Verk-windows-x64.zip" {
 		t.Fatalf("unexpected Windows asset: %q", asset.Name)
 	}
 	if checksum.Name != asset.Name+".sha256" {
@@ -62,7 +62,7 @@ func TestSelectUpdateAsset(t *testing.T) {
 func TestVerifyDownloadChecksum(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "archive.zip")
-	content := []byte("todo update archive")
+	content := []byte("verk update archive")
 	if err := os.WriteFile(path, content, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -99,12 +99,12 @@ func writeTestAppZip(t *testing.T, path string) {
 		content string
 		mode    os.FileMode
 	}{
-		"Todo.app/":                      {"", 0o755 | os.ModeDir},
-		"Todo.app/Contents/":             {"", 0o755 | os.ModeDir},
-		"Todo.app/Contents/MacOS/":       {"", 0o755 | os.ModeDir},
-		"Todo.app/Contents/MacOS/Todo":   {"binary", 0o755},
-		"Todo.app/Contents/Info.plist":   {"plist", 0o644},
-		"Todo.app/Contents/evil/../../x": {"escape", 0o644},
+		"Verk.app/":                      {"", 0o755 | os.ModeDir},
+		"Verk.app/Contents/":             {"", 0o755 | os.ModeDir},
+		"Verk.app/Contents/MacOS/":       {"", 0o755 | os.ModeDir},
+		"Verk.app/Contents/MacOS/Verk":   {"binary", 0o755},
+		"Verk.app/Contents/Info.plist":   {"plist", 0o644},
+		"Verk.app/Contents/evil/../../x": {"escape", 0o644},
 		"Another/ignored.txt":            {"ignored", 0o644},
 	}
 	for name, entry := range entries {
@@ -142,7 +142,7 @@ func TestExtractUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("extractUpdate: %v", err)
 	}
-	binary := filepath.Join(app, "Contents", "MacOS", "Todo")
+	binary := filepath.Join(app, "Contents", "MacOS", "Verk")
 	info, err := os.Stat(binary)
 	if err != nil {
 		t.Fatalf("extracted binary: %v", err)
@@ -160,14 +160,14 @@ func TestDownloadAndStage(t *testing.T) {
 		t.Skip("macOS app extraction")
 	}
 	dir := t.TempDir()
-	zipPath := filepath.Join(dir, "Todo-macos-universal.zip")
+	zipPath := filepath.Join(dir, "Verk-macos-universal.zip")
 	writeTestAppZip(t, zipPath)
 	content, err := os.ReadFile(zipPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256(content)
-	checksumText := hex.EncodeToString(sum[:]) + "  Todo-macos-universal.zip\n"
+	checksumText := hex.EncodeToString(sum[:]) + "  Verk-macos-universal.zip\n"
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/update.zip" {
@@ -185,7 +185,7 @@ func TestDownloadAndStage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("downloadAndStage: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(stage, "Contents", "MacOS", "Todo")); err != nil {
+	if _, err := os.Stat(filepath.Join(stage, "Contents", "MacOS", "Verk")); err != nil {
 		t.Fatalf("staged application missing: %v", err)
 	}
 }

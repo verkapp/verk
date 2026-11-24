@@ -5,9 +5,9 @@ version: '3'
 
 # This information is used to generate the build assets.
 info:
-  companyName: "Todo" # The name of the company
-  productName: "Todo" # The name of the application
-  productIdentifier: "app.todo.desktop" # The unique product identifier
+  companyName: "Verk" # The name of the company
+  productName: "Verk" # The name of the application
+  productIdentifier: "app.verk.desktop" # The unique product identifier
   description: "Une liste de tâches douce, avec un coach Claude Code." # The application description
   copyright: "" # Copyright text
   comments: "Une liste de tâches douce, avec un coach Claude Code." # Comments

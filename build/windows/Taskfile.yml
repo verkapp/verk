@@ -113,8 +113,8 @@ tasks:
       ARCH: '{{.ARCH | default ARCH}}'
 
   create:nsis:installer:
-    # Per-user install (%LOCALAPPDATA%\Programs\Todo) by default: the
-    # auto-updater replaces Todo.exe in place, which needs no admin rights there.
+    # Per-user install (%LOCALAPPDATA%\Programs\Verk) by default: the
+    # auto-updater replaces Verk.exe in place, which needs no admin rights there.
     summary: Creates an NSIS installer
     dir: build/windows/nsis
     deps:

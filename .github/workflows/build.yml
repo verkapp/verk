@@ -70,11 +70,11 @@ jobs:
         include:
           - os: macos-latest
             task: darwin:package:universal
-            artifact: Todo-macos-universal
+            artifact: Verk-macos-universal
           - os: windows-latest
-            # Builds Todo.exe and the NSIS installer next to it.
+            # Builds Verk.exe and the NSIS installer next to it.
             task: windows:package
-            artifact: Todo-windows-x64
+            artifact: Verk-windows-x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -128,20 +128,23 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           cd build/bin
-          ditto -c -k --keepParent Todo.app ../Todo-macos-universal.zip
-          shasum -a 256 ../Todo-macos-universal.zip | awk '{print $1}' > ../Todo-macos-universal.zip.sha256
+          ditto -c -k --keepParent Verk.app ../Verk-macos-universal.zip
+          shasum -a 256 ../Verk-macos-universal.zip | awk '{print $1}' > ../Verk-macos-universal.zip.sha256
 
       - name: Package Windows app
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           # The zip feeds the in-app updater; the installer is for first installs.
-          Compress-Archive -Path build/bin/Todo.exe -DestinationPath build/Todo-windows-x64.zip
-          $hash = (Get-FileHash build/Todo-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  Todo-windows-x64.zip" | Out-File -Encoding ascii build/Todo-windows-x64.zip.sha256
-          Copy-Item build/bin/Todo-amd64-installer.exe build/Todo-windows-x64-setup.exe
-          $hash = (Get-FileHash build/Todo-windows-x64-setup.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  Todo-windows-x64-setup.exe" | Out-File -Encoding ascii build/Todo-windows-x64-setup.exe.sha256
+          # Todo.exe is a copy for updaters released before the rename (1.4.0
+          # and older), which only extract that name. Drop it once they are gone.
+          Copy-Item build/bin/Verk.exe build/bin/Todo.exe
+          Compress-Archive -Path build/bin/Verk.exe, build/bin/Todo.exe -DestinationPath build/Verk-windows-x64.zip
+          $hash = (Get-FileHash build/Verk-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  Verk-windows-x64.zip" | Out-File -Encoding ascii build/Verk-windows-x64.zip.sha256
+          Copy-Item build/bin/Verk-amd64-installer.exe build/Verk-windows-x64-setup.exe
+          $hash = (Get-FileHash build/Verk-windows-x64-setup.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  Verk-windows-x64-setup.exe" | Out-File -Encoding ascii build/Verk-windows-x64-setup.exe.sha256
 
       - uses: actions/upload-artifact@v4
         with:

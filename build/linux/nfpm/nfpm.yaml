@@ -3,7 +3,7 @@
 #
 # The lines below are called `modelines`. See `:help modeline`
 
-name: "Todo"
+name: "Verk"
 arch: ${GOARCH}
 platform: "linux"
 version: "1.4.0"
@@ -11,18 +11,18 @@ section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
 description: "Une liste de tâches douce, avec un coach Claude Code."
-vendor: "Todo"
+vendor: "Verk"
 homepage: "https://wails.io"
 license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/Todo"
-    dst: "/usr/local/bin/Todo"
+  - src: "./bin/Verk"
+    dst: "/usr/local/bin/Verk"
   - src: "./build/appicon.png"
-    dst: "/usr/share/icons/hicolor/128x128/apps/Todo.png"
-  - src: "./build/linux/Todo.desktop"
-    dst: "/usr/share/applications/Todo.desktop"
+    dst: "/usr/share/icons/hicolor/128x128/apps/Verk.png"
+  - src: "./build/linux/Verk.desktop"
+    dst: "/usr/share/applications/Verk.desktop"
 
 # Default dependencies for the GTK4 + WebKitGTK 6.0 stack (Ubuntu 24.04+ / Debian 13+)
 depends:
