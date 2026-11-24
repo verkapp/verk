@@ -11,7 +11,10 @@ Format :
 - **Corrigé** pour les corrections ;
 - **Retiré** pour ce qui disparaît.
 
-## [Non publié]
+## [3.0.0] - 2026-11-24
+
+Le dépôt de synchronisation change de format : mets à jour tous tes appareils. Une version 2.0
+refuse de synchroniser avec un dépôt migré, sans rien abîmer.
 
 ### Modifié
 

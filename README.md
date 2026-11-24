@@ -115,7 +115,7 @@ wails3 task windows:package
 wails3 task linux:build
 
 # Version embarquée (utilisée par la mise à jour automatique)
-wails3 task darwin:package VERSION=2.0.0
+wails3 task darwin:package VERSION=3.0.0
 ```
 
 Les applications sont produites dans `build/bin/`.
