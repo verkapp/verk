@@ -10,6 +10,33 @@
   <div class="settings">
     <section class="card">
       <div class="card-head">
+        <span class="card-icon"><app-icon name="moon" [size]="17" /></span>
+        <div class="card-copy">
+          <h2>Thème</h2>
+          <p>Clair, sombre, ou celui de ton système, qui change avec lui.</p>
+        </div>
+      </div>
+
+      <div class="segmented" role="radiogroup" aria-label="Thème">
+        @for (theme of themes; track theme.id) {
+          <button
+            class="segment"
+            type="button"
+            role="radio"
+            [class.active]="store.settings().theme === theme.id"
+            [attr.aria-checked]="store.settings().theme === theme.id"
+            (click)="setTheme(theme.id)"
+          >
+            <app-icon [name]="theme.icon" [size]="15" />
+            {{ theme.label }}
+          </button>
+        }
+      </div>
+      <p class="hint">La barre de titre de la fenêtre suit le nouveau thème au prochain lancement.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
         <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
         <div class="card-copy">
           <h2>Accent</h2>
@@ -643,7 +670,7 @@
       <div class="about">
         <span>Verk {{ store.info()?.version }}</span>
         <span class="about-dot"></span>
-        <span>Thème clair uniquement</span>
+        <span>Thèmes clair et sombre</span>
         <span class="about-dot"></span>
         <span>Windows & macOS</span>
       </div>

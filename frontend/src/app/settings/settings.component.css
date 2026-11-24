@@ -535,3 +535,40 @@
   padding: 0 8px;
   font-size: 12.5px;
 }
+
+/* Theme picker: three equal segments in a soft track. */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 16px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 12.8px;
+  font-weight: 550;
+  color: var(--muted);
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.segment:hover {
+  color: var(--text);
+}
+
+.segment.active {
+  background: var(--surface);
+  color: var(--accent-strong);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--line);
+}

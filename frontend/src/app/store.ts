@@ -37,7 +37,7 @@ export class Store {
   readonly tasks = signal<Task[]>([]);
   readonly profiles = signal<Profile[]>([]);
   readonly activeProfileId = signal<string>('');
-  readonly settings = signal<Settings>({ accent: 'lavande', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '', closeToTray: false });
+  readonly settings = signal<Settings>({ accent: 'lavande', theme: 'system', coachEnabled: true, coachOnStart: false, timeTracking: true, showMomentum: true, notifications: true, autoUpdate: true, claudeEnabled: true, claudePath: '', closeToTray: false });
   readonly claude = signal<ClaudeStatus | null>(null);
   /** The coach needs both its own switch and the global Claude integration. */
   readonly coachActive = computed(() => this.settings().claudeEnabled && this.settings().coachEnabled);
@@ -175,6 +175,7 @@ export class Store {
   private applySettings(settings: Settings): void {
     this.settings.set(settings);
     this.applyAccent(settings.accent);
+    this.applyTheme();
     try {
       localStorage.setItem('verk.settings', JSON.stringify(settings));
     } catch {
@@ -184,6 +185,21 @@ export class Store {
 
   private applyAccent(accent: AccentName): void {
     document.documentElement.dataset['accent'] = accent;
+  }
+
+  /** Follows the OS appearance while the theme setting is « Système ». */
+  private readonly systemDark = window.matchMedia?.('(prefers-color-scheme: dark)');
+  private systemDarkListening = false;
+
+  /** Resolves the theme setting to data-theme="light" | "dark" on <html>. */
+  private applyTheme(): void {
+    const theme = this.settings().theme;
+    const dark = theme === 'dark' || (theme === 'system' && !!this.systemDark?.matches);
+    document.documentElement.dataset['theme'] = dark ? 'dark' : 'light';
+    if (!this.systemDarkListening && this.systemDark) {
+      this.systemDarkListening = true;
+      this.systemDark.addEventListener('change', () => this.applyTheme());
+    }
   }
 
   private restoreProfile(profiles: Profile[]): void {

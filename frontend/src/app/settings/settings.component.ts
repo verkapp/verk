@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 import { marked } from 'marked';
 
 import { formatCreatedAt } from '../dates';
-import { ACCENTS, AccentName, Profile } from '../models';
+import { ACCENTS, AccentName, Profile, THEMES, ThemeName } from '../models';
 import { Store } from '../store';
 import { IconComponent } from '../ui/icon.component';
 
@@ -17,6 +17,7 @@ import { IconComponent } from '../ui/icon.component';
 export class SettingsComponent implements OnInit {
   readonly store = inject(Store);
   readonly accents = ACCENTS;
+  readonly themes = THEMES;
   readonly pathDraft = signal('');
   readonly checking = signal(false);
   readonly syncRemote = signal('');
@@ -42,6 +43,10 @@ export class SettingsComponent implements OnInit {
   private async loadSync(): Promise<void> {
     const status = await this.store.refreshSync();
     this.syncRemote.set(status?.remote ?? '');
+  }
+
+  setTheme(theme: ThemeName): void {
+    void this.store.saveSettings({ theme });
   }
 
   setAccent(accent: AccentName): void {
