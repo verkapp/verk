@@ -70,6 +70,7 @@ func Run(assets embed.FS) {
 	app.setupWindow()
 	app.setupTray()
 	app.watchSystemTheme()
+	app.hideMenuBar()
 
 	if err := wapp.Run(); err != nil {
 		log.Fatal(err)
