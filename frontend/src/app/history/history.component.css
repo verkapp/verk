@@ -135,8 +135,8 @@
   width: 20px;
   height: 20px;
   border-radius: 7px;
-  background: var(--accent);
-  border: 1px solid var(--accent);
+  background: var(--accent-fill);
+  border: 1px solid var(--accent-fill);
   color: var(--on-accent);
   transition:
     background 0.15s ease,
@@ -144,8 +144,8 @@
 }
 
 .check:hover {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
+  background: var(--accent-fill-hover);
+  border-color: var(--accent-fill-hover);
 }
 
 .row-main {
