@@ -70,7 +70,7 @@ type updater struct {
 
 // Version is overridden at build time with
 // -ldflags "-X verk/src.Version=<tag>".
-var Version = "1.4.0"
+var Version = "2.0.0"
 
 func (a *App) updateStatus() UpdateInfo {
 	a.updates.mu.Lock()
