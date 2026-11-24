@@ -2,7 +2,6 @@ package src
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -174,6 +173,7 @@ func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, messag
 
 	var lastPushErr error
 	for attempt := 0; attempt < syncAttempts; attempt++ {
+		migrating := false
 		if _, err := runGit(ctx, dir, "fetch", "--prune", "origin"); err != nil {
 			return changed, fmt.Errorf("récupération impossible : %w", err)
 		}
@@ -182,15 +182,14 @@ func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, messag
 			if _, err := runGit(ctx, dir, "reset", "--hard", remoteRef); err != nil {
 				return changed, fmt.Errorf("préparation du dépôt : %w", err)
 			}
-			data, err := os.ReadFile(filepath.Join(dir, snapshotFileName))
-			if err != nil && !errors.Is(err, os.ErrNotExist) {
-				return changed, err
-			}
-			remoteSnapshot, err := decodeSnapshot(data)
+			remote, err := readRepoSnapshot(dir, time.Now().UnixMilli())
 			if err != nil {
 				return changed, err
 			}
-			merged, mergedChanged, err := a.store.mergeSnapshot(remoteSnapshot)
+			// A todo.json in the format of 2.0 and earlier is migrated to the
+			// folder layout by the write below; the commit says so.
+			migrating = remote.legacy
+			merged, mergedChanged, err := a.store.mergeSnapshot(remote.snapshot)
 			if err != nil {
 				return changed, err
 			}
@@ -207,7 +206,7 @@ func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, messag
 		if err != nil {
 			return changed, err
 		}
-		if err := writeSnapshotFile(filepath.Join(dir, snapshotFileName), localSnapshot); err != nil {
+		if err := writeSnapshotTree(dir, localSnapshot); err != nil {
 			return changed, err
 		}
 		if err := copyMissingImages(localSnapshot.Images, a.store.imageDir, imagesDir); err != nil {
@@ -223,7 +222,9 @@ func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, messag
 		}
 		if strings.TrimSpace(status) != "" {
 			commitMessage := message
-			if commitMessage == "" {
+			if migrating {
+				commitMessage = migrationCommitMessage
+			} else if commitMessage == "" {
 				commitMessage = fmt.Sprintf("sync: %s %s", hostname(), time.Now().UTC().Format(time.RFC3339))
 			}
 			if _, err := runGit(ctx, dir, "commit", "-m", commitMessage); err != nil {
@@ -334,19 +335,6 @@ func (a *App) configureSync(remote string, enabled bool) error {
 		a.stopSyncTimer()
 	}
 	return nil
-}
-
-func writeSnapshotFile(path string, snap snapshot) error {
-	data, err := json.MarshalIndent(snap.body(), "", "  ")
-	if err != nil {
-		return err
-	}
-	data = append(data, '\n')
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, path)
 }
 
 func hostname() string {
