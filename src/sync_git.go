@@ -15,8 +15,10 @@ import (
 
 const syncDirName = "sync"
 
-// snapshotFileName keeps its pre-Verk name: devices still running Todo read
-// and write the same file, so renaming it would split the shared history.
+// snapshotFileName held the whole dataset up to format 2 (Verk 2.0, Todo).
+// Since format 3 it only holds the fence that stops those versions; the data
+// lives in profiles/ (see sync_layout.go). It keeps its pre-Verk name because
+// older devices look for it.
 const snapshotFileName = "todo.json"
 
 // resolveGitPath mirrors the Claude Code lookup: a macOS app launched from the
