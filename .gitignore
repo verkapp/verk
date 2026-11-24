@@ -1,6 +1,6 @@
 # Build output
 build/bin/
-/todo
+/verk
 frontend/dist/*
 !frontend/dist/.gitkeep
 frontend/.angular/

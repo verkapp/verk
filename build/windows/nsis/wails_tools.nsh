@@ -5,13 +5,13 @@
 !include "FileFunc.nsh"
 
 !ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "Todo"
+    !define INFO_PROJECTNAME "Verk"
 !endif
 !ifndef INFO_COMPANYNAME
-    !define INFO_COMPANYNAME "Todo"
+    !define INFO_COMPANYNAME "Verk"
 !endif
 !ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "Todo"
+    !define INFO_PRODUCTNAME "Verk"
 !endif
 !ifndef INFO_PRODUCTVERSION
     !define INFO_PRODUCTVERSION "1.4.0"

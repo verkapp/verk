@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	releasesAPIURL      = "https://api.github.com/repos/clementherve/todo/releases/latest"
-	releasesPageURL     = "https://github.com/clementherve/todo/releases"
+	releasesAPIURL      = "https://api.github.com/repos/verkapp/verk/releases/latest"
+	releasesPageURL     = "https://github.com/verkapp/verk/releases"
 	updateCheckInterval = 6 * time.Hour
 	updateCheckDelay    = 20 * time.Second
 	maxUpdateBytes      = 512 << 20
@@ -213,7 +213,7 @@ func fetchReleaseWithGH(ctx context.Context) (*githubRelease, error) {
 	}
 	runCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(runCtx, gh, "api", "repos/clementherve/todo/releases/latest")
+	cmd := exec.CommandContext(runCtx, gh, "api", "repos/verkapp/verk/releases/latest")
 	hideWindow(cmd)
 	out, err := cmd.Output()
 	if err != nil {
@@ -272,7 +272,7 @@ func downloadAsset(ctx context.Context, asset githubAsset, tag string, useGH boo
 	runCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, gh, "release", "download", tag,
-		"--repo", "clementherve/todo",
+		"--repo", "verkapp/verk",
 		"--pattern", asset.Name,
 		"--dir", directory,
 		"--clobber")
@@ -466,7 +466,7 @@ func extractUpdate(zipPath, staging string) (string, error) {
 			return "", errors.New("l'archive ne contient pas d'application Verk")
 		}
 	case "windows":
-		target = "Todo.exe"
+		target = "Verk.exe"
 	default:
 		return "", errors.New("les mises à jour automatiques ne sont pas disponibles sur ce système")
 	}

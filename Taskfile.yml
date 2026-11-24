@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  APP_NAME: "Todo"
+  APP_NAME: "Verk"
   # Kept under build/ so CI packaging and the updater keep their paths.
   BIN_DIR: "build/bin"
   PACKAGE_MANAGER: "npm"
