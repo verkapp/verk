@@ -4,7 +4,33 @@ import { marked } from 'marked';
 import { formatCreatedAt } from '../dates';
 import { ACCENTS, AccentName, Profile, THEMES, ThemeName } from '../models';
 import { Store } from '../store';
-import { IconComponent } from '../ui/icon.component';
+import { IconComponent, IconName } from '../ui/icon.component';
+
+type SettingsTab = 'general' | 'appearance' | 'profiles' | 'claude' | 'sync' | 'app';
+
+/** Settings sections, from everyday preferences to maintenance. */
+const SETTINGS_TABS: { id: SettingsTab; label: string; icon: IconName }[] = [
+  { id: 'general', label: 'Général', icon: 'settings' },
+  { id: 'appearance', label: 'Apparence', icon: 'moon' },
+  { id: 'profiles', label: 'Profils', icon: 'tasks' },
+  { id: 'claude', label: 'Claude', icon: 'sparkles' },
+  { id: 'sync', label: 'Synchronisation', icon: 'refresh' },
+  { id: 'app', label: 'Application', icon: 'monitor' },
+];
+
+const TAB_STORAGE_KEY = 'verk.settings.tab';
+
+function restoreTab(): SettingsTab {
+  try {
+    const stored = localStorage.getItem(TAB_STORAGE_KEY);
+    if (SETTINGS_TABS.some((tab) => tab.id === stored)) {
+      return stored as SettingsTab;
+    }
+  } catch {
+    // storage can be unavailable in some webview contexts
+  }
+  return 'general';
+}
 
 @Component({
   selector: 'app-settings',
@@ -25,6 +51,9 @@ export class SettingsComponent implements OnInit {
   readonly newProfileName = signal('');
   readonly profileColors = ['#7b6cf0', '#4aa985', '#559fe0', '#ea8a62', '#dd7ba2', '#d3a640'];
 
+  readonly tabs = SETTINGS_TABS;
+  readonly activeTab = signal<SettingsTab>(restoreTab());
+
   readonly releaseNotes = computed(() =>
     marked.parse(this.store.update()?.notes?.trim() ?? '', {
       async: false,
@@ -43,6 +72,55 @@ export class SettingsComponent implements OnInit {
   private async loadSync(): Promise<void> {
     const status = await this.store.refreshSync();
     this.syncRemote.set(status?.remote ?? '');
+  }
+
+  selectTab(tab: SettingsTab): void {
+    this.activeTab.set(tab);
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, tab);
+    } catch {
+      // storage can be unavailable in some webview contexts
+    }
+  }
+
+  /** Arrow keys, Home and End move between tabs, as in a native tab bar. */
+  onTabKeydown(event: KeyboardEvent): void {
+    const ids = this.tabs.map((tab) => tab.id);
+    const current = ids.indexOf(this.activeTab());
+    let next = current;
+    switch (event.key) {
+      case 'ArrowRight':
+        next = (current + 1) % ids.length;
+        break;
+      case 'ArrowLeft':
+        next = (current - 1 + ids.length) % ids.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = ids.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    this.selectTab(ids[next]);
+    document.getElementById(`settings-tab-${ids[next]}`)?.focus();
+  }
+
+  /** A dot on a tab whose section needs attention. */
+  tabAlert(tab: SettingsTab): boolean {
+    switch (tab) {
+      case 'claude':
+        return this.store.settings().claudeEnabled && !!this.store.claude() && !this.store.claude()!.available;
+      case 'sync':
+        return !!this.store.sync()?.lastError;
+      case 'app':
+        return !!this.store.update()?.ready || !!this.store.update()?.error;
+      default:
+        return false;
+    }
   }
 
   setTheme(theme: ThemeName): void {

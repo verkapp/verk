@@ -6,11 +6,79 @@
   animation: fade-up 0.32s ease both;
 }
 
+/* Category tabs: one scrollable row that stays visible while scrolling. */
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  margin: -6px 0 18px;
+  padding: 6px 0 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 9px 9px 0 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--muted);
+  transition:
+    color 0.16s ease,
+    background 0.16s ease;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+.tab.active {
+  color: var(--accent-strong);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+}
+
+.tab:focus-visible {
+  outline-offset: -2px;
+}
+
+.tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
 .settings {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding-bottom: 20px;
+  animation: fade-in 0.2s ease both;
 }
 
 .card {

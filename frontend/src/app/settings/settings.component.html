@@ -7,673 +7,710 @@
     </div>
   </header>
 
-  <div class="settings">
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="moon" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Thème</h2>
-          <p>Clair, sombre, ou celui de ton système, qui change avec lui.</p>
-        </div>
-      </div>
-
-      <div class="segmented" role="radiogroup" aria-label="Thème">
-        @for (theme of themes; track theme.id) {
-          <button
-            class="segment"
-            type="button"
-            role="radio"
-            [class.active]="store.settings().theme === theme.id"
-            [attr.aria-checked]="store.settings().theme === theme.id"
-            (click)="setTheme(theme.id)"
-          >
-            <app-icon [name]="theme.icon" [size]="15" />
-            {{ theme.label }}
-          </button>
+  <nav class="tabs" role="tablist" aria-label="Catégories de réglages">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="tab"
+        type="button"
+        role="tab"
+        [id]="'settings-tab-' + tab.id"
+        [attr.aria-selected]="activeTab() === tab.id"
+        [attr.aria-controls]="'settings-panel-' + tab.id"
+        [attr.tabindex]="activeTab() === tab.id ? 0 : -1"
+        [class.active]="activeTab() === tab.id"
+        (click)="selectTab(tab.id)"
+        (keydown)="onTabKeydown($event)"
+      >
+        <app-icon [name]="tab.icon" [size]="15" />
+        <span>{{ tab.label }}</span>
+        @if (tabAlert(tab.id)) {
+          <span class="tab-dot" aria-label="À vérifier"></span>
         }
-      </div>
-      <p class="hint">La barre de titre de la fenêtre suit le nouveau thème au prochain lancement.</p>
-    </section>
+      </button>
+    }
+  </nav>
 
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Accent</h2>
-          <p>Une couleur pastel pour les boutons, les repères et les petits détails.</p>
-        </div>
-      </div>
-
-      <div class="accent-grid">
-        @for (accent of accents; track accent.id) {
-          <button
-            class="accent-option"
-            type="button"
-            [class.active]="store.settings().accent === accent.id"
-            (click)="setAccent(accent.id)"
-          >
-            <span class="swatch" [style.background]="accent.soft">
-              <i [style.background]="accent.color"></i>
-              @if (store.settings().accent === accent.id) {
-                <span class="swatch-check" [style.background]="accent.color">
-                  <app-icon name="check" [size]="10" [strokeWidth]="3" />
-                </span>
-              }
-            </span>
-            <span class="accent-name">{{ accent.label }}</span>
-          </button>
-        }
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="clock" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Suivi</h2>
-          <p>Ce que l’application mesure et affiche.</p>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Suivi du temps</p>
-          <p class="row-sub">Le bouton ▶ d’une tâche chronomètre le temps passé dessus. Désactivé, il marque seulement la tâche « en cours ».</p>
-        </div>
-        <button
-          class="switch"
-          type="button"
-          role="switch"
-          [class.on]="store.settings().timeTracking"
-          [attr.aria-checked]="store.settings().timeTracking"
-          (click)="toggleTimeTracking()"
-          aria-label="Activer le suivi du temps"
-        >
-          <span></span>
-        </button>
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Ton élan du jour</p>
-          <p class="row-sub">La carte de progression en bas du menu latéral.</p>
-        </div>
-        <button
-          class="switch"
-          type="button"
-          role="switch"
-          [class.on]="store.settings().showMomentum"
-          [attr.aria-checked]="store.settings().showMomentum"
-          (click)="toggleMomentum()"
-          aria-label="Afficher Ton élan du jour"
-        >
-          <span></span>
-        </button>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="bell" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Notifications</h2>
-          <p>Un rappel sur le bureau quand une tâche arrive à échéance.</p>
-        </div>
-        @if (store.notifications(); as status) {
-          @if (!status.available) {
-            <span class="pill pill-danger status-pill">Indisponible</span>
-          } @else if (!status.authorized) {
-            <span class="pill status-pill">En attente</span>
-          } @else {
-            <span class="pill pill-accent status-pill">Active</span>
-          }
-        }
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Rappels de tâche</p>
-          <p class="row-sub">
-            Une notification native quand l’échéance d’une tâche ouverte est atteinte. L’application doit être lancée.
-          </p>
-        </div>
-        <button
-          class="switch"
-          type="button"
-          role="switch"
-          [class.on]="store.settings().notifications"
-          [attr.aria-checked]="store.settings().notifications"
-          (click)="toggleNotifications()"
-          aria-label="Activer les notifications bureau"
-        >
-          <span></span>
-        </button>
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Vérifier les permissions</p>
-          <p class="row-sub">
-            Envoie une notification de test. Sur macOS, autorise Verk dans Réglages Système › Notifications si besoin.
-          </p>
-        </div>
-        <button class="btn btn-ghost btn-sm" type="button" (click)="testNotification()">
-          <app-icon name="bell" [size]="14" />
-          Tester
-        </button>
-      </div>
-
-      @if (store.notifications()?.error) {
-        <p class="hint">{{ store.notifications()!.error }}</p>
-      }
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Profils</h2>
-          <p>Des listes séparées pour le travail, la maison, ou tout ce qui te ressemble.</p>
-        </div>
-      </div>
-
-      <div class="profile-list">
-        @for (profile of store.profiles(); track profile.id) {
-          <div class="profile-row" [class.current]="store.activeProfileId() === profile.id">
-            <span class="profile-swatch" [style.background]="profile.color"></span>
-            <input
-              class="input profile-name"
-              type="text"
-              [value]="profile.name"
-              (change)="renameProfile(profile, $event)"
-              (keydown.enter)="renameOnEnter($event)"
-              maxlength="40"
-              [attr.aria-label]="'Nom du profil ' + profile.name"
-            />
-            <div class="profile-palette" role="group" [attr.aria-label]="'Couleur de ' + profile.name">
-              @for (color of profileColors; track color) {
-                <button
-                  class="color-dot"
-                  type="button"
-                  [style.background]="color"
-                  [class.active]="profile.color === color"
-                  (click)="setProfileColor(profile, color)"
-                  [attr.aria-label]="'Choisir la couleur ' + color"
-                ></button>
-              }
+  <div
+    class="settings"
+    role="tabpanel"
+    [id]="'settings-panel-' + activeTab()"
+    [attr.aria-labelledby]="'settings-tab-' + activeTab()"
+  >
+    @switch (activeTab()) {
+      @case ('general') {
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="clock" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Suivi</h2>
+              <p>Ce que l’application mesure et affiche.</p>
             </div>
-            @if (store.activeProfileId() === profile.id) {
-              <span class="pill pill-accent">Actif</span>
-            }
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Suivi du temps</p>
+              <p class="row-sub">Le bouton ▶ d’une tâche chronomètre le temps passé dessus. Désactivé, il marque seulement la tâche « en cours ».</p>
+            </div>
             <button
-              class="btn btn-ghost btn-sm"
+              class="switch"
               type="button"
-              (click)="deleteProfile(profile)"
-              [disabled]="store.profiles().length <= 1"
+              role="switch"
+              [class.on]="store.settings().timeTracking"
+              [attr.aria-checked]="store.settings().timeTracking"
+              (click)="toggleTimeTracking()"
+              aria-label="Activer le suivi du temps"
             >
-              Supprimer
+              <span></span>
             </button>
-            <div class="profile-defer">
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Ton élan du jour</p>
+              <p class="row-sub">La carte de progression en bas du menu latéral.</p>
+            </div>
+            <button
+              class="switch"
+              type="button"
+              role="switch"
+              [class.on]="store.settings().showMomentum"
+              [attr.aria-checked]="store.settings().showMomentum"
+              (click)="toggleMomentum()"
+              aria-label="Afficher Ton élan du jour"
+            >
+              <span></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="bell" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Notifications</h2>
+              <p>Un rappel sur le bureau quand une tâche arrive à échéance.</p>
+            </div>
+            @if (store.notifications(); as status) {
+              @if (!status.available) {
+                <span class="pill pill-danger status-pill">Indisponible</span>
+              } @else if (!status.authorized) {
+                <span class="pill status-pill">En attente</span>
+              } @else {
+                <span class="pill pill-accent status-pill">Active</span>
+              }
+            }
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Rappels de tâche</p>
+              <p class="row-sub">
+                Une notification native quand l’échéance d’une tâche ouverte est atteinte. L’application doit être lancée.
+              </p>
+            </div>
+            <button
+              class="switch"
+              type="button"
+              role="switch"
+              [class.on]="store.settings().notifications"
+              [attr.aria-checked]="store.settings().notifications"
+              (click)="toggleNotifications()"
+              aria-label="Activer les notifications bureau"
+            >
+              <span></span>
+            </button>
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Vérifier les permissions</p>
+              <p class="row-sub">
+                Envoie une notification de test. Sur macOS, autorise Verk dans Réglages Système › Notifications si besoin.
+              </p>
+            </div>
+            <button class="btn btn-ghost btn-sm" type="button" (click)="testNotification()">
+              <app-icon name="bell" [size]="14" />
+              Tester
+            </button>
+          </div>
+
+          @if (store.notifications()?.error) {
+            <p class="hint">{{ store.notifications()!.error }}</p>
+          }
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="sidebar" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Fenêtre</h2>
+              <p>L’icône dans la barre des menus (ou la zone de notification) rouvre l’application à tout moment.</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Fermer dans la barre</p>
+              <p class="row-sub">
+                Fermer la fenêtre la range dans la barre au lieu de quitter l’application. Pris en compte au prochain lancement.
+              </p>
+            </div>
+            <button
+              class="switch"
+              type="button"
+              role="switch"
+              [class.on]="store.settings().closeToTray"
+              [attr.aria-checked]="store.settings().closeToTray"
+              (click)="toggleCloseToTray()"
+              aria-label="Fermer dans la barre"
+            >
+              <span></span>
+            </button>
+          </div>
+        </section>
+      }
+      @case ('appearance') {
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="moon" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Thème</h2>
+              <p>Clair, sombre, ou celui de ton système, qui change avec lui.</p>
+            </div>
+          </div>
+
+          <div class="segmented" role="radiogroup" aria-label="Thème">
+            @for (theme of themes; track theme.id) {
               <button
-                class="switch switch-sm"
+                class="segment"
+                type="button"
+                role="radio"
+                [class.active]="store.settings().theme === theme.id"
+                [attr.aria-checked]="store.settings().theme === theme.id"
+                (click)="setTheme(theme.id)"
+              >
+                <app-icon [name]="theme.icon" [size]="15" />
+                {{ theme.label }}
+              </button>
+            }
+          </div>
+          <p class="hint">La barre de titre de la fenêtre suit le nouveau thème au prochain lancement.</p>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Accent</h2>
+              <p>Une couleur pastel pour les boutons, les repères et les petits détails.</p>
+            </div>
+          </div>
+
+          <div class="accent-grid">
+            @for (accent of accents; track accent.id) {
+              <button
+                class="accent-option"
+                type="button"
+                [class.active]="store.settings().accent === accent.id"
+                (click)="setAccent(accent.id)"
+              >
+                <span class="swatch" [style.background]="accent.soft">
+                  <i [style.background]="accent.color"></i>
+                  @if (store.settings().accent === accent.id) {
+                    <span class="swatch-check" [style.background]="accent.color">
+                      <app-icon name="check" [size]="10" [strokeWidth]="3" />
+                    </span>
+                  }
+                </span>
+                <span class="accent-name">{{ accent.label }}</span>
+              </button>
+            }
+          </div>
+        </section>
+      }
+      @case ('profiles') {
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Profils</h2>
+              <p>Des listes séparées pour le travail, la maison, ou tout ce qui te ressemble.</p>
+            </div>
+          </div>
+
+          <div class="profile-list">
+            @for (profile of store.profiles(); track profile.id) {
+              <div class="profile-row" [class.current]="store.activeProfileId() === profile.id">
+                <span class="profile-swatch" [style.background]="profile.color"></span>
+                <input
+                  class="input profile-name"
+                  type="text"
+                  [value]="profile.name"
+                  (change)="renameProfile(profile, $event)"
+                  (keydown.enter)="renameOnEnter($event)"
+                  maxlength="40"
+                  [attr.aria-label]="'Nom du profil ' + profile.name"
+                />
+                <div class="profile-palette" role="group" [attr.aria-label]="'Couleur de ' + profile.name">
+                  @for (color of profileColors; track color) {
+                    <button
+                      class="color-dot"
+                      type="button"
+                      [style.background]="color"
+                      [class.active]="profile.color === color"
+                      (click)="setProfileColor(profile, color)"
+                      [attr.aria-label]="'Choisir la couleur ' + color"
+                    ></button>
+                  }
+                </div>
+                @if (store.activeProfileId() === profile.id) {
+                  <span class="pill pill-accent">Actif</span>
+                }
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="deleteProfile(profile)"
+                  [disabled]="store.profiles().length <= 1"
+                >
+                  Supprimer
+                </button>
+                <div class="profile-defer">
+                  <button
+                    class="switch switch-sm"
+                    type="button"
+                    role="switch"
+                    [class.on]="!!profile.autoDeferAt"
+                    [attr.aria-checked]="!!profile.autoDeferAt"
+                    (click)="toggleAutoDefer(profile)"
+                    [attr.aria-label]="'Report automatique pour ' + profile.name"
+                  >
+                    <span></span>
+                  </button>
+                  <app-icon name="sunrise" [size]="14" />
+                  <span>Reporter les tâches du jour non terminées</span>
+                  @if (profile.autoDeferAt) {
+                    <span>à</span>
+                    <input
+                      class="input input-time"
+                      type="time"
+                      [value]="profile.autoDeferAt"
+                      (change)="setAutoDeferTime(profile, $event)"
+                      [attr.aria-label]="'Heure du report automatique pour ' + profile.name"
+                    />
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <form class="profile-add" (submit)="createProfile($event)">
+            <input
+              class="input"
+              type="text"
+              [value]="newProfileName()"
+              (input)="newProfileName.set($any($event.target).value)"
+              placeholder="Nouveau profil (Travail, Perso…)"
+              maxlength="40"
+              aria-label="Nom du nouveau profil"
+            />
+            <button class="btn btn-primary" type="submit" [disabled]="!newProfileName().trim()">Créer</button>
+          </form>
+          <p class="hint">
+            Les tâches restent dans leur profil : les vues, les statistiques et l’historique suivent le profil actif.
+            Supprimer un profil déplace ses tâches vers un autre profil. Le report automatique déplace à demain
+            (ou lundi) les tâches en retard ou prévues ce jour-là ; une tâche planifiée après l’heure choisie reste en place.
+          </p>
+        </section>
+      }
+      @case ('claude') {
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Claude Code</h2>
+              <p>Utilisé pour découper les tâches et écrire le mot du coach.</p>
+            </div>
+            @if (!store.settings().claudeEnabled) {
+              <span class="pill status-pill">Désactivé</span>
+            } @else if (store.claude()?.available) {
+              <span class="pill pill-accent status-pill">Connecté</span>
+            } @else if (store.claude()) {
+              <span class="pill pill-danger status-pill">Introuvable</span>
+            } @else {
+              <span class="pill status-pill">Vérification…</span>
+            }
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Activer l’intégration Claude</p>
+              <p class="row-sub">
+                Désactivée, l’application n’appelle jamais Claude Code : plus de coach, plus de découpage de tâches.
+              </p>
+            </div>
+            <button
+              class="switch"
+              type="button"
+              role="switch"
+              [class.on]="store.settings().claudeEnabled"
+              [attr.aria-checked]="store.settings().claudeEnabled"
+              (click)="toggleClaude()"
+              aria-label="Activer l’intégration Claude"
+            >
+              <span></span>
+            </button>
+          </div>
+
+          @if (store.settings().claudeEnabled) {
+            <div class="claude-status" [class.offline]="store.claude() && !store.claude()!.available">
+              <span class="status-dot" [class.ok]="store.claude()?.available"></span>
+              <div class="status-copy">
+                <p class="row-title">
+                  @if (store.claude()?.available) {
+                    Claude Code est prêt
+                  } @else if (store.claude()) {
+                    Claude Code n’a pas été trouvé
+                  } @else {
+                    Recherche de Claude Code…
+                  }
+                </p>
+                <p class="row-sub mono truncate">
+                  @if (store.claude()?.available) {
+                    {{ store.claude()!.version }} · {{ store.claude()!.path }}
+                  } @else {
+                    {{ store.claude()?.error || 'Un instant…' }}
+                  }
+                </p>
+              </div>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="verify()" [disabled]="checking()">
+                <app-icon name="refresh" [size]="14" [class.spin]="checking()" />
+                Vérifier
+              </button>
+            </div>
+
+            <div class="path-block">
+              <label class="field-label" for="claude-path">Chemin personnalisé (optionnel)</label>
+              <div class="path-row">
+                <input
+                  id="claude-path"
+                  class="input mono"
+                  type="text"
+                  [value]="pathDraft()"
+                  (input)="onPathInput($any($event.target).value)"
+                  placeholder="Laisse vide pour la détection automatique"
+                  spellcheck="false"
+                />
+                <button class="btn btn-ghost" type="button" (click)="savePath()">Enregistrer</button>
+              </div>
+              <p class="hint">
+                Utile si l’application ne trouve pas <code>claude</code> : indique le chemin complet du binaire, par exemple
+                <code>~/.local/bin/claude</code>.
+              </p>
+            </div>
+          }
+        </section>
+
+        @if (store.settings().claudeEnabled) {
+          <section class="card">
+            <div class="card-head">
+              <span class="card-icon"><app-icon name="leaf" [size]="17" /></span>
+              <div class="card-copy">
+                <h2>Coach</h2>
+                <p>Un mot doux quand la liste s’accumule.</p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="row-copy">
+                <p class="row-title">Activer le coach</p>
+                <p class="row-sub">
+                  Le mot du coach, le rappel d’accueil et la page Coach. Le découpage de tâches avec Claude reste disponible.
+                </p>
+              </div>
+              <button
+                class="switch"
                 type="button"
                 role="switch"
-                [class.on]="!!profile.autoDeferAt"
-                [attr.aria-checked]="!!profile.autoDeferAt"
-                (click)="toggleAutoDefer(profile)"
-                [attr.aria-label]="'Report automatique pour ' + profile.name"
+                [class.on]="store.settings().coachEnabled"
+                [attr.aria-checked]="store.settings().coachEnabled"
+                (click)="toggleCoachEnabled()"
+                aria-label="Activer le coach"
               >
                 <span></span>
               </button>
-              <app-icon name="sunrise" [size]="14" />
-              <span>Reporter les tâches du jour non terminées</span>
-              @if (profile.autoDeferAt) {
-                <span>à</span>
-                <input
-                  class="input input-time"
-                  type="time"
-                  [value]="profile.autoDeferAt"
-                  (change)="setAutoDeferTime(profile, $event)"
-                  [attr.aria-label]="'Heure du report automatique pour ' + profile.name"
-                />
-              }
             </div>
-          </div>
-        }
-      </div>
 
-      <form class="profile-add" (submit)="createProfile($event)">
-        <input
-          class="input"
-          type="text"
-          [value]="newProfileName()"
-          (input)="newProfileName.set($any($event.target).value)"
-          placeholder="Nouveau profil (Travail, Perso…)"
-          maxlength="40"
-          aria-label="Nom du nouveau profil"
-        />
-        <button class="btn btn-primary" type="submit" [disabled]="!newProfileName().trim()">Créer</button>
-      </form>
-      <p class="hint">
-        Les tâches restent dans leur profil : les vues, les statistiques et l’historique suivent le profil actif.
-        Supprimer un profil déplace ses tâches vers un autre profil. Le report automatique déplace à demain
-        (ou lundi) les tâches en retard ou prévues ce jour-là ; une tâche planifiée après l’heure choisie reste en place.
-      </p>
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="sidebar" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Fenêtre</h2>
-          <p>L’icône dans la barre des menus (ou la zone de notification) rouvre l’application à tout moment.</p>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Fermer dans la barre</p>
-          <p class="row-sub">
-            Fermer la fenêtre la range dans la barre au lieu de quitter l’application. Pris en compte au prochain lancement.
-          </p>
-        </div>
-        <button
-          class="switch"
-          type="button"
-          role="switch"
-          [class.on]="store.settings().closeToTray"
-          [attr.aria-checked]="store.settings().closeToTray"
-          (click)="toggleCloseToTray()"
-          aria-label="Fermer dans la barre"
-        >
-          <span></span>
-        </button>
-      </div>
-    </section>
-
-    @if (store.settings().claudeEnabled) {
-      <section class="card">
-        <div class="card-head">
-          <span class="card-icon"><app-icon name="leaf" [size]="17" /></span>
-          <div class="card-copy">
-            <h2>Coach</h2>
-            <p>Un mot doux quand la liste s’accumule.</p>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="row-copy">
-            <p class="row-title">Activer le coach</p>
-            <p class="row-sub">
-              Le mot du coach, le rappel d’accueil et la page Coach. Le découpage de tâches avec Claude reste disponible.
-            </p>
-          </div>
-          <button
-            class="switch"
-            type="button"
-            role="switch"
-            [class.on]="store.settings().coachEnabled"
-            [attr.aria-checked]="store.settings().coachEnabled"
-            (click)="toggleCoachEnabled()"
-            aria-label="Activer le coach"
-          >
-            <span></span>
-          </button>
-        </div>
-
-        <div class="row" [class.disabled]="!store.settings().coachEnabled">
-          <div class="row-copy">
-            <p class="row-title">Un mot au démarrage</p>
-            <p class="row-sub">
-              Demande un rappel à Claude à l’ouverture, s’il reste des tâches en attente. Un appel par lancement.
-            </p>
-          </div>
-          <button
-            class="switch"
-            type="button"
-            role="switch"
-            [class.on]="store.settings().coachOnStart"
-            [attr.aria-checked]="store.settings().coachOnStart"
-            [disabled]="!store.settings().coachEnabled"
-            (click)="toggleCoach()"
-            aria-label="Activer le mot du coach au démarrage"
-          >
-            <span></span>
-          </button>
-        </div>
-      </section>
-    }
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="sparkles" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Claude Code</h2>
-          <p>Utilisé pour découper les tâches et écrire le mot du coach.</p>
-        </div>
-        @if (!store.settings().claudeEnabled) {
-          <span class="pill status-pill">Désactivé</span>
-        } @else if (store.claude()?.available) {
-          <span class="pill pill-accent status-pill">Connecté</span>
-        } @else if (store.claude()) {
-          <span class="pill pill-danger status-pill">Introuvable</span>
-        } @else {
-          <span class="pill status-pill">Vérification…</span>
-        }
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Activer l’intégration Claude</p>
-          <p class="row-sub">
-            Désactivée, l’application n’appelle jamais Claude Code : plus de coach, plus de découpage de tâches.
-          </p>
-        </div>
-        <button
-          class="switch"
-          type="button"
-          role="switch"
-          [class.on]="store.settings().claudeEnabled"
-          [attr.aria-checked]="store.settings().claudeEnabled"
-          (click)="toggleClaude()"
-          aria-label="Activer l’intégration Claude"
-        >
-          <span></span>
-        </button>
-      </div>
-
-      @if (store.settings().claudeEnabled) {
-        <div class="claude-status" [class.offline]="store.claude() && !store.claude()!.available">
-          <span class="status-dot" [class.ok]="store.claude()?.available"></span>
-          <div class="status-copy">
-            <p class="row-title">
-              @if (store.claude()?.available) {
-                Claude Code est prêt
-              } @else if (store.claude()) {
-                Claude Code n’a pas été trouvé
-              } @else {
-                Recherche de Claude Code…
-              }
-            </p>
-            <p class="row-sub mono truncate">
-              @if (store.claude()?.available) {
-                {{ store.claude()!.version }} · {{ store.claude()!.path }}
-              } @else {
-                {{ store.claude()?.error || 'Un instant…' }}
-              }
-            </p>
-          </div>
-          <button class="btn btn-ghost btn-sm" type="button" (click)="verify()" [disabled]="checking()">
-            <app-icon name="refresh" [size]="14" [class.spin]="checking()" />
-            Vérifier
-          </button>
-        </div>
-
-        <div class="path-block">
-          <label class="field-label" for="claude-path">Chemin personnalisé (optionnel)</label>
-          <div class="path-row">
-            <input
-              id="claude-path"
-              class="input mono"
-              type="text"
-              [value]="pathDraft()"
-              (input)="onPathInput($any($event.target).value)"
-              placeholder="Laisse vide pour la détection automatique"
-              spellcheck="false"
-            />
-            <button class="btn btn-ghost" type="button" (click)="savePath()">Enregistrer</button>
-          </div>
-          <p class="hint">
-            Utile si l’application ne trouve pas <code>claude</code> : indique le chemin complet du binaire, par exemple
-            <code>~/.local/bin/claude</code>.
-          </p>
-        </div>
-      }
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="refresh" [size]="17" [class.spin]="store.sync()?.syncing" /></span>
-        <div class="card-copy">
-          <h2>Synchronisation</h2>
-          <p>Tes tâches et tes images dans un dépôt git privé, entre tes ordinateurs.</p>
-        </div>
-        @if (store.sync()?.lastError) {
-          <span class="pill pill-danger status-pill">Erreur</span>
-        } @else if (store.sync()?.configured) {
-          <span class="pill pill-accent status-pill">{{ store.sync()?.enabled ? 'Active' : 'En pause' }}</span>
-        } @else {
-          <span class="pill status-pill">Inactive</span>
-        }
-      </div>
-
-      <div class="path-block">
-        <label class="field-label" for="sync-remote">Adresse du dépôt git</label>
-        <div class="path-row">
-          <input
-            id="sync-remote"
-            class="input mono"
-            type="text"
-            [value]="syncRemote()"
-            (input)="onSyncRemoteInput($any($event.target).value)"
-            placeholder="git@github.com:toi/verk.git"
-            spellcheck="false"
-            [disabled]="syncBusy()"
-          />
-          <button class="btn btn-ghost" type="button" (click)="saveSyncRemote()" [disabled]="syncBusy()">
-            {{ store.sync()?.configured ? 'Mettre à jour' : 'Configurer' }}
-          </button>
-        </div>
-        <p class="hint">
-          Un dépôt privé, vide ou déjà utilisé par Verk. Git doit être installé et tes identifiants
-          (SSH ou gestionnaire d’identifiants) déjà en place. Laisse vide pour désactiver.
-        </p>
-      </div>
-
-      @if (store.sync()?.configured) {
-        <div class="row" [class.disabled]="!store.sync()?.enabled">
-          <div class="row-copy">
-            <p class="row-title">Synchronisation automatique</p>
-            <p class="row-sub">
-              Les changements rapprochés sont regroupés dans un même commit, envoyé quelques
-              secondes après la dernière action.
-            </p>
-          </div>
-          <button
-            class="switch"
-            type="button"
-            role="switch"
-            [class.on]="store.sync()?.enabled"
-            [attr.aria-checked]="store.sync()?.enabled"
-            [disabled]="syncBusy()"
-            (click)="toggleSync()"
-            aria-label="Activer la synchronisation automatique"
-          >
-            <span></span>
-          </button>
-        </div>
-
-        <div class="sync-status" [class.error]="store.sync()?.lastError">
-          <span class="status-dot" [class.ok]="!store.sync()?.lastError && store.sync()?.configured"></span>
-          <div class="status-copy">
-            <p class="row-title">{{ syncHeadline() }}</p>
-            <p class="row-sub">{{ syncDetail() }}</p>
-          </div>
-          <button
-            class="btn btn-ghost btn-sm"
-            type="button"
-            (click)="syncNow()"
-            [disabled]="syncBusy() || store.sync()?.syncing"
-          >
-            <app-icon name="refresh" [size]="14" [class.spin]="syncBusy() || store.sync()?.syncing" />
-            Synchroniser
-          </button>
-        </div>
-
-        <div class="sync-folder">
-          <button class="btn btn-ghost btn-sm" type="button" (click)="openSyncFolder()">
-            <app-icon name="folder" [size]="14" />
-            Ouvrir le dossier de synchronisation
-          </button>
-        </div>
-
-        <p class="hint">
-          Les réglages et les chemins locaux (comme Claude Code) restent propres à cet ordinateur.
-          Les images voyagent avec les tâches et les suppressions sont conservées six mois.
-        </p>
-      }
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="refresh" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Mises à jour</h2>
-          <p>Verk se met à jour depuis GitHub, sans repasser par le site.</p>
-        </div>
-        @if (store.update(); as update) {
-          @if (update.downloading) {
-            <span class="pill status-pill">Téléchargement…</span>
-          } @else if (update.ready) {
-            <span class="pill pill-accent status-pill">Prête</span>
-          } @else if (update.available) {
-            <span class="pill status-pill">Disponible</span>
-          } @else if (update.latestVersion) {
-            <span class="pill pill-accent status-pill">À jour</span>
-          } @else {
-            <span class="pill status-pill">Jamais vérifiée</span>
-          }
-        } @else {
-          <span class="pill status-pill">Verk {{ store.info()?.version }}</span>
-        }
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Mises à jour automatiques</p>
-          <p class="row-sub">
-            Une vérification au démarrage puis toutes les six heures. Une version plus récente est téléchargée en
-            arrière-plan et installée à la fermeture de l’application.
-          </p>
-        </div>
-        <button
-          class="switch"
-          type="button"
-          role="switch"
-          [class.on]="store.settings().autoUpdate"
-          [attr.aria-checked]="store.settings().autoUpdate"
-          (click)="toggleAutoUpdate()"
-          aria-label="Activer les mises à jour automatiques"
-        >
-          <span></span>
-        </button>
-      </div>
-
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Version {{ store.info()?.version }}</p>
-          <p class="row-sub">La dernière version est publiée dans les GitHub Releases du projet.</p>
-        </div>
-        <button
-          class="btn btn-ghost btn-sm"
-          type="button"
-          (click)="checkUpdates()"
-          [disabled]="store.checkingUpdate() || store.update()?.downloading"
-        >
-          <app-icon name="refresh" [size]="14" [class.spin]="store.checkingUpdate()" />
-          Vérifier les mises à jour
-        </button>
-      </div>
-
-      @if (store.update(); as update) {
-        @if (update.available || update.ready || update.error) {
-          <div class="sync-status" [class.error]="update.error">
-            <span class="status-dot" [class.ok]="!update.error && (update.ready || !update.available)"></span>
-            <div class="status-copy">
-              <p class="row-title">
-                @if (update.ready) {
-                  Verk {{ update.latestVersion }} est prêt
-                } @else if (update.error) {
-                  La mise à jour n’a pas pu aboutir
-                } @else if (update.downloading) {
-                  Téléchargement de Verk {{ update.latestVersion }}…
-                } @else {
-                  Verk {{ update.latestVersion }} est disponible
-                }
-              </p>
-              <p class="row-sub">
-                @if (update.error) {
-                  {{ update.error }}
-                } @else if (update.ready) {
-                  Redémarre pour l’installer maintenant, ou laisse l’application se mettre à jour à sa fermeture.
-                } @else if (update.downloading) {
-                  L’archive est vérifiée puis préparée en arrière-plan.
-                } @else {
-                  La mise à jour se télécharge automatiquement si les mises à jour automatiques sont activées.
-                }
-              </p>
+            <div class="row" [class.disabled]="!store.settings().coachEnabled">
+              <div class="row-copy">
+                <p class="row-title">Un mot au démarrage</p>
+                <p class="row-sub">
+                  Demande un rappel à Claude à l’ouverture, s’il reste des tâches en attente. Un appel par lancement.
+                </p>
+              </div>
+              <button
+                class="switch"
+                type="button"
+                role="switch"
+                [class.on]="store.settings().coachOnStart"
+                [attr.aria-checked]="store.settings().coachOnStart"
+                [disabled]="!store.settings().coachEnabled"
+                (click)="toggleCoach()"
+                aria-label="Activer le mot du coach au démarrage"
+              >
+                <span></span>
+              </button>
             </div>
-            @if (update.ready) {
-              <button class="btn btn-primary btn-sm" type="button" (click)="installUpdate()" [disabled]="store.installingUpdate()">
-                <app-icon name="refresh" [size]="14" [class.spin]="store.installingUpdate()" />
-                Redémarrer
-              </button>
-            } @else if (update.available && !update.downloading) {
-              <button class="btn btn-ghost btn-sm" type="button" (click)="downloadUpdate()">
-                Télécharger
-              </button>
-            } @else if (update.error) {
-              <button class="btn btn-ghost btn-sm" type="button" (click)="openUpdatePage()">
-                Ouvrir la page
-              </button>
+          </section>
+        }
+      }
+      @case ('sync') {
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="refresh" [size]="17" [class.spin]="store.sync()?.syncing" /></span>
+            <div class="card-copy">
+              <h2>Synchronisation</h2>
+              <p>Tes tâches et tes images dans un dépôt git privé, entre tes ordinateurs.</p>
+            </div>
+            @if (store.sync()?.lastError) {
+              <span class="pill pill-danger status-pill">Erreur</span>
+            } @else if (store.sync()?.configured) {
+              <span class="pill pill-accent status-pill">{{ store.sync()?.enabled ? 'Active' : 'En pause' }}</span>
+            } @else {
+              <span class="pill status-pill">Inactive</span>
             }
           </div>
-        }
 
-        @if (update.notes && (update.available || update.ready)) {
-          <details class="release-notes">
-            <summary>
-              <app-icon name="chevron-right" [size]="13" />
-              Nouveautés de Verk {{ update.latestVersion }}
-            </summary>
-            <div class="release-notes-body" [innerHTML]="releaseNotes()"></div>
-          </details>
-        }
+          <div class="path-block">
+            <label class="field-label" for="sync-remote">Adresse du dépôt git</label>
+            <div class="path-row">
+              <input
+                id="sync-remote"
+                class="input mono"
+                type="text"
+                [value]="syncRemote()"
+                (input)="onSyncRemoteInput($any($event.target).value)"
+                placeholder="git@github.com:toi/verk.git"
+                spellcheck="false"
+                [disabled]="syncBusy()"
+              />
+              <button class="btn btn-ghost" type="button" (click)="saveSyncRemote()" [disabled]="syncBusy()">
+                {{ store.sync()?.configured ? 'Mettre à jour' : 'Configurer' }}
+              </button>
+            </div>
+            <p class="hint">
+              Un dépôt privé, vide ou déjà utilisé par Verk. Git doit être installé et tes identifiants
+              (SSH ou gestionnaire d’identifiants) déjà en place. Laisse vide pour désactiver.
+            </p>
+          </div>
+
+          @if (store.sync()?.configured) {
+            <div class="row" [class.disabled]="!store.sync()?.enabled">
+              <div class="row-copy">
+                <p class="row-title">Synchronisation automatique</p>
+                <p class="row-sub">
+                  Les changements rapprochés sont regroupés dans un même commit, envoyé quelques
+                  secondes après la dernière action.
+                </p>
+              </div>
+              <button
+                class="switch"
+                type="button"
+                role="switch"
+                [class.on]="store.sync()?.enabled"
+                [attr.aria-checked]="store.sync()?.enabled"
+                [disabled]="syncBusy()"
+                (click)="toggleSync()"
+                aria-label="Activer la synchronisation automatique"
+              >
+                <span></span>
+              </button>
+            </div>
+
+            <div class="sync-status" [class.error]="store.sync()?.lastError">
+              <span class="status-dot" [class.ok]="!store.sync()?.lastError && store.sync()?.configured"></span>
+              <div class="status-copy">
+                <p class="row-title">{{ syncHeadline() }}</p>
+                <p class="row-sub">{{ syncDetail() }}</p>
+              </div>
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="syncNow()"
+                [disabled]="syncBusy() || store.sync()?.syncing"
+              >
+                <app-icon name="refresh" [size]="14" [class.spin]="syncBusy() || store.sync()?.syncing" />
+                Synchroniser
+              </button>
+            </div>
+
+            <div class="sync-folder">
+              <button class="btn btn-ghost btn-sm" type="button" (click)="openSyncFolder()">
+                <app-icon name="folder" [size]="14" />
+                Ouvrir le dossier de synchronisation
+              </button>
+            </div>
+
+            <p class="hint">
+              Les réglages et les chemins locaux (comme Claude Code) restent propres à cet ordinateur.
+              Les images voyagent avec les tâches et les suppressions sont conservées six mois.
+            </p>
+          }
+        </section>
       }
+      @case ('app') {
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="refresh" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Mises à jour</h2>
+              <p>Verk se met à jour depuis GitHub, sans repasser par le site.</p>
+            </div>
+            @if (store.update(); as update) {
+              @if (update.downloading) {
+                <span class="pill status-pill">Téléchargement…</span>
+              } @else if (update.ready) {
+                <span class="pill pill-accent status-pill">Prête</span>
+              } @else if (update.available) {
+                <span class="pill status-pill">Disponible</span>
+              } @else if (update.latestVersion) {
+                <span class="pill pill-accent status-pill">À jour</span>
+              } @else {
+                <span class="pill status-pill">Jamais vérifiée</span>
+              }
+            } @else {
+              <span class="pill status-pill">Verk {{ store.info()?.version }}</span>
+            }
+          </div>
 
-      <p class="hint">
-        L’archive est vérifiée par son empreinte SHA-256 quand la release en fournit une. En cas d’échec,
-        la page GitHub des releases reste accessible pour installer la nouvelle version à la main.
-      </p>
-    </section>
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Mises à jour automatiques</p>
+              <p class="row-sub">
+                Une vérification au démarrage puis toutes les six heures. Une version plus récente est téléchargée en
+                arrière-plan et installée à la fermeture de l’application.
+              </p>
+            </div>
+            <button
+              class="switch"
+              type="button"
+              role="switch"
+              [class.on]="store.settings().autoUpdate"
+              [attr.aria-checked]="store.settings().autoUpdate"
+              (click)="toggleAutoUpdate()"
+              aria-label="Activer les mises à jour automatiques"
+            >
+              <span></span>
+            </button>
+          </div>
 
-    <section class="card">
-      <div class="card-head">
-        <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
-        <div class="card-copy">
-          <h2>Données</h2>
-          <p>Ta liste et tes images, sur cet ordinateur et dans ton dépôt git si tu l’as configuré.</p>
-        </div>
-      </div>
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Version {{ store.info()?.version }}</p>
+              <p class="row-sub">La dernière version est publiée dans les GitHub Releases du projet.</p>
+            </div>
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              (click)="checkUpdates()"
+              [disabled]="store.checkingUpdate() || store.update()?.downloading"
+            >
+              <app-icon name="refresh" [size]="14" [class.spin]="store.checkingUpdate()" />
+              Vérifier les mises à jour
+            </button>
+          </div>
 
-      <div class="row">
-        <div class="row-copy">
-          <p class="row-title">Base SQLite</p>
-          <p class="row-sub mono truncate">{{ store.info()?.databasePath }}</p>
-        </div>
-        <button class="btn btn-ghost" type="button" (click)="openFolder()">
-          <app-icon name="folder" [size]="15" />
-          Ouvrir le dossier
-        </button>
-      </div>
+          @if (store.update(); as update) {
+            @if (update.available || update.ready || update.error) {
+              <div class="sync-status" [class.error]="update.error">
+                <span class="status-dot" [class.ok]="!update.error && (update.ready || !update.available)"></span>
+                <div class="status-copy">
+                  <p class="row-title">
+                    @if (update.ready) {
+                      Verk {{ update.latestVersion }} est prêt
+                    } @else if (update.error) {
+                      La mise à jour n’a pas pu aboutir
+                    } @else if (update.downloading) {
+                      Téléchargement de Verk {{ update.latestVersion }}…
+                    } @else {
+                      Verk {{ update.latestVersion }} est disponible
+                    }
+                  </p>
+                  <p class="row-sub">
+                    @if (update.error) {
+                      {{ update.error }}
+                    } @else if (update.ready) {
+                      Redémarre pour l’installer maintenant, ou laisse l’application se mettre à jour à sa fermeture.
+                    } @else if (update.downloading) {
+                      L’archive est vérifiée puis préparée en arrière-plan.
+                    } @else {
+                      La mise à jour se télécharge automatiquement si les mises à jour automatiques sont activées.
+                    }
+                  </p>
+                </div>
+                @if (update.ready) {
+                  <button class="btn btn-primary btn-sm" type="button" (click)="installUpdate()" [disabled]="store.installingUpdate()">
+                    <app-icon name="refresh" [size]="14" [class.spin]="store.installingUpdate()" />
+                    Redémarrer
+                  </button>
+                } @else if (update.available && !update.downloading) {
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="downloadUpdate()">
+                    Télécharger
+                  </button>
+                } @else if (update.error) {
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="openUpdatePage()">
+                    Ouvrir la page
+                  </button>
+                }
+              </div>
+            }
 
-      <div class="about">
-        <span>Verk {{ store.info()?.version }}</span>
-        <span class="about-dot"></span>
-        <span>Thèmes clair et sombre</span>
-        <span class="about-dot"></span>
-        <span>Windows & macOS</span>
-      </div>
-    </section>
+            @if (update.notes && (update.available || update.ready)) {
+              <details class="release-notes">
+                <summary>
+                  <app-icon name="chevron-right" [size]="13" />
+                  Nouveautés de Verk {{ update.latestVersion }}
+                </summary>
+                <div class="release-notes-body" [innerHTML]="releaseNotes()"></div>
+              </details>
+            }
+          }
+
+          <p class="hint">
+            L’archive est vérifiée par son empreinte SHA-256 quand la release en fournit une. En cas d’échec,
+            la page GitHub des releases reste accessible pour installer la nouvelle version à la main.
+          </p>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="card-icon"><app-icon name="folder" [size]="17" /></span>
+            <div class="card-copy">
+              <h2>Données</h2>
+              <p>Ta liste et tes images, sur cet ordinateur et dans ton dépôt git si tu l’as configuré.</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row-copy">
+              <p class="row-title">Base SQLite</p>
+              <p class="row-sub mono truncate">{{ store.info()?.databasePath }}</p>
+            </div>
+            <button class="btn btn-ghost" type="button" (click)="openFolder()">
+              <app-icon name="folder" [size]="15" />
+              Ouvrir le dossier
+            </button>
+          </div>
+
+          <div class="about">
+            <span>Verk {{ store.info()?.version }}</span>
+            <span class="about-dot"></span>
+            <span>Thèmes clair et sombre</span>
+            <span class="about-dot"></span>
+            <span>Windows & macOS</span>
+          </div>
+        </section>
+      }
+    }
   </div>
 </section>
