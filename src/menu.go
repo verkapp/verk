@@ -39,7 +39,7 @@ func (a *App) applicationMenu() *application.Menu {
 		file.Add("Quitter").SetAccelerator("CmdOrCtrl+Q").OnClick(func(*application.Context) { a.quitApp() })
 	}
 
-	bar.AddRole(application.EditMenu)
+	editMenu(bar.AddSubmenu("Édition"), isMac)
 
 	view := bar.AddSubmenu("Affichage")
 	view.Add("Aujourd’hui").SetAccelerator("CmdOrCtrl+1").OnClick(a.menuAction(actionToday))
@@ -63,4 +63,43 @@ func (a *App) menuAction(action string) func(*application.Context) {
 func (a *App) sendAction(action string) {
 	a.showWindow()
 	a.emit("menu:action", action)
+}
+
+// roleLabel is a native menu role with its French label; an empty label
+// stands for a separator.
+type roleLabel struct {
+	role  application.Role
+	label string
+}
+
+// editMenu rebuilds Wails' Edit role with French labels: the roles keep
+// their native behaviour (clipboard, undo in the webview), only the text
+// changes. Wails' own EditMenu role is labelled in English.
+func editMenu(edit *application.Menu, isMac bool) {
+	items := []roleLabel{
+		{application.Undo, "Annuler"},
+		{application.Redo, "Rétablir"},
+		{},
+		{application.Cut, "Couper"},
+		{application.Copy, "Copier"},
+		{application.Paste, "Coller"},
+	}
+	if isMac {
+		items = append(items, roleLabel{application.PasteAndMatchStyle, "Coller et adapter le style"})
+	}
+	items = append(items,
+		roleLabel{application.Delete, "Supprimer"},
+		roleLabel{},
+		roleLabel{application.SelectAll, "Tout sélectionner"},
+	)
+	for _, item := range items {
+		if item.label == "" {
+			edit.AddSeparator()
+			continue
+		}
+		edit.AddRole(item.role)
+		if added := edit.FindByRole(item.role); added != nil {
+			added.SetLabel(item.label)
+		}
+	}
 }
