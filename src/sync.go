@@ -182,7 +182,7 @@ func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, messag
 			if _, err := runGit(ctx, dir, "reset", "--hard", remoteRef); err != nil {
 				return changed, fmt.Errorf("préparation du dépôt : %w", err)
 			}
-			data, err := os.ReadFile(filepath.Join(dir, "todo.json"))
+			data, err := os.ReadFile(filepath.Join(dir, snapshotFileName))
 			if err != nil && !errors.Is(err, os.ErrNotExist) {
 				return changed, err
 			}
@@ -207,7 +207,7 @@ func (a *App) performSyncWithMessage(ctx context.Context, cfg syncConfig, messag
 		if err != nil {
 			return changed, err
 		}
-		if err := writeSnapshotFile(filepath.Join(dir, "todo.json"), localSnapshot); err != nil {
+		if err := writeSnapshotFile(filepath.Join(dir, snapshotFileName), localSnapshot); err != nil {
 			return changed, err
 		}
 		if err := copyMissingImages(localSnapshot.Images, a.store.imageDir, imagesDir); err != nil {
@@ -352,7 +352,7 @@ func writeSnapshotFile(path string, snap snapshot) error {
 func hostname() string {
 	name, err := os.Hostname()
 	if err != nil || name == "" {
-		return "todo"
+		return "verk"
 	}
 	return name
 }

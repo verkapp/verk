@@ -15,6 +15,10 @@ import (
 
 const syncDirName = "sync"
 
+// snapshotFileName keeps its pre-Verk name: devices still running Todo read
+// and write the same file, so renaming it would split the shared history.
+const snapshotFileName = "todo.json"
+
 // resolveGitPath mirrors the Claude Code lookup: a macOS app launched from the
 // Finder inherits a minimal PATH, so Homebrew git is often invisible.
 func resolveGitPath() (string, error) {
@@ -146,10 +150,10 @@ func ensureSyncRepo(ctx context.Context, dir, remote, branch string) error {
 	}
 	// The checkout belongs to the app, not to the person's git identity.
 	// Repo-local values keep commits working even with no global configuration.
-	if _, err := runGit(ctx, dir, "config", "user.name", "Todo"); err != nil {
+	if _, err := runGit(ctx, dir, "config", "user.name", "Verk"); err != nil {
 		return err
 	}
-	if _, err := runGit(ctx, dir, "config", "user.email", "todo@localhost"); err != nil {
+	if _, err := runGit(ctx, dir, "config", "user.email", "verk@localhost"); err != nil {
 		return err
 	}
 	return nil

@@ -632,9 +632,9 @@ export async function mockCall<T>(method: string, args: unknown[]): Promise<T> {
     case 'AppInfo': {
       const info: AppInfo = {
         version: '1.2.3 · aperçu navigateur',
-        dataDir: '~/Library/Application Support/todo',
-        database: 'todo.db',
-        databasePath: '~/Library/Application Support/todo/todo.db',
+        dataDir: '~/Library/Application Support/verk',
+        database: 'verk.db',
+        databasePath: '~/Library/Application Support/verk/verk.db',
       };
       return info as T;
     }
