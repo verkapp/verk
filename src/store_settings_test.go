@@ -8,11 +8,11 @@ func TestSettings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getSettings: %v", err)
 	}
-	if defaults.Accent != "lavande" || !defaults.CoachEnabled || defaults.CoachOnStart || !defaults.TimeTracking || !defaults.ShowMomentum || !defaults.ClaudeEnabled || defaults.ClaudePath != "" {
+	if defaults.Accent != "lavande" || defaults.Theme != themeSystem || !defaults.CoachEnabled || defaults.CoachOnStart || !defaults.TimeTracking || !defaults.ShowMomentum || !defaults.ClaudeEnabled || defaults.ClaudePath != "" {
 		t.Fatalf("unexpected defaults: %+v", defaults)
 	}
 
-	want := Settings{Accent: "menthe", CoachEnabled: false, CoachOnStart: true, TimeTracking: false, ShowMomentum: false, ClaudePath: "/opt/claude", CloseToTray: true}
+	want := Settings{Accent: "menthe", Theme: themeDark, CoachEnabled: false, CoachOnStart: true, TimeTracking: false, ShowMomentum: false, ClaudePath: "/opt/claude", CloseToTray: true}
 	if err := st.saveSettings(want); err != nil {
 		t.Fatalf("saveSettings: %v", err)
 	}
@@ -30,5 +30,19 @@ func TestSettings(t *testing.T) {
 	got, _ = st.getSettings()
 	if got.Accent != "lavande" {
 		t.Fatalf("empty accent should fall back to lavande, got %q", got.Accent)
+	}
+}
+
+func TestSettingsThemeFallsBackToSystem(t *testing.T) {
+	st := newTestStore(t)
+	if err := st.saveSettings(Settings{Theme: "sepia"}); err != nil {
+		t.Fatalf("saveSettings: %v", err)
+	}
+	got, err := st.getSettings()
+	if err != nil {
+		t.Fatalf("getSettings: %v", err)
+	}
+	if got.Theme != themeSystem {
+		t.Fatalf("unknown theme should fall back to system, got %q", got.Theme)
 	}
 }
