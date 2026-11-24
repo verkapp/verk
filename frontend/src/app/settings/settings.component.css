@@ -120,7 +120,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  color: #fff;
+  color: var(--on-accent);
   border: 2px solid var(--surface);
 }
 
@@ -244,8 +244,8 @@
 
 .claude-status.offline,
 .sync-status.error {
-  background: #fffaf7;
-  border-color: #f1e4da;
+  background: var(--warn-soft);
+  border-color: var(--warn-line);
 }
 
 .sync-folder {

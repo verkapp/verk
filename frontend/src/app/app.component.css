@@ -57,7 +57,7 @@
 
 .sk {
   border-radius: 10px;
-  background: linear-gradient(90deg, #f0ede8, #f7f5f2, #f0ede8);
+  background: linear-gradient(90deg, var(--skeleton), var(--skeleton-hi), var(--skeleton));
   background-size: 220% 100%;
   animation: sk-shimmer 1.5s ease infinite;
 }
