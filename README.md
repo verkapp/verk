@@ -168,8 +168,24 @@ gestionnaire d'identifiants habituels ; aucun secret n'est stocké par Verk.
 - Un envoi part quelques secondes après chaque changement, une récupération a lieu au démarrage,
   et une dernière synchronisation est tentée à la fermeture. Le bouton **Synchroniser** force
   un aller-retour.
-- Le dépôt contient `todo.json` (instantané lisible, nom conservé depuis Todo pour la compatibilité) et `images/` (toutes les pièces jointes).
+- Le dépôt range un fichier par tâche, dans un dossier par profil. Un commit ne touche donc que les
+  tâches modifiées, et `git log` sur un fichier donne l'historique d'une tâche :
+
+  ```
+  profiles/<id du profil>/profile.json         nom, couleur, position, report automatique
+  profiles/<id du profil>/tasks/<id>.json      la tâche, ses sous-tâches et la liste de ses images
+  tombstones.json                              les suppressions récentes
+  images/                                      les fichiers joints
+  todo.json                                    barrière pour les versions 2.0 et antérieures
+  ```
+
+  Les dossiers portent l'identifiant du profil et non son nom : renommer un profil ne déplace rien.
   La base SQLite n'est jamais commitée : il n'y a donc pas de conflit binaire.
+- Jusqu'à la version 2.0, tout tenait dans `todo.json`. La première synchronisation d'une version
+  plus récente migre le dépôt (commit « sync: migration vers un fichier par tâche ») et remplace
+  `todo.json` par une barrière : une version 2.0 refuse alors de synchroniser et demande une mise à
+  jour, au lieu d'écraser les nouveaux fichiers. Une dernière modification poussée par une ancienne
+  version avant la migration est fusionnée, pas perdue.
 - La fusion se fait entité par entité (`updated_at`, dernier écrivain gagnant). Les sous-tâches
   et les images fusionnent indépendamment de leur tâche. Une modification plus récente qu'une
   suppression ressuscite l'élément ; les pierres tombales sont conservées 180 jours.

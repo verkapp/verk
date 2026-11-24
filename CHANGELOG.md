@@ -11,6 +11,16 @@ Format :
 - **Corrigé** pour les corrections ;
 - **Retiré** pour ce qui disparaît.
 
+## [Non publié]
+
+### Modifié
+
+- Le dépôt de synchronisation range un fichier par tâche, dans un dossier par profil
+  (`profiles/<profil>/tasks/<tâche>.json`), au lieu d’un seul `todo.json`. Les commits ne touchent que
+  les tâches modifiées et l’historique d’une tâche se lit avec `git log`. Le dépôt est migré à la
+  première synchronisation. Les appareils restés en 2.0 refusent ensuite de synchroniser et
+  demandent une mise à jour : mets à jour tous tes appareils.
+
 ## [2.0.0] - 2026-11-24
 
 Todo devient **Verk**. Les tâches, pièces jointes et réglages sont repris automatiquement au premier
