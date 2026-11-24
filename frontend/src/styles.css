@@ -26,6 +26,8 @@
 
   /* Secondary tones, kept as tokens so the dark theme can redefine them. */
   --on-accent: #ffffff;
+  /* The « v. » logo stays white on the accent in both themes, like the app icon. */
+  --brand-ink: #ffffff;
   --control-border: #d5d0c9;
   --strike: #cbc6bf;
   --hover-glass: rgba(255, 255, 255, 0.66);
@@ -55,6 +57,10 @@
   --accent-soft: #ece8ff;
   --accent-tint: #f7f5ff;
   --accent-ring: rgba(123, 108, 240, 0.22);
+  /* Solid fills that carry text or an icon (primary button, ticked box):
+     deep enough for white text at 4.5:1, unlike the pastel accent itself. */
+  --accent-fill: #6f5eef;
+  --accent-fill-hover: #5a47ec;
 }
 
 :root[data-accent='lavande'] {
@@ -63,46 +69,58 @@
   --accent-soft: #ece8ff;
   --accent-tint: #f7f5ff;
   --accent-ring: rgba(123, 108, 240, 0.22);
+  --accent-fill: #6f5eef;
+  --accent-fill-hover: #5a47ec;
 }
 
 :root[data-accent='menthe'] {
   --accent: #4aa985;
-  --accent-strong: #328c6c;
+  --accent-strong: #2b775c;
   --accent-soft: #e3f4ec;
   --accent-tint: #f3faf7;
   --accent-ring: rgba(74, 169, 133, 0.22);
+  --accent-fill: #398266;
+  --accent-fill-hover: #317058;
 }
 
 :root[data-accent='ciel'] {
   --accent: #559fe0;
-  --accent-strong: #3a83c2;
+  --accent-strong: #316fa5;
   --accent-soft: #e6f1fb;
   --accent-tint: #f4f9fe;
   --accent-ring: rgba(85, 159, 224, 0.22);
+  --accent-fill: #2378c2;
+  --accent-fill-hover: #206bad;
 }
 
 :root[data-accent='peche'] {
   --accent: #ea8a62;
-  --accent-strong: #d26c43;
+  --accent-strong: #ae502a;
   --accent-soft: #fceee7;
   --accent-tint: #fdf7f3;
   --accent-ring: rgba(234, 138, 98, 0.22);
+  --accent-fill: #c64d1b;
+  --accent-fill-hover: #b04418;
 }
 
 :root[data-accent='rose'] {
   --accent: #dd7ba2;
-  --accent-strong: #c65d89;
+  --accent-strong: #b33f70;
   --accent-soft: #fbe9f0;
   --accent-tint: #fdf5f8;
   --accent-ring: rgba(221, 123, 162, 0.22);
+  --accent-fill: #cd3e77;
+  --accent-fill-hover: #c0326a;
 }
 
 :root[data-accent='beurre'] {
   --accent: #d3a640;
-  --accent-strong: #b5871f;
+  --accent-strong: #896718;
   --accent-soft: #f9f1da;
   --accent-tint: #fdfaf0;
   --accent-ring: rgba(211, 166, 64, 0.24);
+  --accent-fill: #916f21;
+  --accent-fill-hover: #7c5f1d;
 }
 
 /* ---------------------------------------------------------------
@@ -155,6 +173,11 @@
   --accent-soft: color-mix(in srgb, var(--accent) 24%, var(--surface));
   --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
   --accent-ring: color-mix(in srgb, var(--accent) 40%, transparent);
+  /* The pastel accent is bright on the dark surface: it stays the fill and
+     carries near-black text instead of white. */
+  --accent-fill: var(--accent);
+  --accent-fill-hover: color-mix(in srgb, var(--accent) 86%, #ffffff);
+  --on-accent: #16151a;
 }
 
 * {
@@ -170,7 +193,13 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter Variable',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   font-size: 14.5px;
   line-height: 1.5;
   font-feature-settings: 'cv11', 'ss01';
@@ -268,15 +297,12 @@ p {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: var(--on-accent);
-  box-shadow:
-    0 1px 2px rgba(50, 40, 30, 0.08),
-    0 8px 18px -12px var(--accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-strong);
+  background: var(--accent-fill-hover);
 }
 
 .btn-ghost {

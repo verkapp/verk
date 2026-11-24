@@ -37,7 +37,7 @@
   height: 30px;
   border-radius: 9px;
   background: var(--accent);
-  color: var(--on-accent);
+  color: var(--brand-ink);
   box-shadow: none;
 }
 
