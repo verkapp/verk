@@ -75,6 +75,13 @@ type roleLabel struct {
 // editMenu rebuilds Wails' Edit role with French labels: the roles keep
 // their native behaviour (clipboard, undo in the webview), only the text
 // changes. Wails' own EditMenu role is labelled in English.
+//
+// Outside macOS the items lose their shortcuts. There, a role runs its
+// action in JavaScript (execCommand), and go-webview2 forwards every key to
+// WebView2 even when a menu shortcut handled it: Ctrl+V pasted the text
+// twice, Ctrl+Z undid two steps. The webview already handles these keys
+// natively, so the items stay for the mouse only. On macOS the roles map to
+// the responder chain (paste:, undo:…), which consumes the key once.
 func editMenu(edit *application.Menu, isMac bool) {
 	items := []roleLabel{
 		{application.Undo, "Annuler"},
@@ -100,6 +107,9 @@ func editMenu(edit *application.Menu, isMac bool) {
 		edit.AddRole(item.role)
 		if added := edit.FindByRole(item.role); added != nil {
 			added.SetLabel(item.label)
+			if !isMac {
+				added.RemoveAccelerator()
+			}
 		}
 	}
 }
