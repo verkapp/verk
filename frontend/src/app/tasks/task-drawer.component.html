@@ -314,20 +314,32 @@
           </button>
           <button class="btn btn-ghost btn-sm" type="button" (click)="confirmDelete.set(false)">Annuler</button>
         } @else {
-          <button class="btn btn-ghost btn-sm delete-btn" type="button" (click)="requestDelete()">
-            <app-icon name="trash" [size]="14" />
-            Supprimer
+          <button
+            class="btn btn-ghost btn-square delete-btn"
+            type="button"
+            title="Supprimer la tâche"
+            aria-label="Supprimer la tâche"
+            (click)="requestDelete()"
+          >
+            <app-icon name="trash" [size]="15" />
           </button>
+          @if (!isDone()) {
+            <button
+              class="btn btn-ghost btn-square"
+              type="button"
+              title="Ne pas faire"
+              aria-label="Ne pas faire cette tâche"
+              (click)="dropTask()"
+            >
+              <app-icon name="ban" [size]="15" />
+            </button>
+          }
         }
       }
     </div>
     <div class="foot-right">
       @if (taskId()) {
         @if (!isDone()) {
-          <button class="btn btn-ghost" type="button" (click)="dropTask()">
-            <app-icon name="ban" [size]="15" />
-            Ne pas faire
-          </button>
           <button class="btn btn-ghost" type="button" (click)="defer()">
             <app-icon name="sunrise" [size]="15" />
             Reprendre {{ resumeLabel() }}

@@ -835,6 +835,8 @@
   flex: none;
   display: flex;
   align-items: center;
+  /* Narrow window or delete confirmation: the actions wrap instead of being cut off. */
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
   padding: 13px 20px;
@@ -848,6 +850,17 @@
   display: flex;
   align-items: center;
   gap: 7px;
+}
+
+.foot-right {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.btn-square {
+  width: 38px;
+  padding: 0;
 }
 
 .delete-btn {
