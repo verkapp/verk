@@ -11,7 +11,7 @@ Format :
 - **Corrigé** pour les corrections ;
 - **Retiré** pour ce qui disparaît.
 
-## [Non publié]
+## [3.0.1] - 2026-11-25
 
 ### Ajouté
 
