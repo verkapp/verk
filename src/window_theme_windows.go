@@ -121,7 +121,8 @@ func chromeFor(dark bool) chromePalette {
 
 // hideMenuBar detaches the Fichier / Édition / Affichage bar from the window
 // once it exists. Wails keeps the menu's accelerators in a table of its own,
-// so Ctrl+N, Ctrl+1…4, Ctrl+, and the editing shortcuts keep working.
+// so Ctrl+N, Ctrl+1…4 and Ctrl+, keep working (editing keys are left to
+// WebView2, see editMenu).
 func (a *App) hideMenuBar() {
 	a.wapp.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		a.window.HideMenuBar()

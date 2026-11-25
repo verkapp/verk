@@ -49,6 +49,33 @@ coach propulsé par **Claude Code (haiku)**.
 | Coach | CLI locale `claude` (`--model haiku`) |
 | CI | GitHub Actions (macOS universel + Windows x64) |
 
+## Installation
+
+Les scripts installent la dernière release, ou la version passée en argument. Le dépôt étant privé,
+ils téléchargent avec la CLI [`gh`](https://cli.github.com) connectée (`gh auth login`), ou avec un
+jeton dans `GITHUB_TOKEN`.
+
+```bash
+# macOS : Verk.app dans /Applications (~/Applications sans droit d'écriture)
+# Linux : compile depuis les sources, puis ~/.local/bin/verk et une entrée de menu
+scripts/install.sh            # ou : scripts/install.sh v3.0.0
+
+# Sans clone :
+gh api repos/verkapp/verk/contents/scripts/install.sh -H "Accept: application/vnd.github.raw" | bash
+```
+
+```powershell
+# Windows : installeur silencieux, pour l'utilisateur courant, sans droits administrateur
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1            # -Version v3.0.0 -Launch
+
+# Sans clone :
+gh api repos/verkapp/verk/contents/scripts/install.ps1 -H "Accept: application/vnd.github.raw" | Out-File -Encoding utf8 $env:TEMP\verk-install.ps1
+powershell -ExecutionPolicy Bypass -File $env:TEMP\verk-install.ps1
+```
+
+Sous Linux, aucune release ne contient de binaire : le script a besoin de git, Go 1.26+, Node.js 22+,
+d'un compilateur C et des paquets de développement GTK 4 et WebKitGTK 6.0. Il liste ceux qui manquent.
+
 ## Prérequis
 
 - Go **1.26+**
@@ -261,6 +288,8 @@ et télécharger l'archive avec tes droits. Sans `gh`, il faut un dépôt public
 ├── build/                  # Config et ressources de build Wails v3 (icônes, plist, Taskfiles)
 ├── CHANGELOG.md            # Notes de chaque release (source du corps GitHub)
 ├── scripts/
+│   ├── install.sh          # Installe Verk (macOS, Linux)
+│   ├── install.ps1         # Installe Verk (Windows)
 │   └── release-notes.sh    # Extrait les notes d'une version
 ├── frontend/
 │   └── src/app/

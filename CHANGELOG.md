@@ -11,6 +11,21 @@ Format :
 - **Corrigé** pour les corrections ;
 - **Retiré** pour ce qui disparaît.
 
+## [Non publié]
+
+### Ajouté
+
+- Des scripts d’installation : `scripts/install.sh` pour macOS (télécharge la dernière release) et
+  Linux (compile depuis les sources), `scripts/install.ps1` pour Windows (installeur silencieux).
+  Les deux vérifient l’empreinte SHA-256 et passent par `gh` ou un jeton, le dépôt étant privé.
+
+### Corrigé
+
+- Sous Windows, coller du texte avec Ctrl+V l’insérait deux fois, et Ctrl+Z annulait deux étapes :
+  les raccourcis d’édition sont laissés à la vue web.
+- Le bouton « Marquer faite » du panneau de tâche était coupé : « Supprimer » et « Ne pas faire »
+  deviennent des icônes, et les boutons passent à la ligne quand la place manque.
+
 ## [3.0.0] - 2026-11-24
 
 Le dépôt de synchronisation change de format : mets à jour tous tes appareils. Une version 2.0
